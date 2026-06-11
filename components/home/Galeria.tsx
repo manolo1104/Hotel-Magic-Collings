@@ -1,0 +1,53 @@
+import { galeria } from "@/lib/images";
+import { Photo } from "@/components/Photo";
+import { Reveal } from "@/components/motion/Reveal";
+import { ClipReveal } from "@/components/motion/ClipReveal";
+
+type From = "bottom" | "left" | "right" | "top";
+
+// 6 imágenes, 6 celdas, con ritmo: 2 anchas (col-span-2) intercaladas.
+const tiles: { src: string; alt: string; wide: boolean; from: From }[] = [
+  { src: galeria[0], alt: "Habitación del Hotel Magic Collinn", wide: true, from: "left" },
+  { src: galeria[1], alt: "Naturaleza de la Huasteca Potosina", wide: false, from: "bottom" },
+  { src: galeria[2], alt: "Detalle del Hotel Magic Collinn", wide: false, from: "bottom" },
+  { src: galeria[3], alt: "Espacio común del hotel", wide: false, from: "bottom" },
+  { src: galeria[4], alt: "Entorno de Axtla de Terrazas", wide: true, from: "right" },
+  { src: galeria[5], alt: "Interior del Hotel Magic Collinn", wide: false, from: "bottom" },
+];
+
+export function Galeria() {
+  return (
+    <section className="mx-auto max-w-[1400px] px-4 py-20 sm:px-6 md:py-28">
+      <Reveal className="max-w-2xl">
+        <h2 className="font-heading text-3xl font-semibold sm:text-4xl">
+          Un vistazo a Magic Collinn
+        </h2>
+        <p className="mt-3 leading-relaxed text-muted-foreground">
+          Un hotel boutique en la Huasteca Potosina, donde el descanso se siente
+          en casa.
+        </p>
+      </Reveal>
+
+      <div className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-4">
+        {tiles.map((t, i) => (
+          <ClipReveal
+            key={i}
+            from={t.from}
+            delay={i * 0.06}
+            className={`group relative h-44 overflow-hidden rounded-xl sm:h-52 md:h-60 ${
+              t.wide ? "md:col-span-2" : ""
+            }`}
+          >
+            <Photo
+              src={t.src}
+              alt={t.alt}
+              fill
+              sizes="(max-width: 768px) 50vw, 33vw"
+              className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-105"
+            />
+          </ClipReveal>
+        ))}
+      </div>
+    </section>
+  );
+}

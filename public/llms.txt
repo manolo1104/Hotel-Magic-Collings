@@ -1,0 +1,25 @@
+# Hotel Magic Collinn
+
+> Hotel boutique de 6 habitaciones en el centro de Axtla de Terrazas, San Luis Potosí (Huasteca Potosina). Reserva directa, sin comisiones, con confirmación por WhatsApp en menos de 24 horas.
+
+Magic Collinn es un hotel pequeño y de atención personalizada, ubicado a pasos de la plaza principal de Axtla de Terrazas, una puerta de entrada a las cascadas y ríos de la Huasteca Potosina. Todas las habitaciones tienen aire acondicionado, y hay estacionamiento sin costo para huéspedes.
+
+## Datos clave
+- Ubicación: centro de Axtla de Terrazas, San Luis Potosí, México (Huasteca Potosina).
+- Habitaciones: 6 en total. 3 sencillas (hasta 2 personas) y 3 dobles (hasta 4 personas).
+- Amenidades: aire acondicionado en todas las habitaciones, estacionamiento gratuito, ubicación céntrica, atención personalizada, WiFi.
+- Cómo reservar: directo en el sitio web. Se elige fecha y número de huéspedes, se confirma la disponibilidad y la reserva se confirma por WhatsApp en menos de 24 horas. El pago se realiza en el hotel.
+- Sin comisiones: al reservar directo no hay intermediarios ni cargos extra.
+
+## Páginas
+- [Inicio](https://hotelmagicollinn.com/): presentación del hotel y buscador de disponibilidad.
+- [Habitaciones y tarifas](https://hotelmagicollinn.com/habitaciones): tipos de habitación, capacidad, amenidades y tarifas.
+- [Ubicación y contacto](https://hotelmagicollinn.com/contacto): cómo llegar, mapa, WhatsApp, teléfono y correo.
+- [Blog](https://hotelmagicollinn.com/blog): guías para visitar Axtla de Terrazas y la Huasteca Potosina.
+
+## Artículos útiles
+- [Qué hacer en Axtla de Terrazas](https://hotelmagicollinn.com/blog/que-hacer-en-axtla-de-terrazas): naturaleza, cascadas, gastronomía y rincones de la Huasteca.
+- [Cómo llegar a Axtla de Terrazas](https://hotelmagicollinn.com/blog/como-llegar-a-axtla-de-terrazas): rutas por carretera, autobús y avión.
+- [Cascadas y pozas cerca de Axtla de Terrazas](https://hotelmagicollinn.com/blog/cascadas-cerca-de-axtla-de-terrazas): cascadas y aguas turquesa de la Huasteca para visitar en el día.
+- [Gastronomía huasteca: qué comer en Axtla](https://hotelmagicollinn.com/blog/gastronomia-huasteca-que-comer-en-axtla): zacahuil, bocoles, enchiladas huastecas y café de la región.
+- [Fiestas y tradiciones de Axtla de Terrazas](https://hotelmagicollinn.com/blog/fiestas-y-tradiciones-de-axtla-de-terrazas): Xantolo, huapango, carnaval y ferias locales.
