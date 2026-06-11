@@ -23,8 +23,11 @@ function create(): Holder {
     const client = postgres(url, { max: 1, prepare: false });
     return { db: drizzlePg(client, { schema }), close: () => client.end() };
   }
-  // Sin DATABASE_URL → Postgres embebido local (cero configuración)
-  const client = new PGlite(DATA_DIR);
+  // Sin DATABASE_URL → Postgres embebido (PGlite).
+  //  · En Vercel el sistema de archivos es de solo lectura → usar EN MEMORIA
+  //    (el sitio funciona, pero las reservas no persisten: conecta un Postgres).
+  //  · En local → archivo persistente en ./.pglite.
+  const client = process.env.VERCEL ? new PGlite() : new PGlite(DATA_DIR);
   return {
     // Los drivers comparten la API de query-builder; el cast unifica el tipo.
     db: drizzlePglite(client, { schema }) as unknown as DB,
