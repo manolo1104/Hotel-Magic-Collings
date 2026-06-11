@@ -141,7 +141,7 @@ export default async function PostPage({ params }: { params: Params }) {
               src={meta.cover}
               alt={meta.title}
               fill
-              priority
+              loading="lazy"
               sizes="(max-width: 768px) 100vw, 768px"
               className="object-cover"
             />
