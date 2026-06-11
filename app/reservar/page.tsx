@@ -3,8 +3,8 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { Photo } from "@/components/Photo";
 import { es } from "date-fns/locale";
-import { CalendarX, Check } from "lucide-react";
-import { confianza } from "@/lib/site";
+import { CalendarX, Check, ShieldCheck, CreditCard, BadgeCheck } from "lucide-react";
+import { confianza, site } from "@/lib/site";
 import { getAvailability, formatMXN } from "@/lib/booking/engine";
 import { BookingForm } from "@/components/booking/BookingForm";
 import { Button } from "@/components/ui/button";
@@ -162,6 +162,42 @@ export default async function ReservarPage({ searchParams }: { searchParams: SP 
             huespedes={huespedes}
           />
         </Reveal>
+      </div>
+
+      {/* Políticas y confianza */}
+      <div className="mt-8 grid gap-6 rounded-2xl border border-border bg-card p-6 sm:grid-cols-3 sm:p-8">
+        <div>
+          <div className="flex items-center gap-2 text-brand">
+            <ShieldCheck className="size-5" aria-hidden />
+            <h2 className="font-heading text-base font-semibold">Cancelación</h2>
+          </div>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            {site.cancelacion} Solo avísanos por WhatsApp.
+          </p>
+        </div>
+        <div>
+          <div className="flex items-center gap-2 text-brand">
+            <CreditCard className="size-5" aria-hidden />
+            <h2 className="font-heading text-base font-semibold">
+              Formas de pago
+            </h2>
+          </div>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            Aceptamos efectivo, tarjeta, transferencia y pago en OXXO. El pago se
+            realiza en el hotel.
+          </p>
+        </div>
+        <div>
+          <div className="flex items-center gap-2 text-brand">
+            <BadgeCheck className="size-5" aria-hidden />
+            <h2 className="font-heading text-base font-semibold">
+              Mejor precio
+            </h2>
+          </div>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            {site.mejorPrecio}
+          </p>
+        </div>
       </div>
     </div>
   );

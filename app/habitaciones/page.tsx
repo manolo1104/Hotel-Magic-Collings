@@ -41,8 +41,9 @@ export default async function HabitacionesPage() {
         </h1>
         <Reveal delay={0.3} className="mt-4 max-w-xl">
           <p className="leading-relaxed text-muted-foreground">
-            Seis habitaciones boutique en el centro de Axtla de Terrazas. Elige la
-            tuya y reserva directo, sin comisiones.
+            Seis habitaciones boutique en dos categorías (sencilla y doble), en
+            el centro de Axtla de Terrazas. Elige la tuya y reserva directo, sin
+            comisiones.
           </p>
         </Reveal>
       </header>

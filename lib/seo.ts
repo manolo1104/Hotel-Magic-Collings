@@ -2,7 +2,7 @@
 // Helpers de Schema.org (JSON-LD) — grafo conectado por @id
 // Google y los LLMs entienden mejor un @graph con entidades enlazadas.
 // ============================================================
-import { site, amenities, faqs } from "./site";
+import { site, amenities, faqs, testimonios } from "./site";
 import { heroImage, galeria } from "./images";
 
 const HOTEL_ID = `${site.url}/#hotel`;
@@ -33,7 +33,7 @@ export function hotelEntity(): Record<string, unknown> {
     email: site.email,
     priceRange: site.priceRange,
     currenciesAccepted: "MXN",
-    paymentAccepted: "Efectivo, Tarjeta de crédito",
+    paymentAccepted: "Efectivo, Tarjeta de crédito, Transferencia, Pago en OXXO",
     availableLanguage: "Spanish",
     address: postalAddress,
     geo: {
@@ -57,7 +57,26 @@ export function hotelEntity(): Record<string, unknown> {
       "@type": "Place",
       name: `${site.locality}, ${site.region}, Huasteca Potosina`,
     },
-    // sameAs: [],  // TODO: Google Business Profile + redes sociales
+    sameAs: [site.googleReviewsUrl],
+    // Calificación agregada (reseñas reales de Google), respaldada por las
+    // reseñas visibles en la página de Inicio.
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: site.reviewsRating,
+      reviewCount: site.reviewsTotal,
+      bestRating: "5",
+      worstRating: "1",
+    },
+    review: testimonios.slice(0, 6).map((t) => ({
+      "@type": "Review",
+      author: { "@type": "Person", name: t.nombre },
+      reviewRating: {
+        "@type": "Rating",
+        ratingValue: String(t.rating),
+        bestRating: "5",
+      },
+      reviewBody: t.texto,
+    })),
   };
 }
 

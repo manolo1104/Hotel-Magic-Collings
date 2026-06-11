@@ -36,9 +36,9 @@ export function Estancia() {
           </Reveal>
           <Reveal direction="up" delay={0.15}>
             <p className="text-lg leading-relaxed text-brand-foreground/80">
-              Seis habitaciones en el centro de Axtla de Terrazas. Eso significa
-              trato cercano, respuestas rápidas y la tranquilidad de reservar
-              directo, sin sorpresas.
+              Seis habitaciones, en dos categorías, en el centro de Axtla de
+              Terrazas. Eso significa trato cercano, respuestas rápidas y la
+              tranquilidad de reservar directo, sin sorpresas.
             </p>
           </Reveal>
         </div>

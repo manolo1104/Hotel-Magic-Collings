@@ -41,7 +41,18 @@ export const site = {
   checkOut: "12:00", // TODO: confirmar
   petsAllowed: null as boolean | null, // TODO: definir política de mascotas
   rooms: 6,
+  roomCategories: 2, // 6 habitaciones repartidas en 2 categorías (sencilla y doble)
   priceRange: "$$", // para Schema LodgingBusiness
+
+  // ── Políticas y confianza (datos confirmados por el hotel) ─
+  cancelacion: "Cancela hasta 72 horas antes con reembolso o cambio de fechas.",
+  pagos: ["Efectivo", "Tarjeta", "Transferencia", "Pago en OXXO"],
+  mejorPrecio: "Mejor precio garantizado al reservar directo, sin comisiones.",
+
+  // ── Reseñas reales (Google) ───────────────────────────────
+  googleReviewsUrl: "https://share.google/YkEaMJQmjkAdUKOqq",
+  reviewsRating: "5.0",
+  reviewsTotal: 8,
 
   // ── Analytics ─────────────────────────────────────────────
   gaId: "", // TODO: GA_ID
@@ -101,35 +112,75 @@ export const faqs = [
     a: "Escríbenos por WhatsApp para confirmar la disponibilidad para tu mascota.", // TODO: definir política
   },
   {
+    q: "¿Cuál es la política de cancelación?",
+    a: "Puedes cancelar hasta 72 horas antes de tu llegada con reembolso o cambio de fechas. Solo avísanos por WhatsApp.",
+  },
+  {
+    q: "¿Qué formas de pago aceptan?",
+    a: "Aceptamos efectivo, tarjeta, transferencia y pago en OXXO. El pago se realiza directamente en el hotel.",
+  },
+  {
     q: "¿Cómo confirmo mi reserva?",
-    a: "Reservas directo en el sitio y te confirmamos por WhatsApp en menos de 24 horas.",
+    a: "Reservas directo en el sitio y te confirmamos por WhatsApp en menos de 24 horas. Al reservar directo tienes el mejor precio, sin comisiones.",
   },
 ] as const;
 
 // ── Señales de confianza (cerca del CTA) — todas verídicas ──────────
 export const confianza = [
-  "Sin pago en línea, pagas en el hotel",
+  "Mejor precio garantizado al reservar directo",
+  "Cancela hasta 72 h antes",
   "Confirmación por WhatsApp en menos de 24 h",
-  "Reserva directa, sin comisiones",
 ] as const;
 
-// ── Reseñas ─────────────────────────────────────────────────────────
-// ⚠️ EJEMPLO: reemplaza estos textos por reseñas REALES (Google, etc.).
-// No inventamos calificación numérica ni fotos de huéspedes.
+// ── Reseñas REALES de Google (5/5). Recortadas para caber, sin alterar
+//    el sentido. Calificación agregada en site.reviewsRating/Total. ───
 export const testimonios = [
   {
-    nombre: "María Fernanda G.",
-    origen: "Viaje familiar",
-    texto: "Un lugar muy limpio y la atención de primera. Nos sentimos como en casa y el centro queda a un par de cuadras.",
+    nombre: "Natalia Camro",
+    fecha: "Hace un año",
+    rating: 5,
+    texto: "Excelente lugar para descansar, a una calle de la plaza principal. Las habitaciones cumplen con todos los servicios y están muy limpias. El trato del dueño es impecable, atento y respetuoso. Lo recomiendo plenamente.",
   },
   {
-    nombre: "Jorge Ramírez",
-    origen: "Estancia de trabajo",
-    texto: "Perfecto para una noche de paso. El estacionamiento y el aire acondicionado se agradecen muchísimo con el calor de la Huasteca.",
+    nombre: "Marcos Méndez",
+    fecha: "Hace un año",
+    rating: 5,
+    texto: "Excelente hotel, céntrico y con toque hogareño. Para los que viajamos seguido es como estar en casa. Muy limpio y muy buena atención. Regresaría con mi familia.",
   },
   {
-    nombre: "Lucía Hernández",
-    origen: "Escapada de fin de semana",
-    texto: "Reservé directo por WhatsApp y me confirmaron rapidísimo. Excelente punto de partida para conocer las cascadas.",
+    nombre: "Alan Santiago",
+    fecha: "Hace 2 años",
+    rating: 5,
+    texto: "Buen lugar para la familia y trato muy amable: los dueños nos mostraron las habitaciones antes de pagar. Bien ubicado y muy seguro. Sin duda regresaría.",
+  },
+  {
+    nombre: "Gersay Vásquez",
+    fecha: "Hace un año",
+    rating: 5,
+    texto: "Excelente ubicación y habitaciones muy limpias. Precios justos por la calidad de los colchones y las instalaciones. Súper recomendable.",
+  },
+  {
+    nombre: "José Martínez",
+    fecha: "Hace 7 meses",
+    rating: 5,
+    texto: "Muy amable recepción, con internet y cable, muy tradicional y bonito. Y el aire acondicionado, todavía mejor, porque Axtla es muy caliente.",
+  },
+  {
+    nombre: "Daniel Figueroa A.",
+    fecha: "Hace 7 meses",
+    rating: 5,
+    texto: "Excelente trato y las habitaciones muy cómodas. En verdad, muy recomendable este hotel.",
+  },
+  {
+    nombre: "Ale HG",
+    fecha: "Hace 9 meses",
+    rating: 5,
+    texto: "Fui por un viaje de trabajo y agradezco que el aire acondicionado funcione muy bien, porque hacía mucho calor. Un lugar tranquilo.",
+  },
+  {
+    nombre: "Ivonne Andrea Pérez",
+    fecha: "Hace un año",
+    rating: 5,
+    texto: "La atención es excelente y las habitaciones están muy bien. Mil veces recomendado.",
   },
 ] as const;
