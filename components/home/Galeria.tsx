@@ -2,6 +2,7 @@ import { galeria } from "@/lib/images";
 import { Photo } from "@/components/Photo";
 import { Reveal } from "@/components/motion/Reveal";
 import { ClipReveal } from "@/components/motion/ClipReveal";
+import { Gallery, GalleryTile } from "@/components/gallery/Lightbox";
 
 type From = "bottom" | "left" | "right" | "top";
 
@@ -15,6 +16,12 @@ const tiles: { src: string; alt: string; wide: boolean; from: From }[] = [
   { src: galeria[5], alt: "Interior del Hotel Magic Collinn", wide: false, from: "bottom" },
 ];
 
+// Versión grande de cada foto para el lightbox
+const photos = tiles.map((t) => ({
+  src: t.src.replace(/w=\d+/, "w=1600"),
+  alt: t.alt,
+}));
+
 export function Galeria() {
   return (
     <section className="mx-auto max-w-[1400px] px-4 py-20 sm:px-6 md:py-28">
@@ -24,30 +31,34 @@ export function Galeria() {
         </h2>
         <p className="mt-3 leading-relaxed text-muted-foreground">
           Un hotel boutique en la Huasteca Potosina, donde el descanso se siente
-          en casa.
+          en casa. Toca cualquier foto para verla en grande.
         </p>
       </Reveal>
 
-      <div className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-4">
-        {tiles.map((t, i) => (
-          <ClipReveal
-            key={i}
-            from={t.from}
-            delay={i * 0.06}
-            className={`group relative h-44 overflow-hidden rounded-xl sm:h-52 md:h-60 ${
-              t.wide ? "md:col-span-2" : ""
-            }`}
-          >
-            <Photo
-              src={t.src}
-              alt={t.alt}
-              fill
-              sizes="(max-width: 768px) 50vw, 33vw"
-              className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-105"
-            />
-          </ClipReveal>
-        ))}
-      </div>
+      <Gallery photos={photos}>
+        <div className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-4">
+          {tiles.map((t, i) => (
+            <ClipReveal
+              key={i}
+              from={t.from}
+              delay={i * 0.06}
+              className={`h-44 overflow-hidden rounded-xl sm:h-52 md:h-60 ${
+                t.wide ? "md:col-span-2" : ""
+              }`}
+            >
+              <GalleryTile index={i} className="group">
+                <Photo
+                  src={t.src}
+                  alt={t.alt}
+                  fill
+                  sizes="(max-width: 768px) 50vw, 33vw"
+                  className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-105"
+                />
+              </GalleryTile>
+            </ClipReveal>
+          ))}
+        </div>
+      </Gallery>
     </section>
   );
 }

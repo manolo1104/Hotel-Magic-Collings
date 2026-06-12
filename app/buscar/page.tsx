@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { SearchX } from "lucide-react";
+import { SearchX, Star, CalendarDays, ClipboardList, MessageCircle } from "lucide-react";
 import { getAvailability, getRoomTypes } from "@/lib/booking/engine";
+import { site } from "@/lib/site";
 import { BookingWidget } from "@/components/booking/BookingWidget";
+import { BookingSteps } from "@/components/booking/BookingSteps";
 import { RoomResultCard } from "@/components/booking/RoomResultCard";
 import { RoomCatalogCard } from "@/components/booking/RoomCatalogCard";
 import { Reveal } from "@/components/motion/Reveal";
@@ -65,7 +67,21 @@ export default async function BuscarPage({ searchParams }: { searchParams: SP })
             disponibles.
           </p>
         )}
+        <a
+          href={site.googleReviewsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <Star className="size-4 fill-primary text-primary" aria-hidden />
+          <strong className="font-semibold text-foreground">
+            {site.reviewsRating}
+          </strong>
+          · {site.reviewsTotal} reseñas en Google
+        </a>
       </header>
+
+      <BookingSteps current={1} className="mt-7" />
 
       <div id="buscador" className="scroll-mt-24">
         <BookingWidget
@@ -104,6 +120,50 @@ export default async function BuscarPage({ searchParams }: { searchParams: SP })
                 </StaggerItem>
               ))}
             </Stagger>
+
+            {/* Cómo funciona: aclara el flujo sin pago en línea */}
+            <div className="mt-16">
+              <Reveal>
+                <h2 className="font-heading text-2xl font-semibold">
+                  Cómo funciona
+                </h2>
+              </Reveal>
+              <Stagger className="mt-6 grid gap-x-10 gap-y-8 sm:grid-cols-3">
+                <StaggerItem>
+                  <div className="border-t border-border pt-5">
+                    <CalendarDays className="size-6 text-support" strokeWidth={1.75} aria-hidden />
+                    <h3 className="mt-3 font-heading text-base font-semibold">
+                      Elige fechas y habitación
+                    </h3>
+                    <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                      Consulta la disponibilidad real al momento.
+                    </p>
+                  </div>
+                </StaggerItem>
+                <StaggerItem>
+                  <div className="border-t border-border pt-5">
+                    <ClipboardList className="size-6 text-support" strokeWidth={1.75} aria-hidden />
+                    <h3 className="mt-3 font-heading text-base font-semibold">
+                      Completa tus datos
+                    </h3>
+                    <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                      Un minuto y listo, sin pago en línea.
+                    </p>
+                  </div>
+                </StaggerItem>
+                <StaggerItem>
+                  <div className="border-t border-border pt-5">
+                    <MessageCircle className="size-6 text-support" strokeWidth={1.75} aria-hidden />
+                    <h3 className="mt-3 font-heading text-base font-semibold">
+                      Te confirmamos por WhatsApp
+                    </h3>
+                    <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                      En menos de 24 horas, y pagas al llegar al hotel.
+                    </p>
+                  </div>
+                </StaggerItem>
+              </Stagger>
+            </div>
           </div>
         )}
 

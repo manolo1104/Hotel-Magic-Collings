@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, MessageCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, MessageCircle, Loader2, CalendarPlus } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { EASE_OUT } from "@/components/motion/easing";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { waLink } from "@/lib/site";
+import { bookingIcs } from "@/lib/ics";
 
 interface Props {
   slug: string;
@@ -16,11 +17,24 @@ interface Props {
   checkin: string;
   checkout: string;
   huespedes: number;
+  // Labels ya formateados en el servidor (evita importar el engine en cliente)
+  checkinLabel: string;
+  checkoutLabel: string;
+  totalLabel: string;
 }
 
 type Status = "idle" | "loading" | "error" | "success";
 
-export function BookingForm({ slug, nombre, checkin, checkout, huespedes }: Props) {
+export function BookingForm({
+  slug,
+  nombre,
+  checkin,
+  checkout,
+  huespedes,
+  checkinLabel,
+  checkoutLabel,
+  totalLabel,
+}: Props) {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [bookingId, setBookingId] = useState<string>("");
@@ -82,6 +96,31 @@ export function BookingForm({ slug, nombre, checkin, checkout, huespedes }: Prop
           WhatsApp en menos de 24 horas. El pago se realiza directamente en el
           hotel.
         </p>
+
+        {/* Recap de la reserva */}
+        <dl className="mx-auto mt-6 max-w-xs space-y-2 rounded-xl bg-secondary/50 p-4 text-left text-sm">
+          <div className="flex justify-between gap-4">
+            <dt className="text-muted-foreground">Llegada</dt>
+            <dd className="font-medium">{checkinLabel}</dd>
+          </div>
+          <div className="flex justify-between gap-4">
+            <dt className="text-muted-foreground">Salida</dt>
+            <dd className="font-medium">{checkoutLabel}</dd>
+          </div>
+          <div className="flex justify-between gap-4">
+            <dt className="text-muted-foreground">Habitación</dt>
+            <dd className="font-medium">{nombre}</dd>
+          </div>
+          <div className="flex justify-between gap-4">
+            <dt className="text-muted-foreground">Huéspedes</dt>
+            <dd className="font-medium">{huespedes}</dd>
+          </div>
+          <div className="flex justify-between gap-4 border-t border-border pt-2">
+            <dt className="font-medium">Total</dt>
+            <dd className="font-semibold text-primary">{totalLabel}</dd>
+          </div>
+        </dl>
+
         <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
           <Button
             className="h-11 gap-2 px-6"
@@ -94,12 +133,26 @@ export function BookingForm({ slug, nombre, checkin, checkout, huespedes }: Prop
           </Button>
           <Button
             variant="secondary"
-            className="h-11 px-6"
-            render={<Link href="/" />}
+            className="h-11 gap-2 px-6"
+            render={
+              <a
+                href={`data:text/calendar;charset=utf-8,${encodeURIComponent(
+                  bookingIcs({ ref, checkin, checkout }),
+                )}`}
+                download="reserva-magic-collinn.ics"
+              />
+            }
           >
-            Volver al inicio
+            <CalendarPlus className="size-4" aria-hidden />
+            Agregar a tu calendario
           </Button>
         </div>
+        <Link
+          href="/"
+          className="mt-5 inline-block text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+        >
+          Volver al inicio
+        </Link>
       </motion.div>
     );
   }

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/motion/Reveal";
 import { WordsReveal } from "@/components/motion/WordsReveal";
 import { ClipReveal } from "@/components/motion/ClipReveal";
+import { Gallery, GalleryTile } from "@/components/gallery/Lightbox";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { CountUp } from "@/components/motion/CountUp";
 import { JsonLd } from "@/components/JsonLd";
@@ -51,41 +52,54 @@ export default async function HabitacionesPage() {
       <div className="mx-auto mt-14 flex max-w-[1400px] flex-col gap-20 px-4 sm:px-6">
         {tipos.map((t, i) => {
           const flip = i % 2 === 1;
+          const fotosLb = t.fotos.slice(0, 3).map((f, j) => ({
+            src: f.replace(/w=\d+/, "w=1600"),
+            alt:
+              j === 0
+                ? `${t.nombre}, vista principal`
+                : `${t.nombre}, detalle ${j}`,
+          }));
           return (
             <section
               key={t.id}
               className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12"
             >
-              {/* Galería */}
-              <div className={`grid grid-cols-2 gap-3 ${flip ? "lg:order-2" : ""}`}>
-                <ClipReveal
-                  from={flip ? "right" : "left"}
-                  className="group relative col-span-2 aspect-[16/10] overflow-hidden rounded-2xl"
-                >
-                  <Photo
-                    src={t.fotos[0]}
-                    alt={`${t.nombre}, vista principal`}
-                    fill
-                    sizes="(max-width: 1024px) 100vw, 45vw"
-                    className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-105"
-                  />
-                </ClipReveal>
-                {t.fotos.slice(1, 3).map((f, j) => (
+              {/* Galería (clic para ampliar) */}
+              <Gallery photos={fotosLb}>
+                <div className={`grid grid-cols-2 gap-3 ${flip ? "lg:order-2" : ""}`}>
                   <ClipReveal
-                    key={j}
-                    delay={0.1 + j * 0.1}
-                    className="group relative aspect-square overflow-hidden rounded-xl"
+                    from={flip ? "right" : "left"}
+                    className="col-span-2 aspect-[16/10] overflow-hidden rounded-2xl"
                   >
-                    <Photo
-                      src={f}
-                      alt={`${t.nombre}, detalle ${j + 1}`}
-                      fill
-                      sizes="(max-width: 1024px) 50vw, 22vw"
-                      className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-105"
-                    />
+                    <GalleryTile index={0} className="group">
+                      <Photo
+                        src={t.fotos[0]}
+                        alt={`${t.nombre}, vista principal`}
+                        fill
+                        sizes="(max-width: 1024px) 100vw, 45vw"
+                        className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-105"
+                      />
+                    </GalleryTile>
                   </ClipReveal>
-                ))}
-              </div>
+                  {t.fotos.slice(1, 3).map((f, j) => (
+                    <ClipReveal
+                      key={j}
+                      delay={0.1 + j * 0.1}
+                      className="aspect-square overflow-hidden rounded-xl"
+                    >
+                      <GalleryTile index={j + 1} className="group">
+                        <Photo
+                          src={f}
+                          alt={`${t.nombre}, detalle ${j + 1}`}
+                          fill
+                          sizes="(max-width: 1024px) 50vw, 22vw"
+                          className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-105"
+                        />
+                      </GalleryTile>
+                    </ClipReveal>
+                  ))}
+                </div>
+              </Gallery>
 
               {/* Contenido */}
               <Stagger className="flex flex-col gap-0">

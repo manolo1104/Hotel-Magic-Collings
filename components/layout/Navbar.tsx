@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, Leaf } from "lucide-react";
@@ -29,6 +29,20 @@ export function Navbar() {
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
+
+  // A11y: Esc cierra el menú móvil y devuelve el foco a la hamburguesa
+  const menuBtnRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        menuBtnRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -93,6 +107,7 @@ export function Navbar() {
         {/* Móvil: hamburguesa con morph */}
         <button
           type="button"
+          ref={menuBtnRef}
           onClick={() => setOpen((v) => !v)}
           className="relative inline-flex size-11 items-center justify-center rounded-lg text-brand md:hidden"
           aria-label={open ? "Cerrar menú" : "Abrir menú"}

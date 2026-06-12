@@ -7,6 +7,7 @@ import { CalendarX, Check, ShieldCheck, CreditCard, BadgeCheck } from "lucide-re
 import { confianza, site } from "@/lib/site";
 import { getAvailability, formatMXN } from "@/lib/booking/engine";
 import { BookingForm } from "@/components/booking/BookingForm";
+import { BookingSteps } from "@/components/booking/BookingSteps";
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/motion/Reveal";
 import { WordsReveal } from "@/components/motion/WordsReveal";
@@ -94,6 +95,8 @@ export default async function ReservarPage({ searchParams }: { searchParams: SP 
         </p>
       </Reveal>
 
+      <BookingSteps current={2} className="mt-6" />
+
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:items-start">
         {/* Resumen */}
         <aside className="overflow-hidden rounded-2xl border border-border bg-card lg:sticky lg:top-24">
@@ -160,6 +163,9 @@ export default async function ReservarPage({ searchParams }: { searchParams: SP 
             checkin={checkin}
             checkout={checkout}
             huespedes={huespedes}
+            checkinLabel={fmt(checkin)}
+            checkoutLabel={fmt(checkout)}
+            totalLabel={formatMXN(tipo.precioTotal)}
           />
         </Reveal>
       </div>

@@ -1,16 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarDays, Users, Search } from "lucide-react";
+import { CalendarDays, Users, Search, Loader2 } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { EASE_OUT } from "@/components/motion/easing";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
+const STORAGE_KEY = "mc_busqueda";
+
 function todayISO(): string {
   // yyyy-mm-dd en zona local
   return new Date().toLocaleDateString("en-CA");
+}
+
+function addDaysISO(iso: string, days: number): string {
+  const d = new Date(`${iso}T12:00:00`);
+  d.setDate(d.getDate() + days);
+  return d.toLocaleDateString("en-CA");
+}
+
+function nightsBetween(checkin: string, checkout: string): number {
+  if (!checkin || !checkout || checkout <= checkin) return 0;
+  const a = new Date(`${checkin}T12:00:00`).getTime();
+  const b = new Date(`${checkout}T12:00:00`).getTime();
+  return Math.round((b - a) / 86_400_000);
 }
 
 interface Props {
@@ -36,13 +51,40 @@ export function BookingWidget({
   const [checkout, setCheckout] = useState(initialCheckout ?? "");
   const [huespedes, setHuespedes] = useState(String(initialHuespedes ?? 2));
   const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
   const reduce = useReducedMotion();
   const today = todayISO();
+  const noches = nightsBetween(checkin, checkout);
+
+  // Memoria de búsqueda: el widget "limpio" (el del hero) recupera la última
+  // búsqueda guardada, si sigue siendo vigente. Corre post-mount (sin SSR mismatch).
+  const hydrateFromStorage = !initialCheckin && !initialCheckout;
+  useEffect(() => {
+    if (!hydrateFromStorage) return;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const s = JSON.parse(raw) as {
+        checkin?: string;
+        checkout?: string;
+        huespedes?: string;
+      };
+      if (s.checkin && s.checkout && s.checkin >= todayISO() && s.checkout > s.checkin) {
+        setCheckin(s.checkin);
+        setCheckout(s.checkout);
+        if (s.huespedes) setHuespedes(s.huespedes);
+      }
+    } catch {
+      // storage corrupto o bloqueado: ignorar
+    }
+  }, [hydrateFromStorage]);
 
   function onCheckin(value: string) {
     setCheckin(value);
-    // Si la salida quedó antes o igual, la limpiamos
-    if (checkout && checkout <= value) setCheckout("");
+    // Anticipación: sugiere la salida al día siguiente (o corrígela si quedó antes)
+    if (value && (!checkout || checkout <= value)) {
+      setCheckout(addDaysISO(value, 1));
+    }
   }
 
   function onSubmit(e: React.FormEvent) {
@@ -56,9 +98,19 @@ export function BookingWidget({
       return;
     }
     setError(null);
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ checkin, checkout, huespedes }),
+      );
+    } catch {
+      // sin storage disponible: no pasa nada
+    }
     const params = new URLSearchParams({ checkin, checkout, huespedes });
     if (tipo) params.set("tipo", tipo);
-    router.push(`/buscar?${params.toString()}`);
+    startTransition(() => {
+      router.push(`/buscar?${params.toString()}`);
+    });
   }
 
   const field =
@@ -131,15 +183,31 @@ export function BookingWidget({
         {/* CTA */}
         <button
           type="submit"
+          disabled={pending}
           className={cn(
             buttonVariants(),
             "h-full min-h-13 gap-2 px-6 text-base max-lg:mt-1",
           )}
         >
-          <Search className="size-4" aria-hidden />
-          Buscar disponibilidad
+          {pending ? (
+            <>
+              <Loader2 className="size-4 animate-spin" aria-hidden />
+              Buscando…
+            </>
+          ) : (
+            <>
+              <Search className="size-4" aria-hidden />
+              Buscar disponibilidad
+            </>
+          )}
         </button>
       </div>
+
+      {noches > 0 && !error && (
+        <p className="px-2 pt-2 text-xs font-medium text-muted-foreground">
+          {noches} {noches === 1 ? "noche" : "noches"}
+        </p>
+      )}
 
       {error && (
         <motion.p
