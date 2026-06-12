@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Hanken_Grotesk } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { site } from "@/lib/site";
 import { heroImage } from "@/lib/images";
 
@@ -48,6 +49,11 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  // Color de marca en la UI del navegador (barra en móvil)
+  themeColor: "#143a2a",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -58,9 +64,21 @@ export default function RootLayout({
       className={`${sans.variable} ${heading.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col" suppressHydrationWarning>
+        {/* Conexión anticipada al host de las imágenes (origen del LCP) */}
+        <link rel="preconnect" href="https://images.unsplash.com" />
+        {/* Skip link (WCAG 2.4.1): visible solo al enfocar con teclado */}
+        <a
+          href="#contenido"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-lg focus:border focus:border-border focus:bg-card focus:px-4 focus:py-2.5 focus:text-sm focus:font-medium focus:text-foreground focus:shadow-lg"
+        >
+          Saltar al contenido
+        </a>
         <Navbar />
-        <main className="flex flex-1 flex-col">{children}</main>
+        <main id="contenido" className="flex flex-1 flex-col">
+          {children}
+        </main>
         <Footer />
+        <WhatsAppFloat />
 
         {site.gaId ? (
           <>

@@ -135,6 +135,13 @@ export async function createBooking(
   if (!input.nombre?.trim()) return { ok: false, error: "Escribe tu nombre." };
   if (!input.whatsapp?.trim())
     return { ok: false, error: "Escribe tu WhatsApp para confirmar la reserva." };
+  // Límites de tamaño (sanidad server-side contra abuso)
+  if (input.nombre.trim().length > 120)
+    return { ok: false, error: "El nombre es demasiado largo." };
+  if (input.whatsapp.trim().length > 30)
+    return { ok: false, error: "Revisa tu número de WhatsApp." };
+  if ((input.email?.trim().length ?? 0) > 120)
+    return { ok: false, error: "El correo es demasiado largo." };
 
   await ensureDb();
 

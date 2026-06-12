@@ -84,7 +84,15 @@ export function Footer() {
           <p>
             © {year} {site.legalName}. Todos los derechos reservados.
           </p>
-          <p>Hecho con cariño en la Huasteca Potosina.</p>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/privacidad"
+              className="transition-colors hover:text-brand-foreground"
+            >
+              Aviso de privacidad
+            </Link>
+            <p>Hecho con cariño en la Huasteca Potosina.</p>
+          </div>
         </div>
       </div>
     </footer>

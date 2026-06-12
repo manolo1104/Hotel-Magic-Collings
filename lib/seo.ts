@@ -191,6 +191,29 @@ export function articleJsonLd(post: {
   };
 }
 
+/** Listado del blog: CollectionPage + ItemList. */
+export function blogListJsonLd(
+  posts: { title: string; slug: string }[],
+): Record<string, unknown> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "@id": `${site.url}/blog`,
+    name: `Blog del ${site.legalName}`,
+    inLanguage: "es-MX",
+    isPartOf: { "@id": WEBSITE_ID },
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: posts.map((p, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        name: p.title,
+        url: `${site.url}/blog/${p.slug}`,
+      })),
+    },
+  };
+}
+
 /** BreadcrumbList — para rutas internas. */
 export function breadcrumbJsonLd(
   items: { name: string; url: string }[],

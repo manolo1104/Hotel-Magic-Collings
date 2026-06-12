@@ -4,6 +4,8 @@ import { Photo } from "@/components/Photo";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { getAllPosts } from "@/lib/content";
+import { JsonLd } from "@/components/JsonLd";
+import { blogListJsonLd } from "@/lib/seo";
 import { Reveal } from "@/components/motion/Reveal";
 import { WordsReveal } from "@/components/motion/WordsReveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
@@ -28,6 +30,7 @@ export default function BlogPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1400px] px-4 pt-28 pb-20 sm:px-6">
+      <JsonLd data={blogListJsonLd(posts.map((p) => ({ title: p.title, slug: p.slug })))} />
       <header className="max-w-2xl">
         <h1 className="font-heading text-4xl font-semibold sm:text-5xl">
           <WordsReveal text="Blog" />

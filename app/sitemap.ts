@@ -9,6 +9,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/habitaciones`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.9 },
     { url: `${base}/contacto`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.7 },
     { url: `${base}/blog`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.7 },
+    { url: `${base}/privacidad`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.3 },
   ];
   const posts: MetadataRoute.Sitemap = getAllPosts().map((p) => ({
     url: `${base}/blog/${p.slug}`,

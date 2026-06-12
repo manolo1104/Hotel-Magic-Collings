@@ -64,6 +64,7 @@ export function Navbar() {
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={active ? "page" : undefined}
                 className={cn(
                   "relative rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200",
                   active ? "text-brand" : "text-foreground/70 hover:text-brand",
@@ -132,6 +133,7 @@ export function Navbar() {
                 >
                   <Link
                     href={item.href}
+                    aria-current={isActive(item.href) ? "page" : undefined}
                     className={cn(
                       "block rounded-lg px-3 py-3 text-base font-medium hover:bg-accent hover:text-brand",
                       isActive(item.href) ? "text-brand" : "text-foreground/80",
