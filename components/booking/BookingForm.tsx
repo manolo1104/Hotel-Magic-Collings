@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, MessageCircle, Loader2, CalendarPlus } from "lucide-react";
+import {
+  CheckCircle2,
+  MessageCircle,
+  Loader2,
+  CalendarPlus,
+  CreditCard,
+} from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { EASE_OUT } from "@/components/motion/easing";
 import { Button } from "@/components/ui/button";
@@ -10,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { waLink } from "@/lib/site";
 import { bookingIcs } from "@/lib/ics";
+import type { ModalidadPago } from "@/lib/booking/types";
 
 interface Props {
   slug: string;
@@ -21,6 +28,9 @@ interface Props {
   checkinLabel: string;
   checkoutLabel: string;
   totalLabel: string;
+  // Pago en línea (Mercado Pago). Si false, flujo de reserva por WhatsApp.
+  pagoActivo: boolean;
+  anticipoLabel: string; // 50% del total, ya formateado
 }
 
 type Status = "idle" | "loading" | "error" | "success";
@@ -34,11 +44,14 @@ export function BookingForm({
   checkinLabel,
   checkoutLabel,
   totalLabel,
+  pagoActivo,
+  anticipoLabel,
 }: Props) {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [bookingId, setBookingId] = useState<string>("");
   const [form, setForm] = useState({ nombre: "", whatsapp: "", email: "" });
+  const [modalidad, setModalidad] = useState<ModalidadPago>("total");
   const reduce = useReducedMotion();
 
   function update(field: keyof typeof form, value: string) {
@@ -50,6 +63,31 @@ export function BookingForm({
     setStatus("loading");
     setError(null);
     try {
+      if (pagoActivo) {
+        // Crea la reserva (hold) + preferencia y redirige a Checkout Pro.
+        const res = await fetch("/api/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            slug,
+            checkin,
+            checkout,
+            huespedes,
+            ...form,
+            modalidadPago: modalidad,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok || !data.initPoint) {
+          setStatus("error");
+          setError(data.error ?? "No pudimos iniciar el pago. Intenta de nuevo.");
+          return;
+        }
+        window.location.href = data.initPoint; // → Mercado Pago
+        return;
+      }
+
+      // Flujo sin pago en línea: reserva y confirmación por WhatsApp.
       const res = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -69,6 +107,7 @@ export function BookingForm({
     }
   }
 
+  // Éxito inline (solo flujo WhatsApp; con pago se redirige a Mercado Pago)
   if (status === "success") {
     const ref = bookingId.slice(0, 8).toUpperCase();
     const msg = `Hola, acabo de reservar una ${nombre} en Magic Collinn del ${checkin} al ${checkout} para ${huespedes} huéspedes. Mi número de reserva es ${ref}.`;
@@ -97,7 +136,6 @@ export function BookingForm({
           hotel.
         </p>
 
-        {/* Recap de la reserva */}
         <dl className="mx-auto mt-6 max-w-xs space-y-2 rounded-xl bg-secondary/50 p-4 text-left text-sm">
           <div className="flex justify-between gap-4">
             <dt className="text-muted-foreground">Llegada</dt>
@@ -164,7 +202,9 @@ export function BookingForm({
     >
       <h2 className="font-heading text-xl font-semibold">Tus datos</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Completa para reservar. Sin pago en línea: te confirmamos por WhatsApp.
+        {pagoActivo
+          ? "Elige cómo pagar y te llevamos a Mercado Pago para completar tu reserva de forma segura."
+          : "Completa para reservar. Sin pago en línea: te confirmamos por WhatsApp."}
       </p>
 
       <div className="mt-6 grid gap-5">
@@ -199,11 +239,15 @@ export function BookingForm({
 
         <div className="grid gap-2">
           <Label htmlFor="email">
-            Correo <span className="text-muted-foreground">(opcional)</span>
+            Correo{" "}
+            <span className="text-muted-foreground">
+              {pagoActivo ? "(para tu confirmación)" : "(opcional)"}
+            </span>
           </Label>
           <Input
             id="email"
             type="email"
+            required={pagoActivo}
             autoComplete="email"
             value={form.email}
             onChange={(e) => update("email", e.target.value)}
@@ -211,6 +255,29 @@ export function BookingForm({
           />
         </div>
       </div>
+
+      {/* Selector total / anticipo (solo con pago en línea) */}
+      {pagoActivo && (
+        <fieldset className="mt-6">
+          <legend className="text-sm font-medium">¿Cuánto quieres pagar ahora?</legend>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <PagoOpcion
+              activo={modalidad === "total"}
+              onClick={() => setModalidad("total")}
+              titulo="Pagar todo ahora"
+              monto={totalLabel}
+              detalle="Tu estancia queda 100% pagada"
+            />
+            <PagoOpcion
+              activo={modalidad === "anticipo"}
+              onClick={() => setModalidad("anticipo")}
+              titulo="Pagar 50% ahora"
+              monto={anticipoLabel}
+              detalle="El resto se paga en el hotel"
+            />
+          </div>
+        </fieldset>
+      )}
 
       {status === "error" && error && (
         <motion.p
@@ -231,14 +298,56 @@ export function BookingForm({
       >
         {status === "loading" ? (
           <>
-            <Loader2 className="size-4 animate-spin" aria-hidden /> Enviando…
+            <Loader2 className="size-4 animate-spin" aria-hidden />{" "}
+            {pagoActivo ? "Redirigiendo a Mercado Pago…" : "Enviando…"}
+          </>
+        ) : pagoActivo ? (
+          <>
+            <CreditCard className="size-4" aria-hidden /> Pagar y reservar
           </>
         ) : (
           "Confirmar reserva"
         )}
       </Button>
 
-      {/* TODO (opcional): depósito 20–30% con Stripe antes de confirmar. */}
+      {pagoActivo && (
+        <p className="mt-3 text-center text-xs text-muted-foreground">
+          Pago seguro con Mercado Pago. Cancela hasta 72 h antes.
+        </p>
+      )}
     </form>
+  );
+}
+
+function PagoOpcion({
+  activo,
+  onClick,
+  titulo,
+  monto,
+  detalle,
+}: {
+  activo: boolean;
+  onClick: () => void;
+  titulo: string;
+  monto: string;
+  detalle: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={activo}
+      className={`rounded-xl border p-4 text-left transition-colors ${
+        activo
+          ? "border-primary bg-primary/5 ring-1 ring-primary"
+          : "border-border hover:border-primary/40"
+      }`}
+    >
+      <span className="block text-sm font-medium">{titulo}</span>
+      <span className="mt-1 block font-heading text-xl font-semibold text-primary">
+        {monto}
+      </span>
+      <span className="mt-0.5 block text-xs text-muted-foreground">{detalle}</span>
+    </button>
   );
 }

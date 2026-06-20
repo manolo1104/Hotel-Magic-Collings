@@ -6,6 +6,7 @@ import { es } from "date-fns/locale";
 import { CalendarX, Check, ShieldCheck, CreditCard, BadgeCheck } from "lucide-react";
 import { confianza, site } from "@/lib/site";
 import { getAvailability, formatMXN } from "@/lib/booking/engine";
+import { pagosActivos } from "@/lib/mp";
 import { BookingForm } from "@/components/booking/BookingForm";
 import { BookingSteps } from "@/components/booking/BookingSteps";
 import { Button } from "@/components/ui/button";
@@ -166,6 +167,8 @@ export default async function ReservarPage({ searchParams }: { searchParams: SP 
             checkinLabel={fmt(checkin)}
             checkoutLabel={fmt(checkout)}
             totalLabel={formatMXN(tipo.precioTotal)}
+            pagoActivo={pagosActivos()}
+            anticipoLabel={formatMXN(Math.round(tipo.precioTotal / 2))}
           />
         </Reveal>
       </div>
@@ -189,8 +192,9 @@ export default async function ReservarPage({ searchParams }: { searchParams: SP 
             </h2>
           </div>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            Aceptamos efectivo, tarjeta, transferencia y pago en OXXO. El pago se
-            realiza en el hotel.
+            {pagosActivos()
+              ? "Paga en línea de forma segura con Mercado Pago: el total o un 50% de anticipo. Si eliges anticipo, el saldo se paga en el hotel."
+              : "Aceptamos efectivo, tarjeta, transferencia y pago en OXXO. El pago se realiza en el hotel."}
           </p>
         </div>
         <div>

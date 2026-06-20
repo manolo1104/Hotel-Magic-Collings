@@ -4,10 +4,11 @@
 // inventario a Kora sustituyendo solo la fuente de datos (no la UI).
 // Patrón de lógica inspirado en mi-hotel/lib/booking.ts (referencia).
 // ============================================================
-import { and, eq, gt, lt, ne } from "drizzle-orm";
+import { and, eq, gt, lt, ne, or, isNull, sql, desc } from "drizzle-orm";
 import { db } from "../db";
 import { ensureDb } from "../db/ensure";
 import { roomTypes, rooms, bookings } from "../db/schema";
+import type { Booking } from "../db/schema";
 import type {
   AvailabilityParams,
   AvailabilityResult,
@@ -56,7 +57,13 @@ export function validateRange(p: AvailabilityParams): string | null {
 }
 
 // ── Disponibilidad ──────────────────────────────────────────
-/** IDs de cuartos físicos ocupados (booking que se traslapa, estado ≠ cancelada). */
+/**
+ * IDs de cuartos físicos ocupados por un booking que se traslapa con el rango.
+ * Cuenta como ocupado todo booking activo EXCEPTO los "holds" de pago vencidos:
+ * una reserva con `estado_pago = 'iniciado'` cuya `expira_en` ya pasó libera el
+ * cuarto automáticamente (el huésped empezó a pagar y abandonó). Así el
+ * inventario no se bloquea por checkouts no completados, sin necesidad de cron.
+ */
 async function occupiedRoomIds(checkin: string, checkout: string): Promise<Set<string>> {
   const rows = await db
     .select({ roomId: bookings.roomId })
@@ -64,8 +71,15 @@ async function occupiedRoomIds(checkin: string, checkout: string): Promise<Set<s
     .where(
       and(
         ne(bookings.estado, "cancelada"),
+        ne(bookings.estado, "expirada"),
         lt(bookings.checkin, checkout), // booking empieza antes del checkout buscado
         gt(bookings.checkout, checkin), // booking termina después del checkin buscado
+        // No contar holds de pago vencidos:
+        or(
+          ne(bookings.estadoPago, "iniciado"), // confirmada / WhatsApp / etc.
+          isNull(bookings.expiraEn),
+          gt(bookings.expiraEn, sql`now()`), // hold aún vigente
+        ),
       ),
     );
   return new Set(rows.map((r) => r.roomId));
@@ -170,6 +184,21 @@ export async function createBooking(
   const noches = calcNights(input.checkin, input.checkout);
   const total = tipo.tarifaBase * noches;
 
+  // Modalidad de pago: cuánto se cobra en línea ahora y el hold del cuarto.
+  //  · sin modalidad → reserva por WhatsApp (sin pago en línea)
+  //  · "total" → 100% ahora · "anticipo" → 50% ahora, resto en el hotel
+  const conPago =
+    input.modalidadPago === "total" || input.modalidadPago === "anticipo";
+  const montoACobrar = !conPago
+    ? null
+    : input.modalidadPago === "anticipo"
+      ? Math.round(total / 2)
+      : total;
+  const saldoPendiente = montoACobrar === null ? null : total - montoACobrar;
+  // Hold de 30 min mientras el huésped completa el pago en Mercado Pago.
+  const HOLD_MIN = 30;
+  const expiraEn = conPago ? new Date(Date.now() + HOLD_MIN * 60_000) : null;
+
   const [created] = await db
     .insert(bookings)
     .values({
@@ -182,10 +211,159 @@ export async function createBooking(
       email: input.email?.trim() || null,
       estado: "pendiente",
       total,
+      estadoPago: conPago ? "iniciado" : "no_iniciado",
+      modalidadPago: input.modalidadPago ?? null,
+      montoACobrar,
+      saldoPendiente,
+      expiraEn,
     })
     .returning({ id: bookings.id, estado: bookings.estado });
 
-  return { ok: true, id: created.id, estado: created.estado, total };
+  return {
+    ok: true,
+    id: created.id,
+    estado: created.estado,
+    total,
+    modalidadPago: input.modalidadPago,
+    montoACobrar: montoACobrar ?? undefined,
+    saldoPendiente: saldoPendiente ?? undefined,
+    nombreTipo: tipo.nombre,
+  };
+}
+
+/** Lee una reserva por id (para páginas de retorno y panel). */
+export async function getBookingById(id: string): Promise<Booking | null> {
+  await ensureDb();
+  const [b] = await db.select().from(bookings).where(eq(bookings.id, id)).limit(1);
+  return b ?? null;
+}
+
+export type BookingView = Booking & { nombreTipo: string; numeroCuarto: string };
+
+// UUID v4/genérico: evita golpear la BD (y un 500) con un ref de URL inválido.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Reserva enriquecida con nombre del tipo y número de cuarto. */
+export async function getBookingView(id: string): Promise<BookingView | null> {
+  if (!UUID_RE.test(id)) return null;
+  await ensureDb();
+  try {
+    const [b] = await db.select().from(bookings).where(eq(bookings.id, id)).limit(1);
+    if (!b) return null;
+    let nombreTipo = "Habitación";
+    let numeroCuarto = "—";
+    const [room] = await db.select().from(rooms).where(eq(rooms.id, b.roomId)).limit(1);
+    if (room) {
+      numeroCuarto = room.numero;
+      const [tipo] = await db
+        .select()
+        .from(roomTypes)
+        .where(eq(roomTypes.id, room.roomTypeId))
+        .limit(1);
+      if (tipo) nombreTipo = tipo.nombre;
+    }
+    return { ...b, nombreTipo, numeroCuarto };
+  } catch {
+    return null;
+  }
+}
+
+/** Asocia la preferencia de Mercado Pago a la reserva. */
+export async function setMpPreference(
+  bookingId: string,
+  preferenceId: string,
+): Promise<void> {
+  await db
+    .update(bookings)
+    .set({ mpPreferenceId: preferenceId })
+    .where(eq(bookings.id, bookingId));
+}
+
+/**
+ * Marca la reserva como pagada de forma IDEMPOTENTE. El UPDATE condicional
+ * (`estado_pago <> 'pagado'`) garantiza que solo UNA llamada efectúe la
+ * transición aunque Mercado Pago reintente o mande webhooks duplicados.
+ * `changed=true` ⇒ esta llamada confirmó el pago (dispara correos + Kora 1 vez).
+ */
+export async function confirmarPago(args: {
+  bookingId: string;
+  paymentId: string;
+  mpStatus: string;
+  montoPagado: number;
+}): Promise<{ changed: boolean; booking: Booking | null }> {
+  await ensureDb();
+  const [prev] = await db
+    .select()
+    .from(bookings)
+    .where(eq(bookings.id, args.bookingId))
+    .limit(1);
+  if (!prev) return { changed: false, booking: null };
+
+  const updated = await db
+    .update(bookings)
+    .set({
+      estado: "confirmada",
+      estadoPago: "pagado",
+      mpPaymentId: args.paymentId,
+      mpStatus: args.mpStatus,
+      montoPagado: args.montoPagado,
+      saldoPendiente: Math.max(0, prev.total - args.montoPagado),
+      pagadoEn: new Date(),
+    })
+    .where(and(eq(bookings.id, args.bookingId), ne(bookings.estadoPago, "pagado")))
+    .returning({ id: bookings.id });
+
+  const [fresh] = await db
+    .select()
+    .from(bookings)
+    .where(eq(bookings.id, args.bookingId))
+    .limit(1);
+  return { changed: updated.length > 0, booking: fresh ?? null };
+}
+
+/** Pago rechazado/cancelado → libera el cuarto (no toca reservas ya pagadas). */
+export async function marcarPagoRechazado(
+  bookingId: string,
+  paymentId: string | null,
+  mpStatus: string,
+): Promise<void> {
+  await ensureDb();
+  await db
+    .update(bookings)
+    .set({ estado: "cancelada", estadoPago: "rechazado", mpPaymentId: paymentId, mpStatus })
+    .where(and(eq(bookings.id, bookingId), ne(bookings.estadoPago, "pagado")));
+}
+
+/** Marca de idempotencia: correos enviados. */
+export async function marcarEmailsEnviados(bookingId: string): Promise<void> {
+  await db
+    .update(bookings)
+    .set({ emailsSentAt: new Date() })
+    .where(eq(bookings.id, bookingId));
+}
+
+/** Marca de idempotencia: reserva empujada a Kora. */
+export async function marcarKoraPushed(bookingId: string): Promise<void> {
+  await db
+    .update(bookings)
+    .set({ koraPushedAt: new Date() })
+    .where(eq(bookings.id, bookingId));
+}
+
+/** Lista de reservas (con cuarto y tipo) para el panel /admin. */
+export async function listBookings(): Promise<BookingView[]> {
+  await ensureDb();
+  const rows = await db
+    .select({ booking: bookings, numero: rooms.numero, nombreTipo: roomTypes.nombre })
+    .from(bookings)
+    .leftJoin(rooms, eq(bookings.roomId, rooms.id))
+    .leftJoin(roomTypes, eq(rooms.roomTypeId, roomTypes.id))
+    .orderBy(desc(bookings.createdAt));
+  return rows.map((r) => ({
+    ...r.booking,
+    numeroCuarto: r.numero ?? "—",
+    nombreTipo: r.nombreTipo ?? "—",
+  }));
 }
 
 // ── Lectura simple de tipos (para /habitaciones) ────────────

@@ -32,6 +32,10 @@ export interface AvailabilityResult {
   tipos: AvailableRoomType[];
 }
 
+// "total" = paga el 100% ahora · "anticipo" = paga el 50% ahora, resto en hotel
+// undefined = reserva sin pago en línea (flujo WhatsApp tradicional)
+export type ModalidadPago = "total" | "anticipo";
+
 export interface CreateBookingInput {
   slug: string; // tipo de habitación
   checkin: string;
@@ -40,6 +44,7 @@ export interface CreateBookingInput {
   nombre: string;
   whatsapp: string;
   email?: string;
+  modalidadPago?: ModalidadPago;
 }
 
 export interface CreateBookingResult {
@@ -48,4 +53,9 @@ export interface CreateBookingResult {
   id?: string;
   estado?: string;
   total?: number;
+  // Presentes cuando se reserva con pago en línea (modalidadPago definido)
+  modalidadPago?: ModalidadPago;
+  montoACobrar?: number; // MXN a cobrar ahora
+  saldoPendiente?: number; // MXN a pagar en el hotel
+  nombreTipo?: string; // nombre del tipo de habitación (para el cobro)
 }

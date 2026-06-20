@@ -37,8 +37,39 @@ const DDL = [
     email text,
     estado text NOT NULL DEFAULT 'pendiente',
     total integer NOT NULL,
+    estado_pago text NOT NULL DEFAULT 'no_iniciado',
+    modalidad_pago text,
+    monto_a_cobrar integer,
+    monto_pagado integer NOT NULL DEFAULT 0,
+    saldo_pendiente integer,
+    mp_preference_id text,
+    mp_payment_id text,
+    mp_status text,
+    pagado_en timestamp,
+    expira_en timestamp,
+    kora_pushed_at timestamp,
+    emails_sent_at timestamp,
     created_at timestamp NOT NULL DEFAULT now()
   )`,
+];
+
+// Migraciones idempotentes para BASES DE DATOS YA EXISTENTES (PGlite local o
+// Postgres en producción). `CREATE TABLE IF NOT EXISTS` no agrega columnas a una
+// tabla preexistente, así que añadimos las de pago con ADD COLUMN IF NOT EXISTS
+// (soportado por Postgres y PGlite). Inofensivo si ya existen.
+const MIGRATIONS = [
+  `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS estado_pago text NOT NULL DEFAULT 'no_iniciado'`,
+  `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS modalidad_pago text`,
+  `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS monto_a_cobrar integer`,
+  `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS monto_pagado integer NOT NULL DEFAULT 0`,
+  `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS saldo_pendiente integer`,
+  `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS mp_preference_id text`,
+  `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS mp_payment_id text`,
+  `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS mp_status text`,
+  `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS pagado_en timestamp`,
+  `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS expira_en timestamp`,
+  `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS kora_pushed_at timestamp`,
+  `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS emails_sent_at timestamp`,
 ];
 
 export async function seedRooms(): Promise<void> {
@@ -64,6 +95,9 @@ export async function seedRooms(): Promise<void> {
 
 async function init(): Promise<void> {
   for (const stmt of DDL) {
+    await db.execute(sql.raw(stmt));
+  }
+  for (const stmt of MIGRATIONS) {
     await db.execute(sql.raw(stmt));
   }
   const existing = await db

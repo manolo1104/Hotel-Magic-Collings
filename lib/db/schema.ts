@@ -46,8 +46,26 @@ export const bookings = pgTable("bookings", {
   nombre: text("nombre").notNull(),
   whatsapp: text("whatsapp").notNull(),
   email: text("email"),
-  estado: text("estado").notNull().default("pendiente"), // pendiente | confirmada | cancelada
-  total: integer("total").notNull(), // MXN
+  // pendiente | confirmada | cancelada | expirada
+  estado: text("estado").notNull().default("pendiente"),
+  total: integer("total").notNull(), // MXN (precio total de la estancia)
+
+  // ── Pago en línea (Mercado Pago) ───────────────────────────
+  // no_iniciado (reserva por WhatsApp) | iniciado (esperando pago) |
+  // pagado | rechazado | reembolsado | expirado
+  estadoPago: text("estado_pago").notNull().default("no_iniciado"),
+  modalidadPago: text("modalidad_pago"), // total | anticipo
+  montoACobrar: integer("monto_a_cobrar"), // MXN a cobrar en línea
+  montoPagado: integer("monto_pagado").notNull().default(0), // MXN acreditados
+  saldoPendiente: integer("saldo_pendiente"), // MXN a pagar en el hotel
+  mpPreferenceId: text("mp_preference_id"),
+  mpPaymentId: text("mp_payment_id"),
+  mpStatus: text("mp_status"), // status crudo de Mercado Pago
+  pagadoEn: timestamp("pagado_en"),
+  expiraEn: timestamp("expira_en"), // hold del cuarto mientras paga
+  koraPushedAt: timestamp("kora_pushed_at"), // idempotencia push a Kora
+  emailsSentAt: timestamp("emails_sent_at"), // idempotencia de correos
+
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
