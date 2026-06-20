@@ -1,44 +1,45 @@
 // ============================================================
-// IMÁGENES DE STOCK (provisionales) — Magic Collinn
-// TODO: reemplazar TODAS por fotos reales del hotel cuando estén.
-// Fuente: Unsplash (verificadas 200). Centralizadas aquí para
-// cambiarlas en un solo lugar.
+// IMÁGENES DEL HOTEL — Magic Collinn
+// Fotos REALES del hotel (jun 2026) en public/imagenes/.
+// next/image las optimiza en runtime a AVIF/WebP.
+// Las portadas de blog usan stock temático de turismo (Unsplash),
+// porque ilustran lugares de la Huasteca, no el hotel.
 // ============================================================
 
 const UNSPLASH = "https://images.unsplash.com";
 
-/** Construye una URL de Unsplash con ancho y calidad. */
+/** URL de Unsplash con ancho y calidad. Solo para portadas de blog (turismo). */
 export function img(id: string, w = 1200, q = 80): string {
   return `${UNSPLASH}/${id}?auto=format&fit=crop&w=${w}&q=${q}`;
 }
 
-// Fondo del hero (atmosférico, soporta overlay oscuro)
-export const heroImage = img("photo-1566073771259-6a8506099945", 2000, 75);
+// Fondo del hero: fachada del hotel con jardín y cielo abierto
+export const heroImage = "/imagenes/fachada-jardin.jpg";
 
-// Galerías por tipo de habitación (la 1ª es la portada)
+// Galerías por tipo de habitación (la 1ª es la portada en /habitaciones)
 export const sencillaFotos = [
-  img("photo-1611892440504-42a792e24d32"),
-  img("photo-1505693416388-ac5ce068fe85"),
-  img("photo-1551882547-ff40c63fe5fa"),
+  "/imagenes/sencilla-1.jpg",
+  "/imagenes/sencilla-2.jpg",
+  "/imagenes/sencilla-3.jpg",
 ];
 
 export const dobleFotos = [
-  img("photo-1582719478250-c89cae4dc85b"),
-  img("photo-1631049307264-da0ec9d70304"),
-  img("photo-1590490360182-c33d57733427"),
+  "/imagenes/doble-1.jpg",
+  "/imagenes/doble-2.jpg",
+  "/imagenes/doble-3.jpg",
 ];
 
-// Mosaico de galería breve (Inicio): mezcla de hotel + naturaleza Huasteca
+// Mosaico de galería del Inicio (6 fotos variadas: exteriores + habitaciones)
 export const galeria = [
-  img("photo-1564501049412-61c2a3083791", 900),
-  img("photo-1542314831-068cd1dbfeeb", 900), // bosque / Huasteca
-  img("photo-1571896349842-33c89424de2d", 900),
-  img("photo-1520250497591-112f2f40a3f4", 900),
-  img("photo-1455587734955-081b22074882", 900),
-  img("photo-1618773928121-c32242e63f39", 900),
+  "/imagenes/corredor-arcos.jpg",
+  "/imagenes/doble-2.jpg",
+  "/imagenes/sencilla-1.jpg",
+  "/imagenes/fachada-entrada.jpg",
+  "/imagenes/fachada-lateral.jpg",
+  "/imagenes/doble-5.jpg",
 ];
 
-// Portadas para los posts del blog (seed)
+// Portadas para los posts del blog (turismo Huasteca) — stock temático
 export const blogCovers = {
   "que-hacer-en-axtla-de-terrazas": img("photo-1542314831-068cd1dbfeeb", 1600),
   "como-llegar-a-axtla-de-terrazas": img("photo-1571003123894-1f0594d2b5d9", 1600),

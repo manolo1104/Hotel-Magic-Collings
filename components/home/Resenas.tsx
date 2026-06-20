@@ -1,31 +1,35 @@
-import { Star, ArrowRight } from "lucide-react";
+import { Star, StarHalf, ArrowRight } from "lucide-react";
 import { testimonios, site } from "@/lib/site";
 import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 
-function initials(name: string): string {
-  return name
-    .split(" ")
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
-}
-
 function Stars({ value }: { value: number }) {
   return (
     <span className="inline-flex gap-0.5" aria-label={`${value} de 5 estrellas`}>
-      {Array.from({ length: 5 }).map((_, i) => (
-        <Star
-          key={i}
-          className={
-            i < value
-              ? "size-4 fill-primary text-primary"
-              : "size-4 text-border"
-          }
-          aria-hidden
-        />
-      ))}
+      {Array.from({ length: 5 }).map((_, i) => {
+        const filled = i + 1 <= value;
+        const half = !filled && i + 0.5 <= value;
+        if (half) {
+          return (
+            <span key={i} className="relative inline-flex">
+              <Star className="size-4 text-border" aria-hidden />
+              <StarHalf
+                className="absolute inset-0 size-4 fill-primary text-primary"
+                aria-hidden
+              />
+            </span>
+          );
+        }
+        return (
+          <Star
+            key={i}
+            className={
+              filled ? "size-4 fill-primary text-primary" : "size-4 text-border"
+            }
+            aria-hidden
+          />
+        );
+      })}
     </span>
   );
 }
@@ -39,7 +43,7 @@ export function Resenas() {
             Lo que dicen nuestros huéspedes
           </h2>
           <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1">
-            <Stars value={5} />
+            <Stars value={Number(site.reviewsRating)} />
             <span className="text-sm text-muted-foreground">
               <strong className="text-foreground">{site.reviewsRating}</strong> de
               5 · {site.reviewsTotal} reseñas en{" "}
@@ -56,22 +60,17 @@ export function Resenas() {
         </Reveal>
 
         <Stagger className="mt-12 grid gap-x-10 gap-y-12 md:grid-cols-3">
-          {testimonios.map((t) => (
+          {testimonios.slice(0, 3).map((t) => (
             <StaggerItem key={t.nombre}>
               <figure className="border-t border-border pt-6">
                 <Stars value={t.rating} />
                 <blockquote className="mt-3 leading-relaxed text-foreground/85">
                   {t.texto}
                 </blockquote>
-                <figcaption className="mt-5 flex items-center gap-3">
-                  <span className="inline-flex size-10 items-center justify-center rounded-full bg-brand/10 text-sm font-semibold text-brand">
-                    {initials(t.nombre)}
-                  </span>
-                  <span>
-                    <span className="block text-sm font-medium">{t.nombre}</span>
-                    <span className="block text-xs text-muted-foreground">
-                      Reseña de Google · {t.fecha}
-                    </span>
+                <figcaption className="mt-5">
+                  <span className="block text-sm font-medium">{t.nombre}</span>
+                  <span className="block text-xs text-muted-foreground">
+                    Reseña de Google · {t.fecha}
                   </span>
                 </figcaption>
               </figure>

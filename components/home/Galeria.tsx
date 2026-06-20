@@ -8,12 +8,12 @@ type From = "bottom" | "left" | "right" | "top";
 
 // 6 imágenes, 6 celdas, con ritmo: 2 anchas (col-span-2) intercaladas.
 const tiles: { src: string; alt: string; wide: boolean; from: From }[] = [
-  { src: galeria[0], alt: "Habitación del Hotel Magic Collinn", wide: true, from: "left" },
-  { src: galeria[1], alt: "Naturaleza de la Huasteca Potosina", wide: false, from: "bottom" },
-  { src: galeria[2], alt: "Detalle del Hotel Magic Collinn", wide: false, from: "bottom" },
-  { src: galeria[3], alt: "Espacio común del hotel", wide: false, from: "bottom" },
-  { src: galeria[4], alt: "Entorno de Axtla de Terrazas", wide: true, from: "right" },
-  { src: galeria[5], alt: "Interior del Hotel Magic Collinn", wide: false, from: "bottom" },
+  { src: galeria[0], alt: "Corredor con arcos y plantas del Hotel Magic Collinn", wide: true, from: "left" },
+  { src: galeria[1], alt: "Habitación doble del Hotel Magic Collinn", wide: false, from: "bottom" },
+  { src: galeria[2], alt: "Habitación con cama matrimonial y climatización", wide: false, from: "bottom" },
+  { src: galeria[3], alt: "Entrada principal del Hotel Magic Collinn en Axtla de Terrazas", wide: false, from: "bottom" },
+  { src: galeria[4], alt: "Fachada y jardín del Hotel Magic Collinn", wide: true, from: "right" },
+  { src: galeria[5], alt: "Habitación amplia con sala de estar", wide: false, from: "bottom" },
 ];
 
 // Versión grande de cada foto para el lightbox

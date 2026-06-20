@@ -67,7 +67,7 @@ export function hotelEntity(): Record<string, unknown> {
       bestRating: "5",
       worstRating: "1",
     },
-    review: testimonios.slice(0, 6).map((t) => ({
+    review: testimonios.slice(0, 3).map((t) => ({
       "@type": "Review",
       author: { "@type": "Person", name: t.nombre },
       reviewRating: {

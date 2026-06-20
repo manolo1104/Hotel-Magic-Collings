@@ -19,27 +19,28 @@ export const site = {
 
   // ── Contacto ──────────────────────────────────────────────
   // WhatsApp en formato internacional sin signos (para wa.me)
-  whatsapp: "524800000000", // TODO: número real de WhatsApp
-  phone: "+52 480 000 0000", // TODO: teléfono real
+  whatsapp: "524811009939", // Confirmado por el dueño (mismo número de reservación)
+  phone: "+52 481 100 9939", // Confirmado por Google y sitio actual
   email: "reservas@hotelmagicollinn.com", // TODO: correo real
 
   // ── Ubicación ─────────────────────────────────────────────
   address: {
-    street: "Centro de Axtla de Terrazas", // TODO: calle y número exactos
+    street: "C. José María Morelos 14, Zona Centro", // Confirmado por Google
     locality: "Axtla de Terrazas",
     region: "San Luis Potosí",
-    postalCode: "79930", // TODO: confirmar C.P.
+    postalCode: "79932", // Confirmado por Google
     country: "MX",
   },
-  // Coordenadas para el mapa y Schema (TODO: coords exactas del hotel)
-  geo: { lat: 21.4347, lng: -98.8786 },
-  // URL de embed de Google Maps (TODO: pegar el src del iframe real)
-  mapEmbedSrc: "",
+  // Coordenadas sobre la calle José María Morelos, Zona Centro (geocodificado)
+  geo: { lat: 21.4381, lng: -98.8676 },
+  // Embed de Google Maps por nombre del negocio (Google centra el pin en el hotel real)
+  mapEmbedSrc:
+    "https://www.google.com/maps?q=Hotel+Magic+Collinn,+Axtla+de+Terrazas&z=16&hl=es&output=embed",
 
   // ── Operación ─────────────────────────────────────────────
-  checkIn: "15:00", // TODO: confirmar
-  checkOut: "12:00", // TODO: confirmar
-  petsAllowed: null as boolean | null, // TODO: definir política de mascotas
+  checkIn: "15:00", // Confirmado por el dueño
+  checkOut: "12:00", // Confirmado por el dueño
+  petsAllowed: false as boolean | null, // Confirmado: no se reciben mascotas
   rooms: 6,
   roomCategories: 2, // 6 habitaciones repartidas en 2 categorías (sencilla y doble)
   priceRange: "$$", // para Schema LodgingBusiness
@@ -51,8 +52,8 @@ export const site = {
 
   // ── Reseñas reales (Google) ───────────────────────────────
   googleReviewsUrl: "https://share.google/YkEaMJQmjkAdUKOqq",
-  reviewsRating: "5.0",
-  reviewsTotal: 8,
+  reviewsRating: "4.5", // Calificación real de Google (jun 2026)
+  reviewsTotal: 122, // Total real de opiniones en Google
 
   // ── Analytics ─────────────────────────────────────────────
   gaId: "", // TODO: GA_ID
@@ -105,11 +106,11 @@ export const faqs = [
   },
   {
     q: "¿A qué hora es el check-in y check-out?",
-    a: `El check-in es a partir de las ${site.checkIn} h y el check-out hasta las ${site.checkOut} h.`, // TODO: confirmar horarios
+    a: `El check-in es a partir de las ${site.checkIn} h y el check-out hasta las ${site.checkOut} h.`,
   },
   {
     q: "¿Aceptan mascotas?",
-    a: "Escríbenos por WhatsApp para confirmar la disponibilidad para tu mascota.", // TODO: definir política
+    a: "Por el momento no recibimos mascotas en el hotel. Si tienes alguna duda, escríbenos por WhatsApp con gusto.",
   },
   {
     q: "¿Cuál es la política de cancelación?",

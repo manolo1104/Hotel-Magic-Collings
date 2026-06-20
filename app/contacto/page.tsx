@@ -102,7 +102,8 @@ export default function ContactoPage() {
                 <span>
                   <span className="block text-sm font-medium">Dirección</span>
                   <span className="block text-xs text-muted-foreground">
-                    {site.address.street}, {site.address.locality}
+                    {site.address.street}, {site.address.locality},{" "}
+                    {site.address.region} {site.address.postalCode}
                   </span>
                 </span>
               </div>

@@ -6,7 +6,6 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { site } from "@/lib/site";
-import { heroImage } from "@/lib/images";
 
 // Cuerpo: sans humanista cálida (distinta de Inter).
 const sans = Hanken_Grotesk({
@@ -39,13 +38,13 @@ export const metadata: Metadata = {
     siteName: site.legalName,
     title: `${site.legalName} · Hotel boutique en ${site.locality}`,
     description,
-    images: [{ url: heroImage, width: 1200, height: 630, alt: site.legalName }],
+    // La imagen OG la genera app/opengraph-image.tsx (marca, 1200×630).
   },
   twitter: {
     card: "summary_large_image",
     title: `${site.legalName} · Hotel boutique en ${site.locality}`,
     description,
-    images: [heroImage],
+    // twitter:image también lo provee app/opengraph-image.tsx.
   },
 };
 

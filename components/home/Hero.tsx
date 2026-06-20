@@ -18,7 +18,7 @@ export function Hero() {
         <div className="kenburns absolute inset-0">
           <Photo
             src={heroImage}
-            alt="Fachada del Hotel Magic Collinn al atardecer, en el centro de Axtla de Terrazas"
+            alt="Fachada y jardín del Hotel Magic Collinn, en el centro de Axtla de Terrazas"
             fill
             priority
             sizes="100vw"
