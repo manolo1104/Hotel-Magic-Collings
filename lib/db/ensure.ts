@@ -49,6 +49,77 @@ const DDL = [
     expira_en timestamp,
     kora_pushed_at timestamp,
     emails_sent_at timestamp,
+    origen text NOT NULL DEFAULT 'web',
+    notas text NOT NULL DEFAULT '',
+    created_at timestamp NOT NULL DEFAULT now()
+  )`,
+  `CREATE TABLE IF NOT EXISTS quotes (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    cliente text NOT NULL,
+    telefono text NOT NULL,
+    email text,
+    room_type_id uuid REFERENCES room_types(id),
+    slug text,
+    checkin date NOT NULL,
+    checkout date NOT NULL,
+    huespedes integer NOT NULL DEFAULT 1,
+    noches integer NOT NULL,
+    precio_total integer NOT NULL,
+    notas text NOT NULL DEFAULT '',
+    estado text NOT NULL DEFAULT 'borrador',
+    booking_id uuid REFERENCES bookings(id),
+    created_at timestamp NOT NULL DEFAULT now()
+  )`,
+  `CREATE TABLE IF NOT EXISTS ota_channels (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    room_id uuid NOT NULL REFERENCES rooms(id),
+    platform text NOT NULL DEFAULT 'booking',
+    ical_url text NOT NULL,
+    activo boolean NOT NULL DEFAULT true,
+    last_sync timestamp,
+    last_status text DEFAULT 'pending',
+    blocks_found integer NOT NULL DEFAULT 0,
+    created_at timestamp NOT NULL DEFAULT now()
+  )`,
+  `CREATE TABLE IF NOT EXISTS blocks (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    room_id uuid NOT NULL REFERENCES rooms(id),
+    checkin date NOT NULL,
+    checkout date NOT NULL,
+    motivo text NOT NULL DEFAULT 'manual',
+    origen text,
+    ota_channel_id uuid REFERENCES ota_channels(id),
+    uid text,
+    nota text NOT NULL DEFAULT '',
+    created_at timestamp NOT NULL DEFAULT now()
+  )`,
+  `CREATE TABLE IF NOT EXISTS guest_notes (
+    email text PRIMARY KEY,
+    notas text NOT NULL DEFAULT '',
+    updated_at timestamp NOT NULL DEFAULT now()
+  )`,
+  `CREATE TABLE IF NOT EXISTS cleaning_log (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    room_id uuid NOT NULL REFERENCES rooms(id),
+    fecha date NOT NULL,
+    turno text NOT NULL DEFAULT 'manana',
+    personal text NOT NULL DEFAULT '',
+    items_completados text[] NOT NULL DEFAULT '{}',
+    items_pendientes text[] NOT NULL DEFAULT '{}',
+    observaciones text NOT NULL DEFAULT '',
+    estado text NOT NULL DEFAULT 'en_proceso',
+    completado_en timestamp,
+    created_at timestamp NOT NULL DEFAULT now()
+  )`,
+  `CREATE TABLE IF NOT EXISTS maintenance_tasks (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    ambito text NOT NULL,
+    tarea text NOT NULL,
+    frecuencia_dias integer NOT NULL DEFAULT 30,
+    ultima_vez date,
+    proxima_vez date,
+    notas text NOT NULL DEFAULT '',
+    responsable text NOT NULL DEFAULT '',
     created_at timestamp NOT NULL DEFAULT now()
   )`,
 ];
@@ -70,6 +141,8 @@ const MIGRATIONS = [
   `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS expira_en timestamp`,
   `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS kora_pushed_at timestamp`,
   `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS emails_sent_at timestamp`,
+  `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS origen text NOT NULL DEFAULT 'web'`,
+  `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS notas text NOT NULL DEFAULT ''`,
 ];
 
 export async function seedRooms(): Promise<void> {

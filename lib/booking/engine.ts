@@ -7,7 +7,7 @@
 import { and, eq, gt, lt, ne, or, isNull, sql, desc } from "drizzle-orm";
 import { db } from "../db";
 import { ensureDb } from "../db/ensure";
-import { roomTypes, rooms, bookings } from "../db/schema";
+import { roomTypes, rooms, bookings, blocks } from "../db/schema";
 import type { Booking } from "../db/schema";
 import type {
   AvailabilityParams,
@@ -64,25 +64,37 @@ export function validateRange(p: AvailabilityParams): string | null {
  * cuarto automáticamente (el huésped empezó a pagar y abandonó). Así el
  * inventario no se bloquea por checkouts no completados, sin necesidad de cron.
  */
-async function occupiedRoomIds(checkin: string, checkout: string): Promise<Set<string>> {
-  const rows = await db
-    .select({ roomId: bookings.roomId })
-    .from(bookings)
-    .where(
-      and(
-        ne(bookings.estado, "cancelada"),
-        ne(bookings.estado, "expirada"),
-        lt(bookings.checkin, checkout), // booking empieza antes del checkout buscado
-        gt(bookings.checkout, checkin), // booking termina después del checkin buscado
-        // No contar holds de pago vencidos:
-        or(
-          ne(bookings.estadoPago, "iniciado"), // confirmada / WhatsApp / etc.
-          isNull(bookings.expiraEn),
-          gt(bookings.expiraEn, sql`now()`), // hold aún vigente
+export async function occupiedRoomIds(
+  checkin: string,
+  checkout: string,
+): Promise<Set<string>> {
+  const [bookingRows, blockRows] = await Promise.all([
+    db
+      .select({ roomId: bookings.roomId })
+      .from(bookings)
+      .where(
+        and(
+          ne(bookings.estado, "cancelada"),
+          ne(bookings.estado, "expirada"),
+          lt(bookings.checkin, checkout), // booking empieza antes del checkout buscado
+          gt(bookings.checkout, checkin), // booking termina después del checkin buscado
+          // No contar holds de pago vencidos:
+          or(
+            ne(bookings.estadoPago, "iniciado"), // confirmada / WhatsApp / etc.
+            isNull(bookings.expiraEn),
+            gt(bookings.expiraEn, sql`now()`), // hold aún vigente
+          ),
         ),
       ),
-    );
-  return new Set(rows.map((r) => r.roomId));
+    // Bloqueos manuales / mantenimiento / OTA que traslapan el rango
+    db
+      .select({ roomId: blocks.roomId })
+      .from(blocks)
+      .where(and(lt(blocks.checkin, checkout), gt(blocks.checkout, checkin))),
+  ]);
+  const set = new Set(bookingRows.map((r) => r.roomId));
+  for (const r of blockRows) set.add(r.roomId);
+  return set;
 }
 
 export async function getAvailability(
@@ -364,6 +376,143 @@ export async function listBookings(): Promise<BookingView[]> {
     numeroCuarto: r.numero ?? "—",
     nombreTipo: r.nombreTipo ?? "—",
   }));
+}
+
+/** Crea una reserva MANUAL desde el panel (confirmada, sin hold de pago). */
+export async function createManualBooking(input: {
+  slug: string;
+  checkin: string;
+  checkout: string;
+  huespedes: number;
+  nombre: string;
+  whatsapp: string;
+  email?: string;
+  total?: number; // override del precio (si no, tarifa × noches)
+  montoPagado?: number; // anticipo/pago en efectivo ya registrado
+  notas?: string;
+  origen?: string; // manual (default) | whatsapp | booking | expedia
+}): Promise<CreateBookingResult> {
+  const huespedes = Math.floor(Number(input.huespedes));
+  const error = validateRange({
+    checkin: input.checkin,
+    checkout: input.checkout,
+    huespedes,
+  });
+  if (error) return { ok: false, error };
+  if (!input.nombre?.trim()) return { ok: false, error: "Escribe el nombre del huésped." };
+  if (!input.whatsapp?.trim())
+    return { ok: false, error: "Escribe el WhatsApp o teléfono del huésped." };
+
+  await ensureDb();
+  const [tipo] = await db
+    .select()
+    .from(roomTypes)
+    .where(eq(roomTypes.slug, input.slug))
+    .limit(1);
+  if (!tipo) return { ok: false, error: "Tipo de habitación no encontrado." };
+  if (tipo.capacidad < huespedes)
+    return { ok: false, error: "Ese tipo de habitación no admite tantos huéspedes." };
+
+  const typeRooms = await db
+    .select()
+    .from(rooms)
+    .where(and(eq(rooms.roomTypeId, tipo.id), eq(rooms.activa, true)));
+  const occupied = await occupiedRoomIds(input.checkin, input.checkout);
+  const free = typeRooms.find((r) => !occupied.has(r.id));
+  if (!free)
+    return { ok: false, error: "No hay cuartos libres de ese tipo en esas fechas." };
+
+  const noches = calcNights(input.checkin, input.checkout);
+  const total =
+    input.total != null && input.total >= 0
+      ? Math.round(input.total)
+      : tipo.tarifaBase * noches;
+  const montoPagado =
+    input.montoPagado != null && input.montoPagado > 0
+      ? Math.round(input.montoPagado)
+      : 0;
+
+  const [created] = await db
+    .insert(bookings)
+    .values({
+      roomId: free.id,
+      checkin: input.checkin,
+      checkout: input.checkout,
+      huespedes,
+      nombre: input.nombre.trim(),
+      whatsapp: input.whatsapp.trim(),
+      email: input.email?.trim() || null,
+      estado: "confirmada",
+      total,
+      estadoPago: montoPagado > 0 && montoPagado >= total ? "pagado" : "no_iniciado",
+      montoPagado,
+      saldoPendiente: Math.max(0, total - montoPagado),
+      origen: input.origen?.trim() || "manual",
+      notas: input.notas?.trim() || "",
+    })
+    .returning({ id: bookings.id });
+
+  return { ok: true, id: created.id, estado: "confirmada", total };
+}
+
+/** Actualiza los campos editables de una reserva desde el panel. */
+export async function updateBooking(
+  id: string,
+  changes: {
+    nombre?: string;
+    whatsapp?: string;
+    email?: string | null;
+    checkin?: string;
+    checkout?: string;
+    huespedes?: number;
+    total?: number;
+    montoPagado?: number;
+    estado?: string;
+    notas?: string;
+  },
+): Promise<{ ok: boolean; error?: string }> {
+  await ensureDb();
+  const [b] = await db.select().from(bookings).where(eq(bookings.id, id)).limit(1);
+  if (!b) return { ok: false, error: "Reserva no encontrada." };
+
+  const checkin = changes.checkin ?? b.checkin;
+  const checkout = changes.checkout ?? b.checkout;
+  if ((changes.checkin || changes.checkout) && calcNights(checkin, checkout) < 1)
+    return { ok: false, error: "La salida debe ser posterior a la llegada." };
+
+  const total = changes.total != null ? Math.round(changes.total) : b.total;
+  const montoPagado =
+    changes.montoPagado != null ? Math.round(changes.montoPagado) : b.montoPagado;
+
+  const set: Partial<typeof bookings.$inferInsert> = {
+    total,
+    montoPagado,
+    saldoPendiente: Math.max(0, total - montoPagado),
+  };
+  if (changes.nombre != null) set.nombre = changes.nombre.trim();
+  if (changes.whatsapp != null) set.whatsapp = changes.whatsapp.trim();
+  if (changes.email !== undefined)
+    set.email = changes.email ? String(changes.email).trim() : null;
+  if (changes.checkin) set.checkin = checkin;
+  if (changes.checkout) set.checkout = checkout;
+  if (changes.huespedes != null) set.huespedes = Math.floor(changes.huespedes);
+  if (changes.estado) set.estado = changes.estado;
+  if (changes.notas != null) set.notas = changes.notas.trim();
+
+  await db.update(bookings).set(set).where(eq(bookings.id, id));
+  return { ok: true };
+}
+
+/** Cancela una reserva (libera el cuarto automáticamente; no borra la fila). */
+export async function cancelBooking(id: string): Promise<{ ok: boolean; error?: string }> {
+  await ensureDb();
+  const res = await db
+    .update(bookings)
+    .set({ estado: "cancelada" })
+    .where(eq(bookings.id, id))
+    .returning({ id: bookings.id });
+  if (res.length === 0) return { ok: false, error: "Reserva no encontrada." };
+  return { ok: true };
 }
 
 // ── Lectura simple de tipos (para /habitaciones) ────────────
