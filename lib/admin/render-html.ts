@@ -5,7 +5,7 @@
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { site } from "@/lib/site";
-import type { BookingView } from "@/lib/booking/engine";
+import type { BookingView, QuoteView } from "@/lib/booking/engine";
 
 function mxn(n: number): string {
   return `$${Math.round(n ?? 0).toLocaleString("es-MX")} MXN`;
@@ -71,4 +71,22 @@ export function bookingHtml(b: BookingView, opts?: { forPrint?: boolean }): stri
 ${b.notas ? `<p style="font-size:13px;color:#6b6b63;margin-top:8px"><strong>Notas:</strong> ${b.notas}</p>` : ""}
 <p style="font-size:13px;color:#6b6b63;margin-top:14px">${site.cancelacion}</p>`;
   return doc(`Reserva ${ref}`, inner, opts?.forPrint);
+}
+
+export function quoteHtml(q: QuoteView, opts?: { forPrint?: boolean }): string {
+  const ref = q.id.slice(0, 8).toUpperCase();
+  const inner = `
+<div class="chip">COTIZACIÓN</div>
+<h2 style="margin:14px 0 2px;font-size:22px">${q.cliente}</h2>
+<p style="margin:0;color:#6b6b63;font-size:13px">Cotización ${ref} · ${q.nombreTipo}</p>
+<table>
+  <tr><td class="k">Llegada</td><td class="v">${fmt(q.checkin)}</td></tr>
+  <tr><td class="k">Salida</td><td class="v">${fmt(q.checkout)}</td></tr>
+  <tr><td class="k">Noches</td><td class="v">${q.noches}</td></tr>
+  <tr><td class="k">Huéspedes</td><td class="v">${q.huespedes}</td></tr>
+  <tr class="tot"><td>Precio total</td><td class="v">${mxn(q.precioTotal)}</td></tr>
+</table>
+${q.notas ? `<p style="font-size:13px;color:#6b6b63;margin-top:8px">${q.notas}</p>` : ""}
+<p style="font-size:13px;color:#6b6b63;margin-top:14px">Para confirmar tu reserva, escríbenos por WhatsApp al ${site.phone}. ${site.cancelacion}</p>`;
+  return doc(`Cotización ${ref}`, inner, opts?.forPrint);
 }

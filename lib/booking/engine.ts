@@ -7,8 +7,8 @@
 import { and, eq, gt, lt, ne, or, isNull, sql, desc } from "drizzle-orm";
 import { db } from "../db";
 import { ensureDb } from "../db/ensure";
-import { roomTypes, rooms, bookings, blocks, guestNotes } from "../db/schema";
-import type { Booking } from "../db/schema";
+import { roomTypes, rooms, bookings, blocks, guestNotes, quotes } from "../db/schema";
+import type { Booking, Quote } from "../db/schema";
 import type {
   AvailabilityParams,
   AvailabilityResult,
@@ -726,6 +726,149 @@ export async function saveGuestNote(email: string, notas: string): Promise<void>
       target: guestNotes.email,
       set: { notas, updatedAt: new Date() },
     });
+}
+
+// ── Cotizaciones ────────────────────────────────────────────
+export type QuoteView = Quote & { nombreTipo: string };
+
+export async function listQuotes(): Promise<QuoteView[]> {
+  await ensureDb();
+  const rows = await db
+    .select({ q: quotes, tipo: roomTypes.nombre })
+    .from(quotes)
+    .leftJoin(roomTypes, eq(quotes.roomTypeId, roomTypes.id))
+    .orderBy(desc(quotes.createdAt));
+  return rows.map((r) => ({ ...r.q, nombreTipo: r.tipo ?? r.q.slug ?? "—" }));
+}
+
+export async function getQuote(id: string): Promise<QuoteView | null> {
+  if (!UUID_RE.test(id)) return null;
+  await ensureDb();
+  const [r] = await db
+    .select({ q: quotes, tipo: roomTypes.nombre })
+    .from(quotes)
+    .leftJoin(roomTypes, eq(quotes.roomTypeId, roomTypes.id))
+    .where(eq(quotes.id, id))
+    .limit(1);
+  return r ? { ...r.q, nombreTipo: r.tipo ?? r.q.slug ?? "—" } : null;
+}
+
+export async function createQuote(input: {
+  cliente: string;
+  telefono: string;
+  email?: string;
+  slug: string;
+  checkin: string;
+  checkout: string;
+  huespedes: number;
+  precioTotal?: number;
+  notas?: string;
+}): Promise<{ ok: boolean; id?: string; error?: string }> {
+  if (!input.cliente?.trim()) return { ok: false, error: "Escribe el nombre del cliente." };
+  if (calcNights(input.checkin, input.checkout) < 1)
+    return { ok: false, error: "Las fechas no son válidas." };
+  await ensureDb();
+  const [tipo] = await db
+    .select()
+    .from(roomTypes)
+    .where(eq(roomTypes.slug, input.slug))
+    .limit(1);
+  const noches = calcNights(input.checkin, input.checkout);
+  const precioTotal =
+    input.precioTotal != null && input.precioTotal >= 0
+      ? Math.round(input.precioTotal)
+      : (tipo?.tarifaBase ?? 0) * noches;
+  const [created] = await db
+    .insert(quotes)
+    .values({
+      cliente: input.cliente.trim(),
+      telefono: input.telefono.trim(),
+      email: input.email?.trim() || null,
+      roomTypeId: tipo?.id ?? null,
+      slug: tipo?.nombre ?? input.slug,
+      checkin: input.checkin,
+      checkout: input.checkout,
+      huespedes: Math.floor(input.huespedes) || 1,
+      noches,
+      precioTotal,
+      notas: input.notas?.trim() || "",
+      estado: "borrador",
+    })
+    .returning({ id: quotes.id });
+  return { ok: true, id: created.id };
+}
+
+export async function updateQuote(
+  id: string,
+  changes: {
+    cliente?: string;
+    telefono?: string;
+    email?: string | null;
+    checkin?: string;
+    checkout?: string;
+    huespedes?: number;
+    precioTotal?: number;
+    notas?: string;
+    estado?: string;
+  },
+): Promise<{ ok: boolean; error?: string }> {
+  await ensureDb();
+  const [q] = await db.select().from(quotes).where(eq(quotes.id, id)).limit(1);
+  if (!q) return { ok: false, error: "Cotización no encontrada." };
+  const checkin = changes.checkin ?? q.checkin;
+  const checkout = changes.checkout ?? q.checkout;
+  const set: Partial<typeof quotes.$inferInsert> = {};
+  if (changes.cliente != null) set.cliente = changes.cliente.trim();
+  if (changes.telefono != null) set.telefono = changes.telefono.trim();
+  if (changes.email !== undefined)
+    set.email = changes.email ? String(changes.email).trim() : null;
+  if (changes.checkin || changes.checkout) {
+    if (calcNights(checkin, checkout) < 1)
+      return { ok: false, error: "Las fechas no son válidas." };
+    set.checkin = checkin;
+    set.checkout = checkout;
+    set.noches = calcNights(checkin, checkout);
+  }
+  if (changes.huespedes != null) set.huespedes = Math.floor(changes.huespedes);
+  if (changes.precioTotal != null) set.precioTotal = Math.round(changes.precioTotal);
+  if (changes.notas != null) set.notas = changes.notas.trim();
+  if (changes.estado) set.estado = changes.estado;
+  await db.update(quotes).set(set).where(eq(quotes.id, id));
+  return { ok: true };
+}
+
+/** Convierte una cotización en reserva (idempotente vía quotes.bookingId). */
+export async function convertQuoteToBooking(
+  id: string,
+): Promise<{ ok: boolean; bookingId?: string; error?: string }> {
+  await ensureDb();
+  const [q] = await db.select().from(quotes).where(eq(quotes.id, id)).limit(1);
+  if (!q) return { ok: false, error: "Cotización no encontrada." };
+  if (q.bookingId) return { ok: true, bookingId: q.bookingId };
+
+  const [tipo] = q.roomTypeId
+    ? await db.select().from(roomTypes).where(eq(roomTypes.id, q.roomTypeId)).limit(1)
+    : [];
+  if (!tipo) return { ok: false, error: "La cotización no tiene un tipo de habitación válido." };
+
+  const result = await createManualBooking({
+    slug: tipo.slug,
+    checkin: q.checkin,
+    checkout: q.checkout,
+    huespedes: q.huespedes,
+    nombre: q.cliente,
+    whatsapp: q.telefono,
+    email: q.email ?? undefined,
+    total: q.precioTotal,
+    notas: q.notas,
+    origen: "manual",
+  });
+  if (!result.ok || !result.id) return { ok: false, error: result.error };
+  await db
+    .update(quotes)
+    .set({ estado: "aceptada", bookingId: result.id })
+    .where(eq(quotes.id, id));
+  return { ok: true, bookingId: result.id };
 }
 
 // ── Lectura simple de tipos (para /habitaciones) ────────────
