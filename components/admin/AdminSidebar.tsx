@@ -21,8 +21,8 @@ const NAV = [
   { href: "/admin", label: "Reservas", icon: BookOpen, ready: true },
   { href: "/admin/calendario", label: "Calendario", icon: Calendar, ready: true },
   { href: "/admin/cotizaciones", label: "Cotizaciones", icon: FileText, ready: false },
-  { href: "/admin/ingresos", label: "Ingresos", icon: TrendingUp, ready: false },
-  { href: "/admin/clientes", label: "Clientes", icon: Users, ready: false },
+  { href: "/admin/ingresos", label: "Ingresos", icon: TrendingUp, ready: true },
+  { href: "/admin/clientes", label: "Clientes", icon: Users, ready: true },
   { href: "/admin/operaciones", label: "Operaciones", icon: ClipboardCheck, ready: false },
   { href: "/admin/canales", label: "Canales", icon: Globe2, ready: false },
 ];

@@ -7,7 +7,7 @@
 import { and, eq, gt, lt, ne, or, isNull, sql, desc } from "drizzle-orm";
 import { db } from "../db";
 import { ensureDb } from "../db/ensure";
-import { roomTypes, rooms, bookings, blocks } from "../db/schema";
+import { roomTypes, rooms, bookings, blocks, guestNotes } from "../db/schema";
 import type { Booking } from "../db/schema";
 import type {
   AvailabilityParams,
@@ -362,6 +362,13 @@ export async function marcarKoraPushed(bookingId: string): Promise<void> {
     .where(eq(bookings.id, bookingId));
 }
 
+/** Número de cuartos físicos activos (para ocupación/RevPAR). */
+export async function countActiveRooms(): Promise<number> {
+  await ensureDb();
+  const rows = await db.select({ id: rooms.id }).from(rooms).where(eq(rooms.activa, true));
+  return rows.length;
+}
+
 /** Lista de reservas (con cuarto y tipo) para el panel /admin. */
 export async function listBookings(): Promise<BookingView[]> {
   await ensureDb();
@@ -695,6 +702,30 @@ export async function unblock(id: string): Promise<{ ok: boolean; error?: string
   if (res.length === 0)
     return { ok: false, error: "Bloqueo no encontrado o pertenece a un canal OTA." };
   return { ok: true };
+}
+
+// ── Notas CRM por huésped ───────────────────────────────────
+/** Mapa email → notas (para construir el CRM). */
+export async function getGuestNotes(): Promise<Record<string, string>> {
+  await ensureDb();
+  const rows = await db.select().from(guestNotes);
+  const map: Record<string, string> = {};
+  for (const r of rows) map[r.email] = r.notas;
+  return map;
+}
+
+/** Guarda/actualiza las notas de un huésped (upsert por email). */
+export async function saveGuestNote(email: string, notas: string): Promise<void> {
+  await ensureDb();
+  const key = email.toLowerCase().trim();
+  if (!key) return;
+  await db
+    .insert(guestNotes)
+    .values({ email: key, notas, updatedAt: new Date() })
+    .onConflictDoUpdate({
+      target: guestNotes.email,
+      set: { notas, updatedAt: new Date() },
+    });
 }
 
 // ── Lectura simple de tipos (para /habitaciones) ────────────
