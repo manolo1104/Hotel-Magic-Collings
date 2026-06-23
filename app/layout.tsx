@@ -2,9 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Hanken_Grotesk } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
-import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { WhatsAppFloat } from "@/components/WhatsAppFloat";
+import { PublicShell } from "@/components/layout/PublicShell";
 import { site } from "@/lib/site";
 
 // Cuerpo: sans humanista cálida (distinta de Inter).
@@ -72,12 +71,7 @@ export default function RootLayout({
         >
           Saltar al contenido
         </a>
-        <Navbar />
-        <main id="contenido" className="flex flex-1 flex-col">
-          {children}
-        </main>
-        <Footer />
-        <WhatsAppFloat />
+        <PublicShell footer={<Footer />}>{children}</PublicShell>
 
         {site.gaId ? (
           <>

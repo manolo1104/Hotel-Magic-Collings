@@ -137,9 +137,27 @@ export function CanalesClient({
           <h2 className="flex items-center gap-2 font-heading text-lg font-semibold">
             <Plus className="size-4 text-brand" /> Conectar canal
           </h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            En Booking/Expedia, copia el enlace iCal de exportación del calendario de tu habitación.
-          </p>
+          <details className="mt-2 text-xs text-muted-foreground">
+            <summary className="cursor-pointer font-medium text-foreground">
+              ¿Cómo obtengo el enlace de Booking.com?
+            </summary>
+            <ol className="mt-2 list-decimal space-y-1 pl-4">
+              <li>Entra a tu <strong>Extranet de Booking.com</strong>.</li>
+              <li>
+                Menú <strong>Tarifas y disponibilidad → Sincronizar calendarios</strong>{" "}
+                (Calendar sync).
+              </li>
+              <li>
+                En <strong>Exportar calendario</strong>, copia la URL{" "}
+                <code>.ics</code> de cada habitación.
+              </li>
+              <li>Pégala abajo y elige el cuarto que le corresponde.</li>
+            </ol>
+            <p className="mt-2">
+              Repite por cada habitación que tengas en Booking. La sincronización
+              corre sola cada 6 horas; también puedes pulsar “Sincronizar ahora”.
+            </p>
+          </details>
           <div className="mt-4 grid gap-3">
             <div className="grid gap-1.5">
               <Label htmlFor="c-room">Cuarto</Label>

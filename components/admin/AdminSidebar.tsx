@@ -11,6 +11,7 @@ import {
   Users,
   ClipboardCheck,
   Globe2,
+  Leaf,
   Menu,
   X,
 } from "lucide-react";
@@ -103,9 +104,18 @@ export function AdminSidebar() {
         }`}
       >
         <div className="flex h-full flex-col">
-          <div className="hidden items-center gap-2 border-b border-border px-5 py-4 lg:flex">
-            <span className="font-heading text-lg font-semibold">Magic Collinn</span>
-          </div>
+          <Link
+            href="/admin"
+            className="hidden items-center gap-2.5 border-b border-border px-5 py-5 lg:flex"
+          >
+            <span className="inline-flex size-9 items-center justify-center rounded-xl bg-brand text-brand-foreground">
+              <Leaf className="size-5 text-support" strokeWidth={1.75} aria-hidden />
+            </span>
+            <span className="leading-tight">
+              <span className="block font-heading text-lg font-semibold">Magic Collinn</span>
+              <span className="block text-xs text-muted-foreground">Panel del hotel</span>
+            </span>
+          </Link>
           <div className="flex items-center justify-between border-b border-border px-4 py-3 lg:hidden">
             <span className="font-heading font-semibold">Menú</span>
             <button onClick={() => setOpen(false)} aria-label="Cerrar">
