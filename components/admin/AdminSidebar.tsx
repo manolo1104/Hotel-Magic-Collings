@@ -19,7 +19,7 @@ import { LogoutButton } from "./LogoutButton";
 // `ready: false` = sección aún no construida (se activa fase por fase).
 const NAV = [
   { href: "/admin", label: "Reservas", icon: BookOpen, ready: true },
-  { href: "/admin/calendario", label: "Calendario", icon: Calendar, ready: false },
+  { href: "/admin/calendario", label: "Calendario", icon: Calendar, ready: true },
   { href: "/admin/cotizaciones", label: "Cotizaciones", icon: FileText, ready: false },
   { href: "/admin/ingresos", label: "Ingresos", icon: TrendingUp, ready: false },
   { href: "/admin/clientes", label: "Clientes", icon: Users, ready: false },

@@ -515,6 +515,188 @@ export async function cancelBooking(id: string): Promise<{ ok: boolean; error?: 
   return { ok: true };
 }
 
+// ── Calendario y bloqueos ───────────────────────────────────
+function pad2(n: number): string {
+  return n < 10 ? `0${n}` : String(n);
+}
+
+export type DayStatus = "libre" | "reservada" | "bloqueada";
+export interface CalendarData {
+  year: number;
+  month: number; // 1-12
+  days: string[];
+  rooms: { id: string; numero: string; tipo: string }[];
+  grid: Record<string, Record<string, DayStatus>>;
+  bloqueos: {
+    id: string;
+    roomId: string;
+    checkin: string;
+    checkout: string;
+    motivo: string;
+    nota: string;
+  }[];
+}
+
+/** Estado (libre/reservada/bloqueada) de cada cuarto × día del mes. */
+export async function getCalendarMonth(
+  year: number,
+  month: number,
+): Promise<CalendarData> {
+  await ensureDb();
+  const lastDay = new Date(year, month, 0).getDate();
+  const first = `${year}-${pad2(month)}-01`;
+  const afterLast =
+    month === 12 ? `${year + 1}-01-01` : `${year}-${pad2(month + 1)}-01`;
+  const days: string[] = [];
+  for (let d = 1; d <= lastDay; d++) days.push(`${year}-${pad2(month)}-${pad2(d)}`);
+
+  const [roomsRows, bookingRows, blockRows] = await Promise.all([
+    db
+      .select({ id: rooms.id, numero: rooms.numero, tipo: roomTypes.nombre })
+      .from(rooms)
+      .leftJoin(roomTypes, eq(rooms.roomTypeId, roomTypes.id))
+      .where(eq(rooms.activa, true)),
+    db
+      .select({
+        roomId: bookings.roomId,
+        checkin: bookings.checkin,
+        checkout: bookings.checkout,
+      })
+      .from(bookings)
+      .where(
+        and(
+          ne(bookings.estado, "cancelada"),
+          ne(bookings.estado, "expirada"),
+          lt(bookings.checkin, afterLast),
+          gt(bookings.checkout, first),
+          or(
+            ne(bookings.estadoPago, "iniciado"),
+            isNull(bookings.expiraEn),
+            gt(bookings.expiraEn, sql`now()`),
+          ),
+        ),
+      ),
+    db
+      .select()
+      .from(blocks)
+      .where(and(lt(blocks.checkin, afterLast), gt(blocks.checkout, first))),
+  ]);
+
+  const grid: CalendarData["grid"] = {};
+  for (const r of roomsRows) {
+    grid[r.id] = {};
+    for (const day of days) grid[r.id][day] = "libre";
+  }
+  for (const bk of bookingRows) {
+    const g = grid[bk.roomId];
+    if (!g) continue;
+    for (const day of days)
+      if (day >= bk.checkin && day < bk.checkout) g[day] = "reservada";
+  }
+  for (const bl of blockRows) {
+    const g = grid[bl.roomId];
+    if (!g) continue;
+    for (const day of days)
+      if (day >= bl.checkin && day < bl.checkout && g[day] === "libre")
+        g[day] = "bloqueada";
+  }
+
+  return {
+    year,
+    month,
+    days,
+    rooms: roomsRows.map((r) => ({
+      id: r.id,
+      numero: r.numero,
+      tipo: r.tipo ?? "—",
+    })),
+    grid,
+    bloqueos: blockRows.map((b) => ({
+      id: b.id,
+      roomId: b.roomId,
+      checkin: b.checkin,
+      checkout: b.checkout,
+      motivo: b.motivo,
+      nota: b.nota,
+    })),
+  };
+}
+
+export interface GanttBooking {
+  roomId: string;
+  numero: string;
+  nombre: string;
+  checkin: string;
+  checkout: string;
+  estado: string;
+}
+
+/** Reservas activas que traslapan [from, to) para la línea de tiempo. */
+export async function getGanttBookings(
+  from: string,
+  to: string,
+): Promise<GanttBooking[]> {
+  await ensureDb();
+  const rows = await db
+    .select({
+      roomId: bookings.roomId,
+      numero: rooms.numero,
+      nombre: bookings.nombre,
+      checkin: bookings.checkin,
+      checkout: bookings.checkout,
+      estado: bookings.estado,
+    })
+    .from(bookings)
+    .leftJoin(rooms, eq(bookings.roomId, rooms.id))
+    .where(
+      and(
+        ne(bookings.estado, "cancelada"),
+        ne(bookings.estado, "expirada"),
+        lt(bookings.checkin, to),
+        gt(bookings.checkout, from),
+      ),
+    )
+    .orderBy(bookings.checkin);
+  return rows.map((r) => ({ ...r, numero: r.numero ?? "—" }));
+}
+
+/** Bloquea un rango de fechas para un cuarto (manual o mantenimiento). */
+export async function blockDates(input: {
+  roomId: string;
+  checkin: string;
+  checkout: string;
+  motivo?: string;
+  nota?: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  await ensureDb();
+  if (
+    !isValidISODate(input.checkin) ||
+    !isValidISODate(input.checkout) ||
+    calcNights(input.checkin, input.checkout) < 1
+  )
+    return { ok: false, error: "Rango de fechas inválido." };
+  await db.insert(blocks).values({
+    roomId: input.roomId,
+    checkin: input.checkin,
+    checkout: input.checkout,
+    motivo: input.motivo === "mantenimiento" ? "mantenimiento" : "manual",
+    nota: input.nota?.trim() || "",
+  });
+  return { ok: true };
+}
+
+/** Quita un bloqueo manual/mantenimiento (los de OTA se gestionan por sync). */
+export async function unblock(id: string): Promise<{ ok: boolean; error?: string }> {
+  await ensureDb();
+  const res = await db
+    .delete(blocks)
+    .where(and(eq(blocks.id, id), ne(blocks.motivo, "ota")))
+    .returning({ id: blocks.id });
+  if (res.length === 0)
+    return { ok: false, error: "Bloqueo no encontrado o pertenece a un canal OTA." };
+  return { ok: true };
+}
+
 // ── Lectura simple de tipos (para /habitaciones) ────────────
 export async function getRoomTypes() {
   await ensureDb();
