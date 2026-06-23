@@ -24,7 +24,7 @@ const NAV = [
   { href: "/admin/ingresos", label: "Ingresos", icon: TrendingUp, ready: true },
   { href: "/admin/clientes", label: "Clientes", icon: Users, ready: true },
   { href: "/admin/operaciones", label: "Operaciones", icon: ClipboardCheck, ready: true },
-  { href: "/admin/canales", label: "Canales", icon: Globe2, ready: false },
+  { href: "/admin/canales", label: "Canales", icon: Globe2, ready: true },
 ];
 
 export function AdminSidebar() {

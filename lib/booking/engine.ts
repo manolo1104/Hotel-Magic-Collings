@@ -4,7 +4,7 @@
 // inventario a Kora sustituyendo solo la fuente de datos (no la UI).
 // Patrón de lógica inspirado en mi-hotel/lib/booking.ts (referencia).
 // ============================================================
-import { and, eq, gt, lt, ne, or, isNull, sql, desc } from "drizzle-orm";
+import { and, eq, gt, lt, ne, or, isNull, sql, desc, asc } from "drizzle-orm";
 import { db } from "../db";
 import { ensureDb } from "../db/ensure";
 import { roomTypes, rooms, bookings, blocks, guestNotes, quotes } from "../db/schema";
@@ -367,6 +367,18 @@ export async function countActiveRooms(): Promise<number> {
   await ensureDb();
   const rows = await db.select({ id: rooms.id }).from(rooms).where(eq(rooms.activa, true));
   return rows.length;
+}
+
+/** Cuartos físicos activos con su tipo (para selects del panel). */
+export async function listRooms(): Promise<{ id: string; numero: string; tipo: string }[]> {
+  await ensureDb();
+  const rows = await db
+    .select({ id: rooms.id, numero: rooms.numero, tipo: roomTypes.nombre })
+    .from(rooms)
+    .leftJoin(roomTypes, eq(rooms.roomTypeId, roomTypes.id))
+    .where(eq(rooms.activa, true))
+    .orderBy(asc(rooms.numero));
+  return rows.map((r) => ({ id: r.id, numero: r.numero, tipo: r.tipo ?? "—" }));
 }
 
 /** Lista de reservas (con cuarto y tipo) para el panel /admin. */
