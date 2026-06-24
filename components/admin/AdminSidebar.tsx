@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  LayoutDashboard,
   BookOpen,
   Calendar,
   FileText,
@@ -19,6 +20,7 @@ import { LogoutButton } from "./LogoutButton";
 
 // `ready: false` = sección aún no construida (se activa fase por fase).
 const NAV = [
+  { href: "/admin/insights", label: "Insights", icon: LayoutDashboard, ready: true },
   { href: "/admin", label: "Reservas", icon: BookOpen, ready: true },
   { href: "/admin/calendario", label: "Calendario", icon: Calendar, ready: true },
   { href: "/admin/cotizaciones", label: "Cotizaciones", icon: FileText, ready: true },
