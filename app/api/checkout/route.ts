@@ -1,11 +1,11 @@
 // ============================================================
-// POST /api/checkout — crea la reserva (hold) + preferencia de Mercado Pago.
-// Devuelve el initPoint de Checkout Pro para redirigir al huésped.
+// POST /api/checkout — crea la reserva (hold) para el pago embebido.
+// Devuelve el monto a cobrar; el cobro lo hace /api/pagar con el Brick.
 // Solo activo si MP_ACCESS_TOKEN está configurado.
 // ============================================================
 import { NextResponse, type NextRequest } from "next/server";
-import { createBooking, setMpPreference } from "@/lib/booking/engine";
-import { crearPreferencia, pagosActivos } from "@/lib/mp";
+import { createBooking } from "@/lib/booking/engine";
+import { pagosActivos } from "@/lib/mp";
 import type { ModalidadPago } from "@/lib/booking/types";
 
 export const runtime = "nodejs";
@@ -28,7 +28,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Elige cómo quieres pagar." }, { status: 400 });
   }
 
-  const email = body.email ? String(body.email) : undefined;
   const result = await createBooking({
     slug: String(body.slug ?? ""),
     checkin: String(body.checkin ?? ""),
@@ -36,7 +35,7 @@ export async function POST(req: NextRequest) {
     huespedes: Number(body.huespedes ?? 1),
     nombre: String(body.nombre ?? ""),
     whatsapp: String(body.whatsapp ?? ""),
-    email,
+    email: body.email ? String(body.email) : undefined,
     modalidadPago: modalidad,
   });
 
@@ -47,26 +46,12 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/+$/, "") || req.nextUrl.origin;
-  const etiqueta = modalidad === "anticipo" ? "anticipo 50%" : "pago total";
-
-  try {
-    const { preferenceId, initPoint } = await crearPreferencia({
-      bookingId: result.id,
-      titulo: `Magic Collinn — ${result.nombreTipo ?? "Habitación"} (${etiqueta})`,
-      monto: result.montoACobrar,
-      baseUrl,
-      email,
-      nombre: String(body.nombre ?? ""),
-    });
-    await setMpPreference(result.id, preferenceId);
-    return NextResponse.json({ ok: true, bookingId: result.id, initPoint });
-  } catch (e) {
-    console.error("Error creando preferencia MP:", e);
-    return NextResponse.json(
-      { ok: false, error: "No pudimos iniciar el pago. Intenta de nuevo o reserva por WhatsApp." },
-      { status: 502 },
-    );
-  }
+  return NextResponse.json({
+    ok: true,
+    bookingId: result.id,
+    montoACobrar: result.montoACobrar,
+    total: result.total,
+    saldoPendiente: result.saldoPendiente,
+    nombreTipo: result.nombreTipo,
+  });
 }

@@ -8,6 +8,8 @@ import {
   Loader2,
   CalendarPlus,
   CreditCard,
+  Clock,
+  ArrowLeft,
 } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { EASE_OUT } from "@/components/motion/easing";
@@ -16,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { waLink } from "@/lib/site";
 import { bookingIcs } from "@/lib/ics";
+import { PaymentBrick } from "./PaymentBrick";
 import type { ModalidadPago } from "@/lib/booking/types";
 
 interface Props {
@@ -24,16 +27,15 @@ interface Props {
   checkin: string;
   checkout: string;
   huespedes: number;
-  // Labels ya formateados en el servidor (evita importar el engine en cliente)
   checkinLabel: string;
   checkoutLabel: string;
   totalLabel: string;
-  // Pago en línea (Mercado Pago). Si false, flujo de reserva por WhatsApp.
   pagoActivo: boolean;
-  anticipoLabel: string; // 50% del total, ya formateado
+  anticipoLabel: string;
+  publicKey: string;
 }
 
-type Status = "idle" | "loading" | "error" | "success";
+type Step = "datos" | "pago" | "pendiente" | "success";
 
 export function BookingForm({
   slug,
@@ -46,25 +48,31 @@ export function BookingForm({
   totalLabel,
   pagoActivo,
   anticipoLabel,
+  publicKey,
 }: Props) {
-  const [status, setStatus] = useState<Status>("idle");
+  const [step, setStep] = useState<Step>("datos");
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [bookingId, setBookingId] = useState<string>("");
   const [form, setForm] = useState({ nombre: "", whatsapp: "", email: "" });
   const [modalidad, setModalidad] = useState<ModalidadPago>("total");
+  const [bookingId, setBookingId] = useState("");
+  const [monto, setMonto] = useState(0);
+  const [pagado, setPagado] = useState(false);
   const reduce = useReducedMotion();
+
+  const ref = bookingId.slice(0, 8).toUpperCase();
 
   function update(field: keyof typeof form, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  // Paso 1: crear la reserva → ir al pago embebido (o flujo WhatsApp)
+  async function handleContinuar(e: React.FormEvent) {
     e.preventDefault();
-    setStatus("loading");
+    setLoading(true);
     setError(null);
     try {
       if (pagoActivo) {
-        // Crea la reserva (hold) + preferencia y redirige a Checkout Pro.
         const res = await fetch("/api/checkout", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -78,38 +86,60 @@ export function BookingForm({
           }),
         });
         const data = await res.json();
-        if (!res.ok || !data.ok || !data.initPoint) {
-          setStatus("error");
-          setError(data.error ?? "No pudimos iniciar el pago. Intenta de nuevo.");
+        if (!res.ok || !data.ok) {
+          setError(data.error ?? "No pudimos iniciar la reserva.");
+          setLoading(false);
           return;
         }
-        window.location.href = data.initPoint; // → Mercado Pago
-        return;
+        setBookingId(String(data.bookingId));
+        setMonto(Number(data.montoACobrar));
+        setStep("pago");
+        setLoading(false);
+      } else {
+        const res = await fetch("/api/bookings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ slug, checkin, checkout, huespedes, ...form }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          setError(data.error ?? "No pudimos crear la reserva.");
+          setLoading(false);
+          return;
+        }
+        setBookingId(String(data.id));
+        setStep("success");
       }
-
-      // Flujo sin pago en línea: reserva y confirmación por WhatsApp.
-      const res = await fetch("/api/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug, checkin, checkout, huespedes, ...form }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) {
-        setStatus("error");
-        setError(data.error ?? "No pudimos crear la reserva. Intenta de nuevo.");
-        return;
-      }
-      setBookingId(String(data.id));
-      setStatus("success");
     } catch {
-      setStatus("error");
       setError("Hubo un problema de conexión. Intenta de nuevo.");
+      setLoading(false);
     }
   }
 
-  // Éxito inline (solo flujo WhatsApp; con pago se redirige a Mercado Pago)
-  if (status === "success") {
-    const ref = bookingId.slice(0, 8).toUpperCase();
+  // Paso 2: procesar el pago con el token del Brick. Lanza si se rechaza
+  // (para que el propio Brick muestre el error y permita reintentar).
+  async function handlePago(formData: unknown) {
+    setError(null);
+    const res = await fetch("/api/pagar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bookingId, formData }),
+    });
+    const data = await res.json();
+    if (res.ok && data.ok && data.status === "approved") {
+      setPagado(true);
+      setStep("success");
+      return;
+    }
+    if (res.ok && data.pendiente) {
+      setStep("pendiente");
+      return;
+    }
+    throw new Error(data.error ?? "El pago no se completó.");
+  }
+
+  // ── PASO: éxito ──────────────────────────────────────────
+  if (step === "success") {
     const msg = `Hola, acabo de reservar una ${nombre} en Magic Collinn del ${checkin} al ${checkout} para ${huespedes} huéspedes. Mi número de reserva es ${ref}.`;
     return (
       <motion.div
@@ -127,13 +157,13 @@ export function BookingForm({
           <CheckCircle2 className="size-8" aria-hidden />
         </motion.div>
         <h2 className="mt-4 font-heading text-2xl font-semibold">
-          ¡Reserva recibida!
+          {pagado ? "¡Reserva confirmada!" : "¡Reserva recibida!"}
         </h2>
         <p className="mx-auto mt-2 max-w-md leading-relaxed text-muted-foreground">
-          Tu número de reserva es{" "}
-          <strong className="text-foreground">{ref}</strong>. Te confirmamos por
-          WhatsApp en menos de 24 horas. El pago se realiza directamente en el
-          hotel.
+          Tu número de reserva es <strong className="text-foreground">{ref}</strong>.{" "}
+          {pagado
+            ? "Recibimos tu pago. Te enviamos la confirmación por correo."
+            : "Te confirmamos por WhatsApp en menos de 24 horas. El pago se realiza en el hotel."}
         </p>
 
         <dl className="mx-auto mt-6 max-w-xs space-y-2 rounded-xl bg-secondary/50 p-4 text-left text-sm">
@@ -149,10 +179,6 @@ export function BookingForm({
             <dt className="text-muted-foreground">Habitación</dt>
             <dd className="font-medium">{nombre}</dd>
           </div>
-          <div className="flex justify-between gap-4">
-            <dt className="text-muted-foreground">Huéspedes</dt>
-            <dd className="font-medium">{huespedes}</dd>
-          </div>
           <div className="flex justify-between gap-4 border-t border-border pt-2">
             <dt className="font-medium">Total</dt>
             <dd className="font-semibold text-primary">{totalLabel}</dd>
@@ -162,12 +188,10 @@ export function BookingForm({
         <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
           <Button
             className="h-11 gap-2 px-6"
-            render={
-              <a href={waLink(msg)} target="_blank" rel="noopener noreferrer" />
-            }
+            render={<a href={waLink(msg)} target="_blank" rel="noopener noreferrer" />}
           >
             <MessageCircle className="size-4" aria-hidden />
-            Confirmar por WhatsApp
+            {pagado ? "Escríbenos por WhatsApp" : "Confirmar por WhatsApp"}
           </Button>
           <Button
             variant="secondary"
@@ -195,15 +219,74 @@ export function BookingForm({
     );
   }
 
+  // ── PASO: pago pendiente (OXXO / revisión) ───────────────
+  if (step === "pendiente") {
+    return (
+      <div className="rounded-2xl border border-border bg-card p-8 text-center">
+        <div className="mx-auto inline-flex size-14 items-center justify-center rounded-full bg-muted text-muted-foreground">
+          <Clock className="size-8" aria-hidden />
+        </div>
+        <h2 className="mt-4 font-heading text-2xl font-semibold">Estamos confirmando tu pago</h2>
+        <p className="mx-auto mt-2 max-w-md leading-relaxed text-muted-foreground">
+          En cuanto Mercado Pago confirme el pago (reserva{" "}
+          <strong className="text-foreground">{ref}</strong>) te enviamos la
+          confirmación por correo y WhatsApp.
+        </p>
+        <Link
+          href="/"
+          className="mt-5 inline-block text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+        >
+          Volver al inicio
+        </Link>
+      </div>
+    );
+  }
+
+  // ── PASO: pago embebido ──────────────────────────────────
+  if (step === "pago") {
+    return (
+      <div className="rounded-2xl border border-border bg-card p-6 sm:p-8">
+        <button
+          onClick={() => setStep("datos")}
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" /> Volver a tus datos
+        </button>
+        <h2 className="mt-3 font-heading text-xl font-semibold">Pago seguro</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Pagas ahora{" "}
+          <strong className="text-foreground">
+            ${monto.toLocaleString("es-MX")} MXN
+          </strong>{" "}
+          · reserva {ref}. Tus datos de tarjeta los protege Mercado Pago.
+        </p>
+        <div className="mt-5">
+          <PaymentBrick
+            publicKey={publicKey}
+            amount={monto}
+            email={form.email || undefined}
+            onPay={handlePago}
+          />
+        </div>
+        {error && (
+          <p className="mt-3 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {error}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  // ── PASO: datos del huésped ──────────────────────────────
   return (
     <form
-      onSubmit={handleSubmit}
+      onSubmit={handleContinuar}
       className="rounded-2xl border border-border bg-card p-6 sm:p-8"
     >
       <h2 className="font-heading text-xl font-semibold">Tus datos</h2>
       <p className="mt-1 text-sm text-muted-foreground">
         {pagoActivo
-          ? "Elige cómo pagar y te llevamos a Mercado Pago para completar tu reserva de forma segura."
+          ? "Completa tus datos y elige cuánto pagar; el cobro se hace aquí mismo, sin salir del sitio."
           : "Completa para reservar. Sin pago en línea: te confirmamos por WhatsApp."}
       </p>
 
@@ -219,7 +302,6 @@ export function BookingForm({
             placeholder="Tu nombre"
           />
         </div>
-
         <div className="grid gap-2">
           <Label htmlFor="whatsapp">WhatsApp</Label>
           <Input
@@ -232,11 +314,7 @@ export function BookingForm({
             onChange={(e) => update("whatsapp", e.target.value)}
             placeholder="Ej. 481 123 4567"
           />
-          <p className="text-xs text-muted-foreground">
-            Lo usamos solo para confirmar tu reserva.
-          </p>
         </div>
-
         <div className="grid gap-2">
           <Label htmlFor="email">
             Correo{" "}
@@ -256,7 +334,6 @@ export function BookingForm({
         </div>
       </div>
 
-      {/* Selector total / anticipo (solo con pago en línea) */}
       {pagoActivo && (
         <fieldset className="mt-6">
           <legend className="text-sm font-medium">¿Cuánto quieres pagar ahora?</legend>
@@ -279,7 +356,7 @@ export function BookingForm({
         </fieldset>
       )}
 
-      {status === "error" && error && (
+      {error && (
         <motion.p
           role="alert"
           initial={reduce ? { opacity: 0 } : { opacity: 0, y: -6 }}
@@ -293,17 +370,16 @@ export function BookingForm({
 
       <Button
         type="submit"
-        disabled={status === "loading"}
+        disabled={loading}
         className="mt-6 h-12 w-full gap-2 text-base"
       >
-        {status === "loading" ? (
+        {loading ? (
           <>
-            <Loader2 className="size-4 animate-spin" aria-hidden />{" "}
-            {pagoActivo ? "Redirigiendo a Mercado Pago…" : "Enviando…"}
+            <Loader2 className="size-4 animate-spin" aria-hidden /> Un momento…
           </>
         ) : pagoActivo ? (
           <>
-            <CreditCard className="size-4" aria-hidden /> Pagar y reservar
+            <CreditCard className="size-4" aria-hidden /> Continuar al pago
           </>
         ) : (
           "Confirmar reserva"
@@ -312,7 +388,7 @@ export function BookingForm({
 
       {pagoActivo && (
         <p className="mt-3 text-center text-xs text-muted-foreground">
-          Pago seguro con Mercado Pago. Cancela hasta 72 h antes.
+          Pago seguro con Mercado Pago, dentro de este sitio. Cancela hasta 72 h antes.
         </p>
       )}
     </form>

@@ -1,5 +1,5 @@
 // ============================================================
-// CLIENTE MERCADO PAGO (Checkout Pro) — solo servidor
+// CLIENTE MERCADO PAGO — solo servidor (pago embebido con Bricks)
 // El sitio ofrece pago en línea SÓLO si MP_ACCESS_TOKEN está configurado.
 // Sin esa variable, el flujo de reserva sigue siendo el de WhatsApp.
 // ============================================================
@@ -10,6 +10,11 @@ const accessToken = process.env.MP_ACCESS_TOKEN;
 /** ¿Está configurado Mercado Pago? Controla si se ofrece pago en línea. */
 export function pagosActivos(): boolean {
   return Boolean(accessToken && accessToken.trim().length > 0);
+}
+
+/** Public Key para el formulario embebido (frontend). */
+export function mpPublicKey(): string {
+  return process.env.NEXT_PUBLIC_MP_PUBLIC_KEY ?? "";
 }
 
 function client(): MercadoPagoConfig {
@@ -91,5 +96,67 @@ export async function obtenerPago(paymentId: string): Promise<PagoMP> {
     bookingId: res.external_reference ?? null,
     monto: Math.round(res.transaction_amount ?? 0),
     paymentId: String(res.id ?? paymentId),
+  };
+}
+
+// ── Pago embebido (Bricks) ──────────────────────────────────
+export interface BrickFormData {
+  token?: string;
+  installments?: number;
+  payment_method_id?: string;
+  issuer_id?: string;
+  payer?: {
+    email?: string;
+    identification?: { type?: string; number?: string };
+  };
+}
+
+export interface ProcesarPagoInput {
+  bookingId: string;
+  monto: number; // MXN (entero)
+  descripcion: string;
+  baseUrl: string;
+  formData: BrickFormData;
+}
+
+export interface PagoProcesado {
+  status: string; // approved | in_process | pending | rejected
+  statusDetail: string;
+  paymentId: string;
+  monto: number;
+}
+
+/**
+ * Procesa un pago con el token que generó el Payment Brick (frontend).
+ * El dato sensible de la tarjeta nunca toca nuestro servidor: el Brick lo
+ * convierte en un token de un solo uso que aquí se cobra.
+ */
+export async function procesarPago(
+  input: ProcesarPagoInput,
+): Promise<PagoProcesado> {
+  const pay = new Payment(client());
+  const fd = input.formData ?? {};
+  const res = await pay.create({
+    body: {
+      transaction_amount: input.monto,
+      token: fd.token,
+      description: input.descripcion,
+      installments: Number(fd.installments) || 1,
+      payment_method_id: fd.payment_method_id,
+      issuer_id: fd.issuer_id ? Number(fd.issuer_id) : undefined,
+      payer: {
+        email: fd.payer?.email,
+        identification: fd.payer?.identification,
+      },
+      external_reference: input.bookingId,
+      notification_url: `${input.baseUrl}/api/mp/webhook`,
+      metadata: { booking_id: input.bookingId },
+    },
+  });
+  return {
+    status: String(res.status ?? "unknown"),
+    statusDetail: String(res.status_detail ?? ""),
+    paymentId: String(res.id ?? ""),
+    monto: Math.round(res.transaction_amount ?? input.monto),
   };
 }
