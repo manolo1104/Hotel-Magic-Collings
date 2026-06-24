@@ -25,6 +25,20 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        // El panel nunca se cachea: evita que el CDN sirva una versión estática
+        // vieja (p. ej. /admin/login con el navbar público antes de ocultarlo).
+        source: "/admin/:path*",
+        headers: [
+          { key: "Cache-Control", value: "no-store, max-age=0, must-revalidate" },
+        ],
+      },
+      {
+        source: "/admin",
+        headers: [
+          { key: "Cache-Control", value: "no-store, max-age=0, must-revalidate" },
+        ],
+      },
     ];
   },
 };
