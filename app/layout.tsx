@@ -1,23 +1,26 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Hanken_Grotesk } from "next/font/google";
+import { Fraunces, Hanken_Grotesk } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { Footer } from "@/components/layout/Footer";
 import { PublicShell } from "@/components/layout/PublicShell";
 import { site } from "@/lib/site";
 
-// Cuerpo: sans humanista cálida (distinta de Inter).
+// Cuerpo/UI: sans humanista cálida (distinta de Inter).
 const sans = Hanken_Grotesk({
   subsets: ["latin"],
   variable: "--font-sans",
   display: "swap",
 });
 
-// Titulares: grotesca display con carácter (audaz, no es la default de IA).
-const heading = Bricolage_Grotesque({
+// Titulares: serif editorial con carácter (Fraunces), en la línea Aman/Hoxton.
+// No es la serif "default de IA" (Playfair); su óptica cálida vende atmósfera.
+const heading = Fraunces({
   subsets: ["latin"],
   variable: "--font-heading",
   display: "swap",
+  style: ["normal", "italic"],
+  axes: ["opsz", "SOFT"],
 });
 
 const description = `Hotel boutique de ${site.rooms} habitaciones en el centro de ${site.locality}, ${site.region}. Aire acondicionado, estacionamiento y reserva directa sin comisión.`;
