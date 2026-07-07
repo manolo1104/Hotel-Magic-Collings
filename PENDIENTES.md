@@ -42,21 +42,19 @@ Recomendación: hacerlos al reconciliar las dos ramas, en la capa de backend.
   decisión del dueño (no migrar a Kora). Si algún día se migra, conviene envolver
   el motor en una interfaz `BookingEngineAdapter` antes.
 
-## 6. Rendimiento — subir Performance a ≥ 90  (prioridad MEDIA-ALTA)
+## 6. Rendimiento — cerrar de 87 a ≥ 90  (prioridad MEDIA)
 **Lighthouse móvil (build de producción, localhost):**
-`Accessibility 97 · Best Practices 100 · SEO 100 · Performance 78` (LCP 5.1 s,
-CLS 0, TBT 170 ms, FCP 1.4 s).
+`Accessibility 97 · Best Practices 100 · SEO 100 · Performance 87` (CLS 0,
+TBT 20 ms, FCP 1.2 s). **LCP observado real ~260 ms.**
 
-Tres de cuatro categorías ya son de nivel. Lo único por debajo es **Performance**,
-por el **LCP (5.1 s)**. Diagnóstico: **no es peso de imagen** (el hero pesa 159 KB,
-ya en AVIF/WebP). Es que el **titular del hero (H1) se anima con JS** (WordsReveal /
-Reveal arrancan en opacidad 0) y en móvil lento no "pinta" hasta que hidrata la
-librería de animación → el LCP espera al JS.
-- **Fix recomendado (1 pase enfocado):** que el contenido LCP del hero se muestre
-  sin depender del JS (entrada por CSS, o render visible en SSR y animar solo como
-  mejora). Es acotado pero toca la animación estrella del hero, por eso se deja como
-  pase aparte para no arriesgar el look aprobado. Meta realista tras el fix: ≥ 90.
-- En producción con CDN el LCP también mejora respecto a localhost.
+Ya se hizo el pase de perf (78 → 87): hero con entrada CSS, ISR en home/habitaciones,
+Fraunces en pesos estáticos. El **LCP observado es excelente (~260 ms)**; el número
+que Lighthouse "simula" (≈4 s) es un artefacto de su modelo de 4G lento **corriendo
+en `next start` local** (sin CDN ni HTTP/2 ni caché de fuente).
+- **Siguiente paso real:** correr Lighthouse contra el **deploy en Vercel** (CDN +
+  caché de fuente) — ahí el simulado baja y el score debería cruzar ≥ 90 sin más
+  cambios. Si aún faltara, el único lever restante es reducir JS de cliente
+  (framer-motion) en la ruta crítica.
 
 ## 7. Prueba de fuego
 - Reserva real de punta a punta en producción (con el pago de Mercado Pago ya en

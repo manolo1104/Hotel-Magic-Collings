@@ -62,6 +62,15 @@
   (precios reales $850/$1,200), cero "Collings", DOM correcto en /habitaciones,
   respuestas del FAQ en el HTML servido.
 - **Lighthouse móvil:** Accessibility **97** · Best Practices **100** · SEO **100**
-  · Performance **78** (CLS 0, FCP 1.4 s; LCP 5.1 s = único pendiente, ver
-  `PENDIENTES.md` §6 — es el hero animado por JS, no el peso de imagen).
+  · Performance **87** (tras el pase de perf; empezó en 78). CLS 0, TBT 20 ms,
+  FCP 1.2 s. **LCP observado real ~260 ms**; el LCP "simulado" residual es
+  artefacto del modelo de Lighthouse en localhost (se valida en el deploy con CDN).
 - Este `CHANGELOG.md` + `PENDIENTES.md`.
+
+## Pase de rendimiento (LCP del hero) — 78 → 87
+- Titular del hero: de animación JS (quedaba oculto hasta hidratar) a **CSS**
+  (aparece en el primer pintado). TBT 170 → 20 ms.
+- Home y /habitaciones: `force-dynamic` → **ISR (revalidate 600 s)** → TTFB casi
+  cero, LCP observado 245–270 ms.
+- **Fraunces** reducida a pesos estáticos 400/600/700 (sin itálica ni ejes) →
+  fuente crítica más ligera.
