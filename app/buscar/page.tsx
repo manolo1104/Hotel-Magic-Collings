@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { SearchX, Star, CalendarDays, ClipboardList, MessageCircle } from "lucide-react";
 import { getAvailability, getRoomTypes } from "@/lib/booking/engine";
-import { site } from "@/lib/site";
+import { site, waLink } from "@/lib/site";
+import { Button } from "@/components/ui/button";
 import { BookingWidget } from "@/components/booking/BookingWidget";
 import { BookingSteps } from "@/components/booking/BookingSteps";
 import { RoomResultCard } from "@/components/booking/RoomResultCard";
@@ -172,14 +172,19 @@ export default async function BuscarPage({ searchParams }: { searchParams: SP })
             icon={<SearchX className="size-6" aria-hidden />}
             title="Revisa las fechas"
             body={result.error ?? "No pudimos procesar la búsqueda."}
+            cambiarFechas
           />
         )}
 
         {hasDates && result?.ok && result.tipos.length === 0 && (
           <EmptyHint
             icon={<SearchX className="size-6" aria-hidden />}
-            title="Sin disponibilidad para esas fechas"
-            body="No tenemos habitaciones libres en ese rango. Prueba con otras fechas o escríbenos por WhatsApp."
+            title="Esas fechas están llenas"
+            body="No nos quedan habitaciones libres en ese rango. Prueba con otras fechas o escríbenos y te decimos las fechas disponibles más cercanas."
+            cambiarFechas
+            waMsg={`Hola, busqué disponibilidad del ${fmt(checkin)} al ${fmt(
+              checkout,
+            )} para ${huespedes} ${huespedes === 1 ? "huésped" : "huéspedes"} en Magic Collinn y aparece lleno. ¿Me ayudan con las fechas disponibles más cercanas?`}
           />
         )}
 
@@ -207,10 +212,14 @@ function EmptyHint({
   icon,
   title,
   body,
+  waMsg,
+  cambiarFechas,
 }: {
   icon: React.ReactNode;
   title: string;
   body: string;
+  waMsg?: string;
+  cambiarFechas?: boolean;
 }) {
   return (
     <Reveal direction="scale" className="rounded-2xl border border-dashed border-border bg-card/50 px-6 py-14 text-center">
@@ -221,12 +230,29 @@ function EmptyHint({
       <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
         {body}
       </p>
-      <Link
-        href="/contacto"
-        className="mt-4 inline-block text-sm font-medium text-primary underline-offset-4 hover:underline"
-      >
-        Contáctanos por WhatsApp
-      </Link>
+      <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        {cambiarFechas && (
+          <Button
+            variant="secondary"
+            className="h-11 gap-2 px-6"
+            render={<a href="#buscador" />}
+          >
+            <CalendarDays className="size-4" aria-hidden /> Cambiar fechas
+          </Button>
+        )}
+        <Button
+          className="h-11 gap-2 px-6"
+          render={
+            <a
+              href={waLink(waMsg)}
+              target="_blank"
+              rel="noopener noreferrer"
+            />
+          }
+        >
+          <MessageCircle className="size-4" aria-hidden /> Escríbenos por WhatsApp
+        </Button>
+      </div>
     </Reveal>
   );
 }
