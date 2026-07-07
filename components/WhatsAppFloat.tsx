@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
 import { site, waLink } from "@/lib/site";
+import { track } from "@/lib/track";
 
 // Glifo oficial de WhatsApp (Simple Icons, https://simpleicons.org/?q=whatsapp).
 // Se usa el logo real de la marca para reconocimiento inmediato.
@@ -31,6 +32,7 @@ export function WhatsAppFloat() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Escríbenos por WhatsApp"
+      onClick={() => track("whatsapp_click", { location: "float", page: pathname })}
       initial={reduce ? false : { opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: 1, duration: 0.4, ease: [0.23, 1, 0.32, 1] }}

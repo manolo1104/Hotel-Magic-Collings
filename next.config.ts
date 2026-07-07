@@ -5,6 +5,11 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["@electric-sql/pglite"],
   images: {
     formats: ["image/avif", "image/webp"],
+    // Acota los anchos servidos: el default de Next llega a 3840 (4K) y se
+    // servían imágenes enormes sin necesidad. Tope en 1920 = ahorro grande de
+    // bytes en móvil sin pérdida visible (LCP/INP mejores).
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "picsum.photos" },

@@ -56,7 +56,8 @@ export const site = {
   reviewsTotal: 122, // Total real de opiniones en Google
 
   // ── Analytics ─────────────────────────────────────────────
-  gaId: "", // TODO: GA_ID
+  // Se activa poniendo NEXT_PUBLIC_GA_ID=G-XXXX en el entorno (vacío = sin GA).
+  gaId: process.env.NEXT_PUBLIC_GA_ID ?? "",
 
   // ── Navegación ────────────────────────────────────────────
   nav: [
