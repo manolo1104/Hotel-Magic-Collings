@@ -4,7 +4,7 @@ import { Users, ArrowRight } from "lucide-react";
 import { getRoomTypes } from "@/lib/booking/engine";
 import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
-import { CountUp } from "@/components/motion/CountUp";
+import { Precio } from "@/components/Precio";
 import { Button } from "@/components/ui/button";
 
 export async function VistazoHabitaciones() {
@@ -51,14 +51,21 @@ export async function VistazoHabitaciones() {
                   </p>
                   <div className="mt-4 flex items-end justify-between gap-4 pt-2">
                     <p className="text-sm text-muted-foreground">
-                      Desde{" "}
-                      <CountUp
-                        value={t.tarifaBase}
-                        prefix="$"
-                        suffix=" MXN"
-                        className="text-lg font-semibold text-primary"
-                      />{" "}
-                      / noche
+                      {t.tarifaBase > 0 ? (
+                        <>
+                          Desde{" "}
+                          <Precio
+                            value={t.tarifaBase}
+                            className="text-lg font-semibold text-primary"
+                          />{" "}
+                          / noche
+                        </>
+                      ) : (
+                        <Precio
+                          value={t.tarifaBase}
+                          className="text-lg font-semibold text-primary"
+                        />
+                      )}
                     </p>
                     <Button
                       variant="secondary"

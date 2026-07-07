@@ -12,7 +12,6 @@ import { BookingSteps } from "@/components/booking/BookingSteps";
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/motion/Reveal";
 import { WordsReveal } from "@/components/motion/WordsReveal";
-import { CountUp } from "@/components/motion/CountUp";
 
 export const metadata: Metadata = {
   title: "Reservar",
@@ -135,12 +134,9 @@ export default async function ReservarPage({ searchParams }: { searchParams: SP 
             </dl>
             <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
               <span className="font-medium">Total</span>
-              <CountUp
-                value={tipo.precioTotal}
-                prefix="$"
-                suffix=" MXN"
-                className="font-heading text-2xl font-semibold text-primary"
-              />
+              <span className="font-heading text-2xl font-semibold text-primary">
+                {formatMXN(tipo.precioTotal)}
+              </span>
             </div>
             <ul className="mt-4 space-y-2 border-t border-border pt-4">
               {confianza.map((c) => (

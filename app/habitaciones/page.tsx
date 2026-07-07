@@ -9,7 +9,7 @@ import { WordsReveal } from "@/components/motion/WordsReveal";
 import { ClipReveal } from "@/components/motion/ClipReveal";
 import { Gallery, GalleryTile } from "@/components/gallery/Lightbox";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
-import { CountUp } from "@/components/motion/CountUp";
+import { Precio } from "@/components/Precio";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbJsonLd, roomsJsonLd } from "@/lib/seo";
 
@@ -135,14 +135,21 @@ export default async function HabitacionesPage() {
                 <StaggerItem className="mt-8">
                   <div className="group flex flex-wrap items-center justify-between gap-4 border-t border-border pt-6">
                     <p className="text-sm text-muted-foreground">
-                      Desde{" "}
-                      <CountUp
-                        value={t.tarifaBase}
-                        prefix="$"
-                        suffix=" MXN"
-                        className="text-2xl font-semibold text-primary"
-                      />{" "}
-                      / noche
+                      {t.tarifaBase > 0 ? (
+                        <>
+                          Desde{" "}
+                          <Precio
+                            value={t.tarifaBase}
+                            className="text-2xl font-semibold text-primary"
+                          />{" "}
+                          / noche
+                        </>
+                      ) : (
+                        <Precio
+                          value={t.tarifaBase}
+                          className="text-2xl font-semibold text-primary"
+                        />
+                      )}
                     </p>
                     <Button
                       className="h-11 gap-2 px-6"
