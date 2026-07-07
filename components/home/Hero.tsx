@@ -1,12 +1,15 @@
+import { Fragment } from "react";
 import { Leaf, Check } from "lucide-react";
 import { Photo } from "@/components/Photo";
 import { BookingWidget } from "@/components/booking/BookingWidget";
 import { heroImage } from "@/lib/images";
 import { confianza } from "@/lib/site";
 import { Parallax } from "@/components/motion/Parallax";
-import { WordsReveal } from "@/components/motion/WordsReveal";
-import { Reveal } from "@/components/motion/Reveal";
 import { RatingBadge } from "@/components/RatingBadge";
+
+// El titular es el elemento LCP: se anima por CSS (no por JS) para que aparezca
+// en el primer pintado incluso en móvil lento. El resto del sitio usa motion.
+const titulo = "Tu estancia en Axtla de Terrazas".split(" ");
 
 export function Hero() {
   return (
@@ -32,26 +35,43 @@ export function Hero() {
 
       <div className="mx-auto w-full max-w-[1400px] px-4 pt-24 pb-16 sm:px-6">
         <div className="max-w-3xl">
-          <Reveal direction="none" className="flex items-center gap-2 text-sm font-medium text-brand-foreground/90">
+          <p
+            className="anim-in-fade flex items-center gap-2 text-sm font-medium text-brand-foreground/90"
+            style={{ animationDelay: "0.05s" }}
+          >
             <Leaf className="size-4 text-support" strokeWidth={1.75} aria-hidden />
             Hotel boutique en la Huasteca Potosina
-          </Reveal>
+          </p>
           <h1 className="mt-4 font-heading text-5xl font-semibold leading-[1.0] text-white sm:text-6xl lg:text-[5.25rem]">
-            <WordsReveal text="Tu estancia en Axtla de Terrazas" />
+            {titulo.map((w, i) => (
+              <Fragment key={i}>
+                <span
+                  className="anim-in inline-block pb-[0.08em]"
+                  style={{ animationDelay: `${0.12 + i * 0.06}s` }}
+                >
+                  {w}
+                </span>
+                {i < titulo.length - 1 ? " " : ""}
+              </Fragment>
+            ))}
           </h1>
-          <Reveal delay={0.55} className="mt-6 max-w-xl">
-            <p className="text-lg leading-relaxed text-white/90 sm:text-xl">
-              Hotel de 6 habitaciones en el centro. Reserva directo, sin
-              intermediarios.
-            </p>
-          </Reveal>
+          <p
+            className="anim-in mt-6 max-w-xl text-lg leading-relaxed text-white/90 sm:text-xl"
+            style={{ animationDelay: "0.5s" }}
+          >
+            Hotel de 6 habitaciones en el centro. Reserva directo, sin
+            intermediarios.
+          </p>
         </div>
 
-        <Reveal direction="scale" delay={0.7} className="mt-10 max-w-4xl">
+        <div className="anim-in mt-10 max-w-4xl" style={{ animationDelay: "0.62s" }}>
           <BookingWidget />
-        </Reveal>
+        </div>
 
-        <Reveal delay={0.85} className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
+        <div
+          className="anim-in mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5"
+          style={{ animationDelay: "0.74s" }}
+        >
           <RatingBadge tone="onDark" />
           <ul className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-white/90">
             {confianza.map((c) => (
@@ -61,7 +81,7 @@ export function Hero() {
               </li>
             ))}
           </ul>
-        </Reveal>
+        </div>
       </div>
     </section>
   );

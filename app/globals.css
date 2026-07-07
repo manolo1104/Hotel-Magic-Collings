@@ -178,6 +178,31 @@
   will-change: transform;
 }
 
+/* ── Entrada por CSS para contenido CRÍTICO del hero ──────────────────
+   Corre en el primer pintado (no depende de hidratar JS), así el titular
+   —elemento LCP— aparece de inmediato en móvil. El resto del sitio sigue
+   usando los primitivos de motion (Reveal/Stagger) al hacer scroll. */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(1.25rem); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.anim-in {
+  animation: fade-up 0.7s var(--ease-out) both;
+}
+.anim-in-fade {
+  animation: fade-in 0.7s var(--ease-out) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .anim-in,
+  .anim-in-fade {
+    animation: none;
+  }
+}
+
 @keyframes marquee {
   from {
     transform: translateX(0);

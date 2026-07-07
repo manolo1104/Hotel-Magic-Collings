@@ -13,8 +13,8 @@ import { Precio } from "@/components/Precio";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbJsonLd, roomsJsonLd } from "@/lib/seo";
 
-// Lee inventario de la BD en cada request (datos siempre frescos).
-export const dynamic = "force-dynamic";
+// ISR: se prerenderiza y revalida cada 10 min (tarifas/tipos cambian rara vez).
+export const revalidate = 600;
 
 export const metadata: Metadata = {
   title: "Habitaciones y tarifas en Axtla de Terrazas",

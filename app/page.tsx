@@ -11,8 +11,9 @@ import { CtaFinal } from "@/components/home/CtaFinal";
 import { JsonLd } from "@/components/JsonLd";
 import { homeGraphJsonLd } from "@/lib/seo";
 
-// Lee inventario de la BD en cada request (datos siempre frescos).
-export const dynamic = "force-dynamic";
+// ISR: se prerenderiza y revalida cada 10 min. Las tarifas/tipos de habitación
+// cambian rara vez, así que no hace falta render por request (mejor TTFB/LCP).
+export const revalidate = 600;
 
 export default function Home() {
   return (

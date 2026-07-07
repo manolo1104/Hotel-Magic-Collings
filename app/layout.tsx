@@ -19,8 +19,10 @@ const heading = Fraunces({
   subsets: ["latin"],
   variable: "--font-heading",
   display: "swap",
-  style: ["normal", "italic"],
-  axes: ["opsz", "SOFT"],
+  // Solo los pesos que usan los titulares (instancias estáticas, mucho más
+  // ligeras que la variable completa) → la fuente crítica llega antes en móvil
+  // lento y el titular (LCP) pinta su forma final cuanto antes.
+  weight: ["400", "600", "700"],
 });
 
 const description = `Hotel boutique de ${site.rooms} habitaciones en el centro de ${site.locality}, ${site.region}. Aire acondicionado, estacionamiento y reserva directa sin comisión.`;
