@@ -10,6 +10,7 @@ import {
   marcarPagoRechazado,
   marcarEmailsEnviados,
   marcarKoraPushed,
+  getBookingById,
 } from "@/lib/booking/engine";
 import { enviarCorreosReserva } from "@/lib/email/reservas";
 import { pushLeadToKora } from "@/lib/kora";
@@ -49,6 +50,15 @@ export async function POST(req: NextRequest) {
     }
 
     if (pago.status === "approved") {
+      // Defensa: no confirmar como pagado si MP acreditó menos de lo esperado.
+      const reserva = await getBookingById(pago.bookingId);
+      const esperado = reserva ? (reserva.montoACobrar ?? reserva.total) : 0;
+      if (reserva && pago.monto < esperado) {
+        console.error(
+          `Webhook MP: monto insuficiente ${pago.bookingId}: ${pago.monto} < ${esperado} (payment ${pago.paymentId})`,
+        );
+        return NextResponse.json({ ok: true, note: "monto insuficiente, revisión manual" });
+      }
       const { changed, booking } = await confirmarPago({
         bookingId: pago.bookingId,
         paymentId: pago.paymentId,

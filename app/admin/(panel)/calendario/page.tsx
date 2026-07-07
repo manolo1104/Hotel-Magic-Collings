@@ -6,9 +6,11 @@ export const metadata: Metadata = { title: "Calendario", robots: { index: false 
 export const dynamic = "force-dynamic";
 
 export default async function CalendarioPage() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth() + 1;
+  // Mes/año por defecto en la zona del hotel (no la del servidor/UTC en Vercel).
+  const [year, month] = new Date()
+    .toLocaleDateString("en-CA", { timeZone: "America/Mexico_City" })
+    .split("-")
+    .map(Number);
   const calendar = await getCalendarMonth(year, month);
   const afterLast =
     month === 12

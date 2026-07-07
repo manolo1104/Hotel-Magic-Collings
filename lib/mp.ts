@@ -136,6 +136,12 @@ export async function procesarPago(
 ): Promise<PagoProcesado> {
   const pay = new Payment(client());
   const fd = input.formData ?? {};
+  // MP exige que notification_url sea una URL pública válida; rechaza localhost
+  // (y cualquier http). En desarrollo se omite: el cobro síncrono igual confirma;
+  // en producción (https) sí se envía para que el webhook respalde el flujo.
+  const notifUrl = input.baseUrl.startsWith("https://")
+    ? `${input.baseUrl}/api/mp/webhook`
+    : undefined;
   const res = await pay.create({
     body: {
       transaction_amount: input.monto,
@@ -149,7 +155,7 @@ export async function procesarPago(
         identification: fd.payer?.identification,
       },
       external_reference: input.bookingId,
-      notification_url: `${input.baseUrl}/api/mp/webhook`,
+      ...(notifUrl ? { notification_url: notifUrl } : {}),
       metadata: { booking_id: input.bookingId },
     },
   });

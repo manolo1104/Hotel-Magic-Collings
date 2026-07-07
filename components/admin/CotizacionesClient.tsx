@@ -126,9 +126,9 @@ export function CotizacionesClient({
     if (!confirm(`¿Convertir la cotización de ${q.cliente} en reserva confirmada?`)) return;
     setAviso(null);
     const res = await fetch(`/api/admin/cotizaciones/${q.id}/convertir`, { method: "POST" });
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     setAviso(res.ok && data.ok ? "Cotización convertida en reserva." : data.error ?? "No se pudo convertir.");
-    if (res.ok) router.refresh();
+    if (res.ok && data.ok) router.refresh();
   }
   async function enviar(q: QuoteView) {
     setAviso(null);

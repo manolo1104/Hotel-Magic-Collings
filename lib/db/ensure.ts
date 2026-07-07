@@ -160,9 +160,11 @@ export async function seedRooms(): Promise<void> {
       })
       .returning({ id: roomTypes.id });
 
-    await db
-      .insert(rooms)
-      .values(t.units.map((numero) => ({ roomTypeId: rt.id, numero })));
+    if (t.units.length > 0) {
+      await db
+        .insert(rooms)
+        .values(t.units.map((numero) => ({ roomTypeId: rt.id, numero })));
+    }
   }
 }
 

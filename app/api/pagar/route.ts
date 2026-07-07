@@ -9,6 +9,7 @@ import { procesarPago, pagosActivos, type BrickFormData } from "@/lib/mp";
 import {
   getBookingById,
   confirmarPago,
+  marcarPagoPendiente,
   marcarEmailsEnviados,
   marcarKoraPushed,
 } from "@/lib/booking/engine";
@@ -38,6 +39,21 @@ export async function POST(req: NextRequest) {
   }
   if (booking.estadoPago === "pagado") {
     return NextResponse.json({ ok: true, status: "approved", yaPagado: true });
+  }
+  // Solo se cobra en línea un "hold" en curso. Evita cobrar reservas de
+  // WhatsApp/manuales (estadoPago != 'iniciado') o reintentos sobre canceladas.
+  if (booking.estadoPago !== "iniciado") {
+    return NextResponse.json(
+      { ok: false, error: "Esta reserva no admite pago en línea." },
+      { status: 409 },
+    );
+  }
+  // Hold vencido: el cuarto ya pudo liberarse → no cobrar para no sobrevender.
+  if (booking.expiraEn && new Date(booking.expiraEn) < new Date()) {
+    return NextResponse.json(
+      { ok: false, error: "La reserva expiró. Vuelve a empezar la reserva." },
+      { status: 409 },
+    );
   }
 
   const monto = booking.montoACobrar ?? booking.total;
@@ -79,7 +95,9 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // in_process / pending (revisión, OXXO…): el webhook confirmará al acreditarse.
+    // in_process / pending (revisión antifraude de MP): conserva el hold sin que
+    // venza mientras se acredita; el webhook confirmará/liberará al resolverse.
+    await marcarPagoPendiente(booking.id, pago.paymentId, pago.status);
     return NextResponse.json({
       ok: true,
       status: pago.status,

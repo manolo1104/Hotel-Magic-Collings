@@ -1,7 +1,7 @@
 // ============================================================
 // Operaciones: limpieza diaria + mantenimiento preventivo (Drizzle)
 // ============================================================
-import { and, eq, gt, lte, ne, asc } from "drizzle-orm";
+import { and, eq, gt, lte, ne, asc, or, isNull, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { ensureDb } from "@/lib/db/ensure";
 import { rooms, roomTypes, bookings, cleaningLog, maintenanceTasks } from "@/lib/db/schema";
@@ -47,12 +47,28 @@ export async function getCleaningToday(fecha: string): Promise<CleaningRoom[]> {
           ne(bookings.estado, "expirada"),
           lte(bookings.checkin, fecha),
           gt(bookings.checkout, fecha),
+          or(
+            ne(bookings.estadoPago, "iniciado"),
+            isNull(bookings.expiraEn),
+            gt(bookings.expiraEn, sql`now()`),
+          ),
         ),
       ),
     db
       .select({ roomId: bookings.roomId })
       .from(bookings)
-      .where(and(ne(bookings.estado, "cancelada"), eq(bookings.checkout, fecha))),
+      .where(
+        and(
+          ne(bookings.estado, "cancelada"),
+          ne(bookings.estado, "expirada"),
+          eq(bookings.checkout, fecha),
+          or(
+            ne(bookings.estadoPago, "iniciado"),
+            isNull(bookings.expiraEn),
+            gt(bookings.expiraEn, sql`now()`),
+          ),
+        ),
+      ),
     db.select().from(cleaningLog).where(eq(cleaningLog.fecha, fecha)),
   ]);
 
@@ -97,19 +113,25 @@ export async function saveChecklistResult(input: {
     .from(cleaningLog)
     .where(and(eq(cleaningLog.roomId, input.roomId), eq(cleaningLog.fecha, input.fecha)))
     .limit(1);
-  const values = {
+  const base = {
     itemsCompletados: input.itemsCompletados,
-    personal: input.personal ?? "",
-    observaciones: input.observaciones ?? "",
     estado,
     completadoEn: completo ? new Date() : null,
   };
   if (existing) {
-    await db.update(cleaningLog).set(values).where(eq(cleaningLog.id, existing.id));
+    // No pisar personal/observaciones con "" si el caller no los manda.
+    const patch: Partial<typeof cleaningLog.$inferInsert> = { ...base };
+    if (input.personal !== undefined) patch.personal = input.personal;
+    if (input.observaciones !== undefined) patch.observaciones = input.observaciones;
+    await db.update(cleaningLog).set(patch).where(eq(cleaningLog.id, existing.id));
   } else {
-    await db
-      .insert(cleaningLog)
-      .values({ roomId: input.roomId, fecha: input.fecha, ...values });
+    await db.insert(cleaningLog).values({
+      roomId: input.roomId,
+      fecha: input.fecha,
+      ...base,
+      personal: input.personal ?? "",
+      observaciones: input.observaciones ?? "",
+    });
   }
   return { ok: true };
 }
@@ -174,10 +196,10 @@ export async function getMaintenanceTasks(): Promise<MaintTask[]> {
 export async function markMaintenanceDone(
   id: string,
   responsable?: string,
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean; error?: string; notFound?: boolean }> {
   await ensureDb();
   const [t] = await db.select().from(maintenanceTasks).where(eq(maintenanceTasks.id, id)).limit(1);
-  if (!t) return { ok: false, error: "Tarea no encontrada." };
+  if (!t) return { ok: false, notFound: true, error: "Tarea no encontrada." };
   const hoy = hoyISO();
   await db
     .update(maintenanceTasks)
