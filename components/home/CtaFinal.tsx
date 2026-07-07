@@ -6,6 +6,7 @@ import { Parallax } from "@/components/motion/Parallax";
 import { WordsReveal } from "@/components/motion/WordsReveal";
 import { Reveal } from "@/components/motion/Reveal";
 import { MagneticButton } from "@/components/motion/MagneticButton";
+import { RatingBadge } from "@/components/RatingBadge";
 
 export function CtaFinal() {
   return (
@@ -46,6 +47,12 @@ export function CtaFinal() {
               Buscar disponibilidad
             </Button>
           </MagneticButton>
+        </Reveal>
+        <Reveal delay={0.45} className="mt-6 flex flex-col items-center gap-4">
+          <p className="text-sm text-white/80">
+            Solo 6 habitaciones · consulta disponibilidad para tus fechas.
+          </p>
+          <RatingBadge tone="onDark" />
         </Reveal>
       </div>
     </section>

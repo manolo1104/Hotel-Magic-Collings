@@ -6,6 +6,7 @@ import { confianza } from "@/lib/site";
 import { Parallax } from "@/components/motion/Parallax";
 import { WordsReveal } from "@/components/motion/WordsReveal";
 import { Reveal } from "@/components/motion/Reveal";
+import { RatingBadge } from "@/components/RatingBadge";
 
 export function Hero() {
   return (
@@ -50,7 +51,8 @@ export function Hero() {
           <BookingWidget />
         </Reveal>
 
-        <Reveal delay={0.85} className="mt-4">
+        <Reveal delay={0.85} className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
+          <RatingBadge tone="onDark" />
           <ul className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-white/90">
             {confianza.map((c) => (
               <li key={c} className="flex items-center gap-1.5">

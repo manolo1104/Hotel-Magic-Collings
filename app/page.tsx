@@ -1,7 +1,9 @@
 import { Hero } from "@/components/home/Hero";
+import { BarraValor } from "@/components/home/BarraValor";
 import { Amenidades } from "@/components/home/Amenidades";
 import { VistazoHabitaciones } from "@/components/home/VistazoHabitaciones";
 import { Estancia } from "@/components/home/Estancia";
+import { Huasteca } from "@/components/home/Huasteca";
 import { Galeria } from "@/components/home/Galeria";
 import { Resenas } from "@/components/home/Resenas";
 import { Faq } from "@/components/home/Faq";
@@ -17,9 +19,11 @@ export default function Home() {
     <>
       <JsonLd data={homeGraphJsonLd()} />
       <Hero />
+      <BarraValor />
       <Amenidades />
       <VistazoHabitaciones />
       <Estancia />
+      <Huasteca />
       <Galeria />
       <Resenas />
       <Faq />

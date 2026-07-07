@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Photo } from "@/components/Photo";
-import { Users, ArrowRight } from "lucide-react";
+import { Users, ArrowRight, Check } from "lucide-react";
 import { getRoomTypes } from "@/lib/booking/engine";
 import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
@@ -49,7 +49,21 @@ export async function VistazoHabitaciones() {
                   <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
                     {t.descripcion}
                   </p>
-                  <div className="mt-4 flex items-end justify-between gap-4 pt-2">
+
+                  {/* Amenidades clave */}
+                  <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5">
+                    {t.amenidades.slice(0, 3).map((a) => (
+                      <li
+                        key={a}
+                        className="inline-flex items-center gap-1.5 text-xs text-foreground/70"
+                      >
+                        <Check className="size-3.5 shrink-0 text-support" aria-hidden />
+                        {a}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="mt-auto flex items-end justify-between gap-4 pt-6">
                     <p className="text-sm text-muted-foreground">
                       {t.tarifaBase > 0 ? (
                         <>
@@ -67,14 +81,21 @@ export async function VistazoHabitaciones() {
                         />
                       )}
                     </p>
-                    <Button
-                      variant="secondary"
-                      className="gap-1.5"
-                      render={<Link href="/habitaciones" />}
-                    >
-                      Ver detalles
-                      <ArrowRight className="size-4 transition-transform duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:translate-x-0.5" aria-hidden />
-                    </Button>
+                    <div className="flex flex-col items-end gap-1.5">
+                      <Button
+                        className="gap-1.5"
+                        render={<Link href={`/buscar?tipo=${t.slug}`} />}
+                      >
+                        Reservar
+                        <ArrowRight className="size-4 transition-transform duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:translate-x-0.5" aria-hidden />
+                      </Button>
+                      <Link
+                        href="/habitaciones"
+                        className="text-xs font-medium text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
+                      >
+                        Ver detalles y fotos
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </article>

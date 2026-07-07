@@ -1,6 +1,14 @@
-import { Tag, HeartHandshake, MapPin } from "lucide-react";
+import { Tag, HeartHandshake, MapPin, Check, Minus } from "lucide-react";
 import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
+
+// Comparativa honesta: reservar directo vs. una OTA (Booking/Expedia).
+const comparativa = [
+  { tema: "Tarifa", directo: "La más baja, sin comisión", ota: "Precio con comisión del intermediario" },
+  { tema: "Cancelación", directo: "Flexible, hasta 72 h antes", ota: "Sujeta a la política de la plataforma" },
+  { tema: "Trato", directo: "Directo con el hotel por WhatsApp", ota: "A través de la plataforma" },
+  { tema: "Peticiones especiales", directo: "Nos las dices directo", ota: "Se pueden perder en el camino" },
+];
 
 const puntos = [
   {
@@ -65,6 +73,45 @@ export function Estancia() {
             );
           })}
         </Stagger>
+
+        {/* Comparativa honesta directo vs. OTA */}
+        <Reveal
+          direction="up"
+          className="mt-16 overflow-hidden rounded-2xl border border-brand-foreground/15 bg-brand-foreground/[0.04]"
+        >
+          <div className="grid sm:grid-cols-2">
+            <div className="border-b border-brand-foreground/15 p-6 sm:border-r sm:border-b-0 sm:p-8">
+              <p className="font-heading text-lg font-semibold text-brand-foreground">
+                Reservando directo aquí
+              </p>
+              <ul className="mt-5 space-y-3.5">
+                {comparativa.map((c) => (
+                  <li key={c.tema} className="flex items-start gap-3">
+                    <Check className="mt-0.5 size-5 shrink-0 text-support" aria-hidden />
+                    <span className="text-brand-foreground/90">
+                      <span className="font-medium">{c.tema}:</span> {c.directo}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="p-6 sm:p-8">
+              <p className="font-heading text-lg font-semibold text-brand-foreground/70">
+                En una OTA (Booking, Expedia…)
+              </p>
+              <ul className="mt-5 space-y-3.5">
+                {comparativa.map((c) => (
+                  <li key={c.tema} className="flex items-start gap-3">
+                    <Minus className="mt-0.5 size-5 shrink-0 text-brand-foreground/40" aria-hidden />
+                    <span className="text-brand-foreground/60">
+                      <span className="font-medium">{c.tema}:</span> {c.ota}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </Reveal>
       </div>
     </section>
   );
