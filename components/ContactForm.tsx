@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Send, CheckCircle2 } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,9 @@ export function ContactForm() {
   const [form, setForm] = useState({ nombre: "", whatsapp: "", mensaje: "" });
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  // Anti-spam: honeypot (campo oculto) + tiempo mínimo desde que se montó el form.
+  const [honeypot, setHoneypot] = useState("");
+  const montadoEn = useRef(Date.now());
   const reduce = useReducedMotion();
 
   function update(field: keyof typeof form, value: string) {
@@ -24,6 +27,12 @@ export function ContactForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    // Bot detectado (honeypot lleno o envío < 2.5 s tras cargar): se descarta en
+    // silencio (mostramos "enviado" para no dar pistas al bot).
+    if (honeypot || Date.now() - montadoEn.current < 2500) {
+      setSent(true);
+      return;
+    }
     if (FORMSPREE_URL) {
       setLoading(true);
       try {
@@ -76,6 +85,20 @@ export function ContactForm() {
       onSubmit={handleSubmit}
       className="grid gap-5 rounded-2xl border border-border bg-card p-6 sm:p-8"
     >
+      {/* Honeypot: invisible para humanos; si un bot lo llena, se descarta el envío. */}
+      <div aria-hidden className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
+        <label htmlFor="c-empresa">No llenar este campo</label>
+        <input
+          id="c-empresa"
+          name="empresa"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          value={honeypot}
+          onChange={(e) => setHoneypot(e.target.value)}
+        />
+      </div>
+
       <div className="grid gap-2">
         <Label htmlFor="c-nombre">Nombre</Label>
         <Input
