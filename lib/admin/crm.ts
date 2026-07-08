@@ -31,7 +31,7 @@ export function buildCRM(
   const map = new Map<string, GuestProfile>();
   for (const b of bookings) {
     if (!b.email) continue;
-    const email = b.email.toLowerCase();
+    const email = b.email.toLowerCase().trim();
     let p = map.get(email);
     if (!p) {
       p = {

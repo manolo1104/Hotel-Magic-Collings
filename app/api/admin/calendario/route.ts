@@ -9,9 +9,13 @@ export async function GET(req: NextRequest) {
   if (!(await sesionActiva()))
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   const sp = req.nextUrl.searchParams;
-  const now = new Date();
-  const year = Number(sp.get("year")) || now.getFullYear();
-  const month = Number(sp.get("month")) || now.getMonth() + 1;
+  // Mes/año por defecto en la zona del hotel (no la del servidor/UTC en Vercel).
+  const [yNow, mNow] = new Date()
+    .toLocaleDateString("en-CA", { timeZone: "America/Mexico_City" })
+    .split("-")
+    .map(Number);
+  const year = Number(sp.get("year")) || yNow;
+  const month = Number(sp.get("month")) || mNow;
 
   const calendar = await getCalendarMonth(year, month);
   const first = calendar.days[0];

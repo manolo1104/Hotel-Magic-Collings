@@ -2,7 +2,7 @@
 // Insights operativos del día (puro, sobre filas Drizzle)
 // Foco: qué pasa HOY + pronóstico de ocupación de la semana.
 // ============================================================
-import type { BookingView } from "@/lib/booking/engine";
+import { isReservaActiva, type BookingView } from "@/lib/booking/engine";
 
 export interface MovimientoHoy {
   nombre: string;
@@ -41,9 +41,8 @@ export function calcInsights(
   totalRooms: number,
   hoy: Date,
 ): InsightsData {
-  const activas = bookings.filter(
-    (b) => b.estado !== "cancelada" && b.estado !== "expirada",
-  );
+  // Misma definición de "activa" que disponibilidad/KPIs (sin holds vencidos).
+  const activas = bookings.filter((b) => isReservaActiva(b, hoy));
   const fecha = dISO(hoy);
   const ym = fecha.slice(0, 7);
 
@@ -74,7 +73,7 @@ export function calcInsights(
 
   const proximasLlegadas = activas
     .filter((b) => b.checkin > fecha)
-    .sort((a, b) => (a.checkin < b.checkin ? -1 : 1))
+    .sort((a, b) => (a.checkin < b.checkin ? -1 : a.checkin > b.checkin ? 1 : 0))
     .slice(0, 6)
     .map((b) => ({
       nombre: b.nombre,

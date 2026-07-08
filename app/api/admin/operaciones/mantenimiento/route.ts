@@ -34,5 +34,7 @@ export async function POST(req: NextRequest) {
     String(body.id ?? ""),
     body.responsable ? String(body.responsable) : undefined,
   );
-  return NextResponse.json(result, { status: result.ok ? 200 : 400 });
+  return NextResponse.json(result, {
+    status: result.ok ? 200 : result.notFound ? 404 : 400,
+  });
 }

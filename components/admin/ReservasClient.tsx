@@ -49,6 +49,7 @@ function opsState(b: BookingView, today: string): { key: OpsKey; label: string; 
 function badgePago(b: BookingView) {
   const map: Record<string, { t: string; c: string }> = {
     pagado: { t: "Pagada", c: "bg-support/15 text-support" },
+    parcial: { t: "Anticipo", c: "bg-amber-500/15 text-amber-700" },
     iniciado: { t: "Esperando pago", c: "bg-amber-500/15 text-amber-700" },
     no_iniciado: { t: "Sin pago en línea", c: "bg-muted text-muted-foreground" },
     rechazado: { t: "Pago rechazado", c: "bg-destructive/10 text-destructive" },

@@ -27,5 +27,8 @@ export async function POST(
     );
   const sent = await enviarCotizacion(q);
   if (sent) await updateQuote(id, { estado: "enviada" });
-  return NextResponse.json({ ok: sent });
+  return NextResponse.json(
+    sent ? { ok: true } : { ok: false, error: "No se pudo enviar el correo." },
+    { status: sent ? 200 : 502 },
+  );
 }

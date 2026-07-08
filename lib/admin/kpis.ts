@@ -2,7 +2,7 @@
 // KPIs financieros del hotel (puro, sobre filas Drizzle)
 // Ingreso de una reserva = su `total`, atribuido al mes de check-in.
 // ============================================================
-import type { BookingView } from "@/lib/booking/engine";
+import { isReservaActiva, type BookingView } from "@/lib/booking/engine";
 
 export interface KPIData {
   ingresoMes: number;
@@ -36,9 +36,9 @@ export function calcKPIs(
   totalRooms: number,
   hoy: Date,
 ): KPIData {
-  const activas = bookings.filter(
-    (b) => b.estado !== "cancelada" && b.estado !== "expirada",
-  );
+  // "Activa" = ocupa inventario (excluye holds de pago vencidos), coherente
+  // con disponibilidad/calendario para no inflar ingresos con pagos abandonados.
+  const activas = bookings.filter((b) => isReservaActiva(b, hoy));
   const y = hoy.getFullYear();
   const m = hoy.getMonth(); // 0-11
   const mesActual = `${y}-${String(m + 1).padStart(2, "0")}`;

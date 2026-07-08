@@ -6,7 +6,7 @@ import { es } from "date-fns/locale";
 import { CalendarX, Check, ShieldCheck, CreditCard, BadgeCheck } from "lucide-react";
 import { confianza, site } from "@/lib/site";
 import { getAvailability, formatMXN } from "@/lib/booking/engine";
-import { pagosActivos } from "@/lib/mp";
+import { pagosActivos, mpPublicKey } from "@/lib/mp";
 import { BookingForm } from "@/components/booking/BookingForm";
 import { BookingSteps } from "@/components/booking/BookingSteps";
 import { Button } from "@/components/ui/button";
@@ -165,6 +165,7 @@ export default async function ReservarPage({ searchParams }: { searchParams: SP 
             totalLabel={formatMXN(tipo.precioTotal)}
             pagoActivo={pagosActivos()}
             anticipoLabel={formatMXN(Math.round(tipo.precioTotal / 2))}
+            publicKey={mpPublicKey()}
           />
         </Reveal>
       </div>

@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createBooking } from "@/lib/booking/engine";
 import type { CreateBookingInput } from "@/lib/booking/types";
 
+export const runtime = "nodejs";
+
 // Crea una reserva en estado "pendiente" y asigna un cuarto físico libre.
 export async function POST(req: NextRequest) {
   const body = (await req.json().catch(() => null)) as CreateBookingInput | null;

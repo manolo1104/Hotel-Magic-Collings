@@ -245,15 +245,20 @@ export async function createBooking(
 
 /** Lee una reserva por id (para páginas de retorno y panel). */
 export async function getBookingById(id: string): Promise<Booking | null> {
+  if (!UUID_RE.test(id)) return null;
   await ensureDb();
-  const [b] = await db.select().from(bookings).where(eq(bookings.id, id)).limit(1);
-  return b ?? null;
+  try {
+    const [b] = await db.select().from(bookings).where(eq(bookings.id, id)).limit(1);
+    return b ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export type BookingView = Booking & { nombreTipo: string; numeroCuarto: string };
 
 // UUID v4/genérico: evita golpear la BD (y un 500) con un ref de URL inválido.
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Reserva enriquecida con nombre del tipo y número de cuarto. */
 export async function getBookingView(id: string): Promise<BookingView | null> {
@@ -278,6 +283,26 @@ export async function getBookingView(id: string): Promise<BookingView | null> {
   } catch {
     return null;
   }
+}
+
+/**
+ * ¿La reserva ocupa inventario AHORA? Misma regla que occupiedRoomIds/
+ * getCalendarMonth: cancelada/expirada no cuentan, y un "hold" de pago
+ * (estado_pago='iniciado') con expiraEn ya vencida libera el cuarto.
+ * Fuente única para que KPIs, insights y disponibilidad sean coherentes.
+ */
+export function isReservaActiva(
+  b: { estado: string; estadoPago: string; expiraEn: Date | null },
+  ahora: Date,
+): boolean {
+  if (b.estado === "cancelada" || b.estado === "expirada") return false;
+  if (
+    b.estadoPago === "iniciado" &&
+    b.expiraEn != null &&
+    new Date(b.expiraEn).getTime() < ahora.getTime()
+  )
+    return false;
+  return true;
 }
 
 /** Asocia la preferencia de Mercado Pago a la reserva. */
@@ -343,6 +368,23 @@ export async function marcarPagoRechazado(
   await db
     .update(bookings)
     .set({ estado: "cancelada", estadoPago: "rechazado", mpPaymentId: paymentId, mpStatus })
+    .where(and(eq(bookings.id, bookingId), ne(bookings.estadoPago, "pagado")));
+}
+
+/**
+ * Pago en revisión (in_process/pending de MP): conserva el hold del cuarto
+ * SIN que venza mientras MP acredita (expiraEn=null lo cuenta como ocupado en
+ * occupiedRoomIds), evitando que el cuarto se libere y se sobrevenda.
+ */
+export async function marcarPagoPendiente(
+  bookingId: string,
+  paymentId: string,
+  mpStatus: string,
+): Promise<void> {
+  await ensureDb();
+  await db
+    .update(bookings)
+    .set({ mpPaymentId: paymentId, mpStatus, expiraEn: null })
     .where(and(eq(bookings.id, bookingId), ne(bookings.estadoPago, "pagado")));
 }
 
@@ -463,7 +505,12 @@ export async function createManualBooking(input: {
       email: input.email?.trim() || null,
       estado: "confirmada",
       total,
-      estadoPago: montoPagado > 0 && montoPagado >= total ? "pagado" : "no_iniciado",
+      estadoPago:
+        montoPagado >= total && total > 0
+          ? "pagado"
+          : montoPagado > 0
+            ? "parcial"
+            : "no_iniciado",
       montoPagado,
       saldoPendiente: Math.max(0, total - montoPagado),
       origen: input.origen?.trim() || "manual",
@@ -494,20 +541,37 @@ export async function updateBooking(
   const [b] = await db.select().from(bookings).where(eq(bookings.id, id)).limit(1);
   if (!b) return { ok: false, error: "Reserva no encontrada." };
 
+  if (
+    changes.estado != null &&
+    !["pendiente", "confirmada", "cancelada", "expirada"].includes(changes.estado)
+  )
+    return { ok: false, error: "Estado inválido." };
+
   const checkin = changes.checkin ?? b.checkin;
   const checkout = changes.checkout ?? b.checkout;
   if ((changes.checkin || changes.checkout) && calcNights(checkin, checkout) < 1)
     return { ok: false, error: "La salida debe ser posterior a la llegada." };
 
-  const total = changes.total != null ? Math.round(changes.total) : b.total;
+  const total =
+    changes.total != null ? Math.max(0, Math.round(changes.total)) : b.total;
   const montoPagado =
-    changes.montoPagado != null ? Math.round(changes.montoPagado) : b.montoPagado;
+    changes.montoPagado != null
+      ? Math.max(0, Math.round(changes.montoPagado))
+      : b.montoPagado;
 
   const set: Partial<typeof bookings.$inferInsert> = {
     total,
     montoPagado,
     saldoPendiente: Math.max(0, total - montoPagado),
   };
+  // Si cambia el pago de una reserva no-online, refresca el badge de pago.
+  if (changes.montoPagado != null && b.estadoPago !== "iniciado")
+    set.estadoPago =
+      montoPagado >= total && total > 0
+        ? "pagado"
+        : montoPagado > 0
+          ? "parcial"
+          : "no_iniciado";
   if (changes.nombre != null) set.nombre = changes.nombre.trim();
   if (changes.whatsapp != null) set.whatsapp = changes.whatsapp.trim();
   if (changes.email !== undefined)
@@ -673,6 +737,12 @@ export async function getGanttBookings(
         ne(bookings.estado, "expirada"),
         lt(bookings.checkin, to),
         gt(bookings.checkout, from),
+        // Coherente con getCalendarMonth/occupiedRoomIds: ocultar holds vencidos
+        or(
+          ne(bookings.estadoPago, "iniciado"),
+          isNull(bookings.expiraEn),
+          gt(bookings.expiraEn, sql`now()`),
+        ),
       ),
     )
     .orderBy(bookings.checkin);
@@ -687,6 +757,8 @@ export async function blockDates(input: {
   motivo?: string;
   nota?: string;
 }): Promise<{ ok: boolean; error?: string }> {
+  if (!UUID_RE.test(input.roomId))
+    return { ok: false, error: "Elige un cuarto válido." };
   await ensureDb();
   if (
     !isValidISODate(input.checkin) ||
@@ -694,6 +766,12 @@ export async function blockDates(input: {
     calcNights(input.checkin, input.checkout) < 1
   )
     return { ok: false, error: "Rango de fechas inválido." };
+  const [room] = await db
+    .select({ id: rooms.id })
+    .from(rooms)
+    .where(eq(rooms.id, input.roomId))
+    .limit(1);
+  if (!room) return { ok: false, error: "Cuarto no encontrado." };
   await db.insert(blocks).values({
     roomId: input.roomId,
     checkin: input.checkin,
@@ -706,6 +784,8 @@ export async function blockDates(input: {
 
 /** Quita un bloqueo manual/mantenimiento (los de OTA se gestionan por sync). */
 export async function unblock(id: string): Promise<{ ok: boolean; error?: string }> {
+  if (!UUID_RE.test(id))
+    return { ok: false, error: "Bloqueo no encontrado o pertenece a un canal OTA." };
   await ensureDb();
   const res = await db
     .delete(blocks)
@@ -786,6 +866,9 @@ export async function createQuote(input: {
     .where(eq(roomTypes.slug, input.slug))
     .limit(1);
   const noches = calcNights(input.checkin, input.checkout);
+  const huespedes = Math.floor(input.huespedes) || 1;
+  if (tipo && huespedes > tipo.capacidad)
+    return { ok: false, error: "Ese tipo de habitación no admite tantos huéspedes." };
   const precioTotal =
     input.precioTotal != null && input.precioTotal >= 0
       ? Math.round(input.precioTotal)
@@ -800,7 +883,7 @@ export async function createQuote(input: {
       slug: tipo?.nombre ?? input.slug,
       checkin: input.checkin,
       checkout: input.checkout,
-      huespedes: Math.floor(input.huespedes) || 1,
+      huespedes,
       noches,
       precioTotal,
       notas: input.notas?.trim() || "",

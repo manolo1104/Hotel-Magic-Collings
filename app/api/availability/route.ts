@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getAvailability } from "@/lib/booking/engine";
 
+export const runtime = "nodejs";
+
 // Runtime Node (por defecto) — necesario para PGlite/Postgres.
 export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams;

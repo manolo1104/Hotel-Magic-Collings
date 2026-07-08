@@ -2,7 +2,7 @@
 // Canales OTA (Booking/Expedia) — importa reservas vía iCal como bloqueos.
 // Cada canal mapea 1 cuarto físico. Cada sync REEMPLAZA los bloqueos del canal.
 // ============================================================
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { ensureDb } from "@/lib/db/ensure";
 import { otaChannels, blocks, rooms } from "@/lib/db/schema";
@@ -56,9 +56,18 @@ export async function addOtaChannel(input: {
   if (!input.roomId) return { ok: false, error: "Elige un cuarto." };
   if (!/^https?:\/\//.test(input.icalUrl))
     return { ok: false, error: "La URL del calendario no es válida." };
+  const platform = input.platform === "expedia" ? "expedia" : "booking";
+  // Evita conectar dos veces el mismo cuarto + plataforma.
+  const [dup] = await db
+    .select({ id: otaChannels.id })
+    .from(otaChannels)
+    .where(and(eq(otaChannels.roomId, input.roomId), eq(otaChannels.platform, platform)))
+    .limit(1);
+  if (dup)
+    return { ok: false, error: "Ese cuarto ya tiene un canal de esa plataforma." };
   await db.insert(otaChannels).values({
     roomId: input.roomId,
-    platform: input.platform === "expedia" ? "expedia" : "booking",
+    platform,
     icalUrl: input.icalUrl.trim(),
   });
   return { ok: true };
