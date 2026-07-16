@@ -10,8 +10,9 @@ export const site = {
   // Nombre completo de marca para títulos/Schema
   legalName: "Hotel Magic Collinn",
   tagline: "Hotel boutique en el corazón de Axtla de Terrazas",
-  // Dominio (confirmar): se usa para metadataBase, sitemap y Open Graph
-  url: "https://hotelmagicollinn.com", // TODO: confirmar dominio real
+  // Dominio: se usa para metadataBase, sitemap y Open Graph.
+  // www es la URL canónica (el apex hotelmagicollinn.com reenvía 301 a www).
+  url: "https://www.hotelmagicollinn.com",
   locality: "Axtla de Terrazas",
   region: "San Luis Potosí",
   regionCode: "SLP",
