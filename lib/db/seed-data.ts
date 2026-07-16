@@ -52,4 +52,19 @@ export const roomTypeSeed: RoomTypeSeed[] = [
     fotos: dobleFotos,
     units: ["201", "202", "203"],
   },
+  {
+    // CUARTO INTERNO DE PRUEBA — $10 MXN. Sirve para probar el cobro REAL de
+    // Mercado Pago sin gastar. OCULTO del sitio público (ver HIDDEN_SLUGS en
+    // engine.ts); se reserva solo por link directo:
+    //   /reservar?tipo=prueba&checkin=YYYY-MM-DD&checkout=YYYY-MM-DD&huespedes=1
+    slug: "prueba",
+    nombre: "Reserva de prueba (interno)",
+    descripcion:
+      "Cuarto interno de $10 para probar el cobro real de Mercado Pago. No es una habitación real y no aparece en el sitio público.",
+    capacidad: 2,
+    tarifaBase: 10, // $10 MXN
+    amenidades: ["Uso interno"],
+    fotos: sencillaFotos,
+    units: ["T01"],
+  },
 ];

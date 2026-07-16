@@ -17,6 +17,12 @@ import type {
   CreateBookingResult,
 } from "./types";
 
+// Tipos internos (p. ej. el cuarto de prueba de pago de $10): existen en la BD
+// pero se OCULTAN del sitio público (home, /habitaciones, /buscar, widget del
+// hero). Siguen siendo reservables por link directo a /reservar?tipo=<slug>,
+// que pide `includeHidden`. Así se puede probar el cobro real sin exponerlo.
+export const HIDDEN_SLUGS = new Set<string>(["prueba"]);
+
 // ── Helpers puros de fecha/precio ───────────────────────────
 const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -141,7 +147,12 @@ export async function getAvailability(
         precioTotal: t.tarifaBase * noches,
       };
     })
-    .filter((t) => t.capacidad >= huespedes && t.disponibles > 0);
+    .filter(
+      (t) =>
+        t.capacidad >= huespedes &&
+        t.disponibles > 0 &&
+        (params.includeHidden || !HIDDEN_SLUGS.has(t.slug)),
+    );
 
   return { ok: true, ...base, noches, tipos };
 }
@@ -967,9 +978,13 @@ export async function convertQuoteToBooking(
 }
 
 // ── Lectura simple de tipos (para /habitaciones) ────────────
-export async function getRoomTypes() {
+// Oculta los tipos internos (HIDDEN_SLUGS) salvo que se pida includeHidden.
+export async function getRoomTypes(opts?: { includeHidden?: boolean }) {
   await ensureDb();
-  return db.select().from(roomTypes).orderBy(roomTypes.tarifaBase);
+  const rows = await db.select().from(roomTypes).orderBy(roomTypes.tarifaBase);
+  return opts?.includeHidden
+    ? rows
+    : rows.filter((t) => !HIDDEN_SLUGS.has(t.slug));
 }
 
 export async function getRoomTypeBySlug(slug: string) {

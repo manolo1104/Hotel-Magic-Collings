@@ -67,7 +67,9 @@ export default async function ReservarPage({ searchParams }: { searchParams: SP 
     );
   }
 
-  const result = await getAvailability({ checkin, checkout, huespedes });
+  // includeHidden: permite reservar el cuarto interno de prueba ($10) por link
+  // directo, aunque esté oculto del catálogo público.
+  const result = await getAvailability({ checkin, checkout, huespedes, includeHidden: true });
   const tipo = result.ok ? result.tipos.find((t) => t.slug === tipoSlug) : undefined;
 
   if (!tipo) {

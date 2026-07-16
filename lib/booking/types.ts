@@ -6,6 +6,7 @@ export interface AvailabilityParams {
   checkin: string; // ISO yyyy-mm-dd
   checkout: string; // ISO yyyy-mm-dd
   huespedes: number;
+  includeHidden?: boolean; // incluye tipos internos (p. ej. cuarto de prueba)
 }
 
 export interface AvailableRoomType {
