@@ -17,11 +17,14 @@ import type {
   CreateBookingResult,
 } from "./types";
 
-// Tipos internos (p. ej. el cuarto de prueba de pago de $10): existen en la BD
-// pero se OCULTAN del sitio público (home, /habitaciones, /buscar, widget del
-// hero). Siguen siendo reservables por link directo a /reservar?tipo=<slug>,
-// que pide `includeHidden`. Así se puede probar el cobro real sin exponerlo.
-export const HIDDEN_SLUGS = new Set<string>(["prueba"]);
+// Tipos internos que se OCULTAN del sitio público (home, /habitaciones,
+// /buscar, widget del hero). Siguen reservables por link directo a
+// /reservar?tipo=<slug> (que pide `includeHidden`).
+// NOTA: "prueba" ($10) está comentado a propósito → el dueño lo quiere
+// VISIBLE en el sitio para la prueba de pago. Para re-ocultarlo, descomenta.
+export const HIDDEN_SLUGS = new Set<string>([
+  // "prueba",
+]);
 
 // ── Helpers puros de fecha/precio ───────────────────────────
 const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
