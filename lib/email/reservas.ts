@@ -61,10 +61,14 @@ export async function enviarCorreosReserva(b: Booking): Promise<void> {
     });
   }
 
-  // Aviso al dueño
-  const dueno = process.env.OWNER_EMAIL || site.email;
+  // Aviso al dueño. OWNER_EMAIL admite VARIOS correos separados por coma
+  // (p. ej. "hotel@gmail.com,dueno@gmail.com") → llega a todos.
+  const duenos = (process.env.OWNER_EMAIL || site.email)
+    .split(/[;,]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
   await enviarEmail({
-    to: dueno,
+    to: duenos,
     subject: `Nueva reserva pagada — ${b.nombre} (REF ${ref})`,
     html: correoDueno(datos),
     attachments,
