@@ -8,6 +8,7 @@ import { Galeria } from "@/components/home/Galeria";
 import { Resenas } from "@/components/home/Resenas";
 import { Faq } from "@/components/home/Faq";
 import { CtaFinal } from "@/components/home/CtaFinal";
+import { Ubicacion } from "@/components/home/Ubicacion";
 import { JsonLd } from "@/components/JsonLd";
 import { homeGraphJsonLd } from "@/lib/seo";
 
@@ -31,6 +32,7 @@ export default function Home() {
       <Galeria />
       <Faq />
       <CtaFinal />
+      <Ubicacion />
     </>
   );
 }

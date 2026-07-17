@@ -5,6 +5,7 @@ import { es } from "date-fns/locale";
 import { LogIn, LogOut, BedDouble, CalendarDays } from "lucide-react";
 import { listBookings, countActiveRooms } from "@/lib/booking/engine";
 import { calcInsights } from "@/lib/admin/insights";
+import { calcKPIs } from "@/lib/admin/kpis";
 
 export const metadata: Metadata = { title: "Insights", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -25,7 +26,14 @@ export default async function InsightsPage() {
     listBookings(),
     countActiveRooms(),
   ]);
-  const d = calcInsights(reservas, totalRooms, new Date());
+  const hoy = new Date();
+  const d = calcInsights(reservas, totalRooms, hoy);
+  // Desglose por tipo (este año), ordenado por nº de reservas para destacar
+  // la habitación más vendida y qué % representa cada una.
+  const k = calcKPIs(reservas, totalRooms, hoy);
+  const porTipo = [...k.porTipo].sort((a, b) => b.reservas - a.reservas);
+  const totalReservasTipo = porTipo.reduce((s, t) => s + t.reservas, 0);
+  const masVendida = porTipo[0] ?? null;
 
   return (
     <div className="mx-auto w-full max-w-[1100px] px-4 pt-6 pb-20 sm:px-6 lg:pt-8">
@@ -65,6 +73,45 @@ export default async function InsightsPage() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* Habitación más vendida + desglose por tipo (este año) */}
+      <section className="mt-6 rounded-2xl border border-border bg-card p-5">
+        <h2 className="flex items-center gap-2 font-heading text-lg font-semibold">
+          <BedDouble className="size-4 text-brand" /> Habitación más vendida
+          <span className="ml-auto text-xs font-normal text-muted-foreground">
+            Este año
+          </span>
+        </h2>
+        {totalReservasTipo === 0 || !masVendida ? (
+          <p className="mt-3 text-sm text-muted-foreground">
+            Aún no hay reservas este año.
+          </p>
+        ) : (
+          <>
+            <p className="mt-2 text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">
+                {masVendida.nombre}
+              </span>{" "}
+              es la más reservada: {masVendida.reservas} de {totalReservasTipo}{" "}
+              reservas (
+              {Math.round((masVendida.reservas / totalReservasTipo) * 100)}%).
+            </p>
+            <div className="mt-4 space-y-3">
+              {porTipo.map((t) => (
+                <Barra
+                  key={t.nombre}
+                  label={t.nombre}
+                  sub={`${t.reservas} ${
+                    t.reservas === 1 ? "reserva" : "reservas"
+                  } · ${mxn(t.ingreso)}`}
+                  valor={`${Math.round((t.reservas / totalReservasTipo) * 100)}%`}
+                  pct={(t.reservas / totalReservasTipo) * 100}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </section>
 
       {/* Movimientos de hoy */}
@@ -143,6 +190,34 @@ function Card({
       <div className="text-xs text-muted-foreground">{label}</div>
       <div className={`mt-1 font-heading text-2xl font-semibold ${valueCls}`}>{value}</div>
       {sub && <div className="text-xs text-muted-foreground">{sub}</div>}
+    </div>
+  );
+}
+
+function Barra({
+  label,
+  sub,
+  valor,
+  pct,
+}: {
+  label: string;
+  sub: string;
+  valor: string;
+  pct: number;
+}) {
+  return (
+    <div>
+      <div className="flex items-center justify-between text-sm">
+        <span className="font-medium">{label}</span>
+        <span className="text-muted-foreground">{valor}</span>
+      </div>
+      <div className="mt-1 h-2 overflow-hidden rounded-full bg-muted">
+        <div
+          className="h-full rounded-full bg-brand"
+          style={{ width: `${Math.max(2, pct)}%` }}
+        />
+      </div>
+      <div className="mt-0.5 text-xs text-muted-foreground">{sub}</div>
     </div>
   );
 }
