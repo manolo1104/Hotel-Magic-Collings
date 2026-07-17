@@ -3,8 +3,9 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { Photo } from "@/components/Photo";
 import { es } from "date-fns/locale";
-import { CalendarX, Check, ShieldCheck, CreditCard, BadgeCheck } from "lucide-react";
-import { confianza, site } from "@/lib/site";
+import { CalendarX, Check, ShieldCheck, CreditCard, BadgeCheck, Star } from "lucide-react";
+import { confianza, site, testimonios } from "@/lib/site";
+import { RatingBadge } from "@/components/RatingBadge";
 import { getAvailability, formatMXN } from "@/lib/booking/engine";
 import { pagosActivos, mpPublicKey } from "@/lib/mp";
 import { BookingForm } from "@/components/booking/BookingForm";
@@ -151,6 +152,28 @@ export default async function ReservarPage({ searchParams }: { searchParams: SP 
                 </li>
               ))}
             </ul>
+
+            {/* Prueba social junto al total: el punto de máxima objeción */}
+            <div className="mt-4 border-t border-border pt-4">
+              <RatingBadge className="w-full justify-center" />
+              {testimonios[7] && (
+                <figure className="mt-3">
+                  <blockquote className="text-xs leading-relaxed text-muted-foreground">
+                    “{testimonios[7].texto}”
+                  </blockquote>
+                  <figcaption className="mt-1.5 flex items-center gap-1.5 text-xs">
+                    <span className="font-medium text-foreground">
+                      {testimonios[7].nombre}
+                    </span>
+                    <span className="flex gap-0.5 text-primary" aria-hidden>
+                      {Array.from({ length: testimonios[7].rating }).map((_, i) => (
+                        <Star key={i} className="size-3 fill-current" />
+                      ))}
+                    </span>
+                  </figcaption>
+                </figure>
+              )}
+            </div>
           </div>
         </aside>
 

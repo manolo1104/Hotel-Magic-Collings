@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { SearchX, Star, CalendarDays, ClipboardList, MessageCircle } from "lucide-react";
+import { SearchX, CalendarDays, ClipboardList, MessageCircle } from "lucide-react";
 import { getAvailability, getRoomTypes } from "@/lib/booking/engine";
-import { site, waLink } from "@/lib/site";
+import { waLink } from "@/lib/site";
 import { Button } from "@/components/ui/button";
+import { RatingBadge } from "@/components/RatingBadge";
 import { BookingWidget } from "@/components/booking/BookingWidget";
 import { BookingSteps } from "@/components/booking/BookingSteps";
 import { RoomResultCard } from "@/components/booking/RoomResultCard";
 import { RoomCatalogCard } from "@/components/booking/RoomCatalogCard";
+import { PruebaSocial } from "@/components/booking/PruebaSocial";
 import { Reveal } from "@/components/motion/Reveal";
 import { WordsReveal } from "@/components/motion/WordsReveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
@@ -67,18 +69,7 @@ export default async function BuscarPage({ searchParams }: { searchParams: SP })
             disponibles.
           </p>
         )}
-        <a
-          href={site.googleReviewsUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <Star className="size-4 fill-primary text-primary" aria-hidden />
-          <strong className="font-semibold text-foreground">
-            {site.reviewsRating}
-          </strong>
-          · {site.reviewsTotal} reseñas en Google
-        </a>
+        <RatingBadge className="mt-3" />
       </header>
 
       <BookingSteps current={1} className="mt-7" />
@@ -204,6 +195,9 @@ export default async function BuscarPage({ searchParams }: { searchParams: SP })
           </Stagger>
         )}
       </div>
+
+      {/* Prueba social: rating real de Google + garantías + testimonios */}
+      <PruebaSocial className="mt-16" />
     </div>
   );
 }

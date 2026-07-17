@@ -233,3 +233,28 @@ export function breadcrumbJsonLd(
     })),
   };
 }
+
+/** ImageGallery — fotos reales del hotel para /galeria (rich results de imagen). */
+export function imageGalleryJsonLd(
+  images: { src: string; alt: string }[],
+): Record<string, unknown> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ImageGallery",
+    "@id": `${site.url}/galeria`,
+    name: `Galería de fotos del ${site.legalName}`,
+    inLanguage: "es-MX",
+    isPartOf: { "@id": WEBSITE_ID },
+    about: { "@id": HOTEL_ID },
+    image: images.map((im) => ({
+      "@type": "ImageObject",
+      contentUrl: im.src.startsWith("http") ? im.src : `${site.url}${im.src}`,
+      caption: im.alt,
+    })),
+  };
+}
+
+/** Entidad Hotel (LocalBusiness) suelta — para páginas como /contacto y /nosotros. */
+export function hotelJsonLd(): Record<string, unknown> {
+  return { "@context": "https://schema.org", ...hotelEntity() };
+}

@@ -4,7 +4,7 @@ import { site } from "@/lib/site";
 import { Photo } from "@/components/Photo";
 import { Button } from "@/components/ui/button";
 import { JsonLd } from "@/components/JsonLd";
-import { breadcrumbJsonLd } from "@/lib/seo";
+import { breadcrumbJsonLd, imageGalleryJsonLd } from "@/lib/seo";
 import { Reveal } from "@/components/motion/Reveal";
 import { WordsReveal } from "@/components/motion/WordsReveal";
 import { ClipReveal } from "@/components/motion/ClipReveal";
@@ -56,6 +56,7 @@ export default function GaleriaPage() {
           { name: "Galería", url: "/galeria" },
         ])}
       />
+      <JsonLd data={imageGalleryJsonLd(photos)} />
 
       <header className="max-w-2xl">
         <p className="text-sm font-medium text-primary">Galería</p>

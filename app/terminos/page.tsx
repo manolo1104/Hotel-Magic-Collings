@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { site, waLink } from "@/lib/site";
+import { JsonLd } from "@/components/JsonLd";
+import { breadcrumbJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Términos y políticas de reserva",
@@ -10,6 +12,12 @@ export const metadata: Metadata = {
 export default function TerminosPage() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 pt-28 pb-20 sm:px-6">
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Inicio", url: "/" },
+          { name: "Términos y políticas", url: "/terminos" },
+        ])}
+      />
       <h1 className="font-heading text-4xl font-semibold sm:text-5xl">
         Términos y políticas de reserva
       </h1>

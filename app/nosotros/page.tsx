@@ -5,7 +5,7 @@ import { site, waLink, testimonios } from "@/lib/site";
 import { Button } from "@/components/ui/button";
 import { Photo } from "@/components/Photo";
 import { JsonLd } from "@/components/JsonLd";
-import { breadcrumbJsonLd } from "@/lib/seo";
+import { breadcrumbJsonLd, hotelJsonLd } from "@/lib/seo";
 import { Reveal } from "@/components/motion/Reveal";
 import { WordsReveal } from "@/components/motion/WordsReveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
@@ -27,6 +27,7 @@ export default function NosotrosPage() {
           { name: "Nosotros", url: "/nosotros" },
         ])}
       />
+      <JsonLd data={hotelJsonLd()} />
 
       <header className="max-w-2xl">
         <p className="text-sm font-medium text-primary">Conócenos</p>

@@ -4,7 +4,7 @@ import { site, waLink } from "@/lib/site";
 import { Button } from "@/components/ui/button";
 import { ContactForm } from "@/components/ContactForm";
 import { JsonLd } from "@/components/JsonLd";
-import { breadcrumbJsonLd } from "@/lib/seo";
+import { breadcrumbJsonLd, hotelJsonLd } from "@/lib/seo";
 import { Reveal } from "@/components/motion/Reveal";
 import { WordsReveal } from "@/components/motion/WordsReveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
@@ -33,6 +33,8 @@ export default function ContactoPage() {
           { name: "Contacto", url: "/contacto" },
         ])}
       />
+      {/* Entidad Hotel (NAP + geo) — refuerza el SEO local en la página de contacto */}
+      <JsonLd data={hotelJsonLd()} />
 
       <header className="max-w-2xl">
         <h1 className="font-heading text-4xl font-semibold sm:text-5xl">
