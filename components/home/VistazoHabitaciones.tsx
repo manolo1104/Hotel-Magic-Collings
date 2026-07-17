@@ -90,7 +90,7 @@ export async function VistazoHabitaciones() {
                         <ArrowRight className="size-4 transition-transform duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:translate-x-0.5" aria-hidden />
                       </Button>
                       <Link
-                        href="/habitaciones"
+                        href={`/habitaciones#${t.slug}`}
                         className="text-xs font-medium text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
                       >
                         Ver detalles y fotos

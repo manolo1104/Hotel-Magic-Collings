@@ -6,7 +6,8 @@ import { Gallery, GalleryTile } from "@/components/gallery/Lightbox";
 
 type From = "bottom" | "left" | "right" | "top";
 
-// 6 imágenes, 6 celdas, con ritmo: 2 anchas (col-span-2) intercaladas.
+// 8 imágenes con ritmo: 4 anchas (col-span-2) intercaladas → la cuadrícula
+// de 4 columnas cierra en 3 filas exactas (2+2+4+4 = 12 spans).
 const tiles: { src: string; alt: string; wide: boolean; from: From }[] = [
   { src: galeria[0], alt: "Corredor con arcos y plantas del Hotel Magic Collinn", wide: true, from: "left" },
   { src: galeria[1], alt: "Habitación doble del Hotel Magic Collinn", wide: false, from: "bottom" },
@@ -14,6 +15,8 @@ const tiles: { src: string; alt: string; wide: boolean; from: From }[] = [
   { src: galeria[3], alt: "Entrada principal del Hotel Magic Collinn en Axtla de Terrazas", wide: false, from: "bottom" },
   { src: galeria[4], alt: "Fachada y jardín del Hotel Magic Collinn", wide: true, from: "right" },
   { src: galeria[5], alt: "Habitación amplia con sala de estar", wide: false, from: "bottom" },
+  { src: galeria[6], alt: "Entrada del Hotel Magic Collinn iluminada de noche", wide: true, from: "left" },
+  { src: galeria[7], alt: "Habitación doble con sala de estar", wide: true, from: "right" },
 ];
 
 // Versión grande de cada foto para el lightbox

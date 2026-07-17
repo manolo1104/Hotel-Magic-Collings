@@ -57,7 +57,11 @@ export function hotelEntity(): Record<string, unknown> {
       "@type": "Place",
       name: `${site.locality}, ${site.region}, Huasteca Potosina`,
     },
-    sameAs: [site.googleReviewsUrl],
+    // Perfil de Google + redes sociales (las vacías se omiten solas)
+    sameAs: [
+      site.googleReviewsUrl,
+      ...Object.values(site.socials).filter(Boolean),
+    ],
     // Calificación agregada (reseñas reales de Google), respaldada por las
     // reseñas visibles en la página de Inicio.
     aggregateRating: {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   CheckCircle2,
@@ -10,13 +10,15 @@ import {
   CreditCard,
   Clock,
   ArrowLeft,
+  ShieldCheck,
 } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { EASE_OUT } from "@/components/motion/easing";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { waLink } from "@/lib/site";
+import { site, waLink } from "@/lib/site";
+import { track } from "@/lib/track";
 import { bookingIcs } from "@/lib/ics";
 import { PaymentBrick } from "./PaymentBrick";
 import type { ModalidadPago } from "@/lib/booking/types";
@@ -62,6 +64,11 @@ export function BookingForm({
 
   const ref = bookingId.slice(0, 8).toUpperCase();
 
+  // Medición: llegar a /reservar = intención de reserva (embudo GA4).
+  useEffect(() => {
+    track("begin_booking", { room: slug, checkin, checkout, huespedes });
+  }, [slug, checkin, checkout, huespedes]);
+
   function update(field: keyof typeof form, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
   }
@@ -93,6 +100,7 @@ export function BookingForm({
         }
         setBookingId(String(data.bookingId));
         setMonto(Number(data.montoACobrar));
+        track("submit_reservation", { room: slug, modalidad, pago_activo: true });
         setStep("pago");
         setLoading(false);
       } else {
@@ -108,6 +116,7 @@ export function BookingForm({
           return;
         }
         setBookingId(String(data.id));
+        track("submit_reservation", { room: slug, pago_activo: false });
         setStep("success");
       }
     } catch {
@@ -128,10 +137,12 @@ export function BookingForm({
     const data = await res.json();
     if (res.ok && data.ok && data.status === "approved") {
       setPagado(true);
+      track("payment_success", { room: slug, monto, modalidad });
       setStep("success");
       return;
     }
     if (res.ok && data.pendiente) {
+      track("payment_pending", { room: slug, monto, modalidad });
       setStep("pendiente");
       return;
     }
@@ -259,6 +270,11 @@ export function BookingForm({
             ${monto.toLocaleString("es-MX")} MXN
           </strong>{" "}
           · reserva {ref}. Tus datos de tarjeta los protege Mercado Pago.
+        </p>
+        {/* Garantía visible en el momento de mayor objeción: junto al pago */}
+        <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
+          <ShieldCheck className="size-4 shrink-0 text-support" aria-hidden />
+          {site.cancelacion}
         </p>
         <div className="mt-5">
           <PaymentBrick

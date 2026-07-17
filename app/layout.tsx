@@ -35,6 +35,10 @@ export const metadata: Metadata = {
   },
   description,
   alternates: { canonical: "/" },
+  // Verificación de Google Search Console (se omite si la env está vacía).
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+  },
   openGraph: {
     type: "website",
     locale: "es_MX",

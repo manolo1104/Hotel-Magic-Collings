@@ -1,12 +1,45 @@
 import Link from "next/link";
-import { Leaf, MessageCircle, Phone, Mail, MapPin } from "lucide-react";
+import {
+  Leaf,
+  MessageCircle,
+  Phone,
+  Mail,
+  MapPin,
+  ShieldCheck,
+} from "lucide-react";
 import { site, waLink } from "@/lib/site";
+import { getAllPosts } from "@/lib/content";
+
+// Iconos de redes inline (lucide-react ya no incluye iconos de marcas)
+function FacebookIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+    </svg>
+  );
+}
+function InstagramIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+    </svg>
+  );
+}
+
+// Redes con URL configurada en lib/site.ts (vacías = no se pintan)
+const redes = [
+  { label: "Facebook", href: site.socials.facebook, Icon: FacebookIcon },
+  { label: "Instagram", href: site.socials.instagram, Icon: InstagramIcon },
+].filter((r) => r.href);
 
 export function Footer() {
   const year = new Date().getFullYear();
+  const guias = getAllPosts().slice(0, 3);
   return (
     <footer className="mt-auto bg-brand text-brand-foreground">
-      <div className="mx-auto grid max-w-[1400px] gap-10 px-4 py-14 sm:px-6 md:grid-cols-3">
+      <div className="mx-auto grid max-w-[1400px] gap-10 px-4 py-14 sm:px-6 sm:grid-cols-2 lg:grid-cols-4">
         <div className="max-w-xs">
           <div className="flex items-center gap-2 font-heading text-xl font-semibold">
             <Leaf className="size-5 text-support" strokeWidth={1.75} aria-hidden />
@@ -15,6 +48,30 @@ export function Footer() {
           <p className="mt-3 text-sm leading-relaxed text-brand-foreground/70">
             {site.tagline}. {site.locality}, {site.region}. Reserva directa, sin
             intermediarios.
+          </p>
+          {redes.length > 0 && (
+            <ul className="mt-4 flex items-center gap-3">
+              {redes.map(({ label, href, Icon }) => (
+                <li key={label}>
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${site.name} en ${label}`}
+                    className="inline-flex size-9 items-center justify-center rounded-full border border-brand-foreground/20 text-brand-foreground/80 transition-colors hover:border-brand-foreground/50 hover:text-brand-foreground"
+                  >
+                    <Icon className="size-4" aria-hidden />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="mt-4 flex items-start gap-1.5 text-xs leading-relaxed text-brand-foreground/60">
+            <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-support" aria-hidden />
+            <span>
+              Pagos: {site.pagos.join(" · ")} · Pago en línea seguro con Mercado
+              Pago
+            </span>
           </p>
         </div>
 
@@ -31,6 +88,32 @@ export function Footer() {
                 </Link>
               </li>
             ))}
+          </ul>
+        </nav>
+
+        <nav className="text-sm">
+          <h2 className="font-heading text-base font-semibold">
+            Guías de viaje
+          </h2>
+          <ul className="mt-4 space-y-2.5">
+            {guias.map((p) => (
+              <li key={p.slug}>
+                <Link
+                  href={`/blog/${p.slug}`}
+                  className="text-brand-foreground/75 transition-colors hover:text-brand-foreground"
+                >
+                  {p.title}
+                </Link>
+              </li>
+            ))}
+            <li>
+              <Link
+                href="/blog"
+                className="font-medium text-brand-foreground/90 transition-colors hover:text-brand-foreground"
+              >
+                Ver todo el blog →
+              </Link>
+            </li>
           </ul>
         </nav>
 
@@ -84,7 +167,13 @@ export function Footer() {
           <p>
             © {year} {site.legalName}. Todos los derechos reservados.
           </p>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <Link
+              href="/terminos"
+              className="transition-colors hover:text-brand-foreground"
+            >
+              Términos y políticas
+            </Link>
             <Link
               href="/privacidad"
               className="transition-colors hover:text-brand-foreground"

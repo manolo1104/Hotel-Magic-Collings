@@ -12,6 +12,7 @@ import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { Precio } from "@/components/Precio";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbJsonLd, roomsJsonLd } from "@/lib/seo";
+import { fotosExtraPorSlug } from "@/lib/images";
 
 // ISR: se prerenderiza y revalida cada 10 min (tarifas/tipos cambian rara vez).
 export const revalidate = 600;
@@ -52,7 +53,9 @@ export default async function HabitacionesPage() {
       <div className="mx-auto mt-14 flex max-w-[1400px] flex-col gap-20 px-4 sm:px-6">
         {tipos.map((t, i) => {
           const flip = i % 2 === 1;
-          const fotosLb = t.fotos.slice(0, 3).map((f, j) => ({
+          // Fotos de BD + extras locales (el grid muestra 3; el lightbox, todas)
+          const fotos = [...t.fotos, ...(fotosExtraPorSlug[t.slug] ?? [])];
+          const fotosLb = fotos.map((f, j) => ({
             src: f.replace(/w=\d+/, "w=1600"),
             alt:
               j === 0
@@ -62,7 +65,8 @@ export default async function HabitacionesPage() {
           return (
             <section
               key={t.id}
-              className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12"
+              id={t.slug}
+              className="grid scroll-mt-24 items-center gap-8 lg:grid-cols-2 lg:gap-12"
             >
               {/* Galería (clic para ampliar) */}
               <Gallery photos={fotosLb}>
@@ -73,7 +77,7 @@ export default async function HabitacionesPage() {
                   >
                     <GalleryTile index={0} className="group">
                       <Photo
-                        src={t.fotos[0]}
+                        src={fotos[0]}
                         alt={`${t.nombre}, vista principal`}
                         fill
                         sizes="(max-width: 1024px) 100vw, 45vw"
@@ -81,13 +85,13 @@ export default async function HabitacionesPage() {
                       />
                     </GalleryTile>
                   </ClipReveal>
-                  {t.fotos.slice(1, 3).map((f, j) => (
+                  {fotos.slice(1, 3).map((f, j) => (
                     <ClipReveal
                       key={j}
                       delay={0.1 + j * 0.1}
                       className="aspect-square overflow-hidden rounded-xl"
                     >
-                      <GalleryTile index={j + 1} className="group">
+                      <GalleryTile index={j + 1} className="group relative">
                         <Photo
                           src={f}
                           alt={`${t.nombre}, detalle ${j + 1}`}
@@ -95,6 +99,12 @@ export default async function HabitacionesPage() {
                           sizes="(max-width: 1024px) 50vw, 22vw"
                           className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-105"
                         />
+                        {/* Aviso de fotos adicionales en el lightbox */}
+                        {j === 1 && fotos.length > 3 && (
+                          <span className="absolute right-2 bottom-2 rounded-full bg-black/55 px-2.5 py-1 text-xs font-medium text-white">
+                            +{fotos.length - 3} fotos
+                          </span>
+                        )}
                       </GalleryTile>
                     </ClipReveal>
                   ))}

@@ -9,7 +9,7 @@ import { RatingBadge } from "@/components/RatingBadge";
 
 // El titular es el elemento LCP: se anima por CSS (no por JS) para que aparezca
 // en el primer pintado incluso en móvil lento. El resto del sitio usa motion.
-const titulo = "Tu estancia en Axtla de Terrazas".split(" ");
+const titulo = "Tu casa en Axtla, a un paso de las cascadas".split(" ");
 
 export function Hero() {
   return (
@@ -30,8 +30,9 @@ export function Hero() {
           />
         </div>
       </Parallax>
-      {/* Overlay verde de marca, comprometido, para legibilidad AA */}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-brand/90 via-brand/65 to-brand/90" />
+      {/* Overlay verde de marca: denso arriba/abajo (legibilidad AA del texto)
+          y ligero al centro para dejar ver la fachada real */}
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-brand/80 via-brand/50 to-brand/85" />
 
       <div className="mx-auto w-full max-w-[1400px] px-4 pt-24 pb-16 sm:px-6">
         <div className="max-w-3xl">
@@ -57,20 +58,20 @@ export function Hero() {
           </h1>
           <p
             className="anim-in mt-6 max-w-xl text-lg leading-relaxed text-white/90 sm:text-xl"
-            style={{ animationDelay: "0.5s" }}
+            style={{ animationDelay: "0.7s" }}
           >
-            Hotel de 6 habitaciones en el centro. Reserva directo, sin
-            intermediarios.
+            Hotel boutique de 6 habitaciones en el centro de Axtla de Terrazas.
+            Reserva directo, sin intermediarios.
           </p>
         </div>
 
-        <div className="anim-in mt-10 max-w-4xl" style={{ animationDelay: "0.62s" }}>
+        <div className="anim-in mt-10 max-w-4xl" style={{ animationDelay: "0.8s" }}>
           <BookingWidget />
         </div>
 
         <div
           className="anim-in mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5"
-          style={{ animationDelay: "0.74s" }}
+          style={{ animationDelay: "0.92s" }}
         >
           <RatingBadge tone="onDark" />
           <ul className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-white/90">

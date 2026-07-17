@@ -80,7 +80,16 @@ export function RoomResultCard({
             </p>
           </div>
           <div className="flex flex-col items-end gap-1.5">
-            <span className="text-xs font-medium text-support-foreground/80">
+            {/* Urgencia honesta: ámbar solo cuando el inventario real es bajo */}
+            <span
+              className={
+                tipo.disponibles === 1
+                  ? "text-xs font-semibold text-amber-700"
+                  : tipo.disponibles <= 2
+                    ? "text-xs font-medium text-amber-700"
+                    : "text-xs font-medium text-support-foreground/80"
+              }
+            >
               {tipo.disponibles === 1
                 ? "Última habitación disponible"
                 : `${tipo.disponibles} disponibles`}

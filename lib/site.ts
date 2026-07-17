@@ -56,15 +56,24 @@ export const site = {
   reviewsRating: "4.5", // Calificación real de Google (jun 2026)
   reviewsTotal: 122, // Total real de opiniones en Google
 
+  // ── Redes sociales ────────────────────────────────────────
+  // Al llenar una URL se agrega sola al Schema (sameAs). Vacío = se omite.
+  socials: {
+    facebook: "", // TODO: URL de la página de Facebook del hotel
+    instagram: "", // TODO: URL del Instagram del hotel
+  },
+
   // ── Analytics ─────────────────────────────────────────────
   // Se activa poniendo NEXT_PUBLIC_GA_ID=G-XXXX en el entorno (vacío = sin GA).
   gaId: process.env.NEXT_PUBLIC_GA_ID ?? "",
 
   // ── Navegación ────────────────────────────────────────────
+  // Sin "Inicio": el logo ya lleva al home (6 items + CTA desbordan en md).
   nav: [
-    { label: "Inicio", href: "/" },
     { label: "Habitaciones", href: "/habitaciones" },
+    { label: "Qué hacer", href: "/blog/que-hacer-en-axtla-de-terrazas" },
     { label: "Blog", href: "/blog" },
+    { label: "Nosotros", href: "/nosotros" },
     { label: "Contacto", href: "/contacto" },
   ],
 } as const;
@@ -102,6 +111,14 @@ export const amenities = [
 
 // ── FAQ (Inicio) ────────────────────────────────────────────
 export const faqs = [
+  {
+    q: "¿Dónde está el Hotel Magic Collinn?",
+    a: `Estamos en ${site.address.street}, ${site.address.locality}, ${site.address.region} (C.P. ${site.address.postalCode}), a una calle de la plaza principal, en pleno centro del pueblo.`,
+  },
+  {
+    q: "¿Sirve como base para visitar la Huasteca Potosina?",
+    a: "Sí. Axtla de Terrazas está en el corazón de la Huasteca Potosina: desde el hotel puedes salir en el día a cascadas, pozas y ríos cercanos y regresar a dormir al centro. En nuestro blog tenemos guías de qué hacer y cómo llegar.",
+  },
   {
     q: "¿Incluye estacionamiento?",
     a: "Sí, contamos con estacionamiento sin costo para nuestros huéspedes.",

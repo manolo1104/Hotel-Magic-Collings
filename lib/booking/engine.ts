@@ -19,11 +19,10 @@ import type {
 
 // Tipos internos que se OCULTAN del sitio público (home, /habitaciones,
 // /buscar, widget del hero). Siguen reservables por link directo a
-// /reservar?tipo=<slug> (que pide `includeHidden`).
-// NOTA: "prueba" ($10) está comentado a propósito → el dueño lo quiere
-// VISIBLE en el sitio para la prueba de pago. Para re-ocultarlo, descomenta.
+// /reservar?tipo=<slug> (que pide `includeHidden`) y visibles en el
+// panel /admin (que pasa includeHidden:true).
 export const HIDDEN_SLUGS = new Set<string>([
-  // "prueba",
+  "prueba", // cuarto de $10 para probar cobros reales de Mercado Pago
 ]);
 
 // ── Helpers puros de fecha/precio ───────────────────────────

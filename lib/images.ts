@@ -6,13 +6,6 @@
 // porque ilustran lugares de la Huasteca, no el hotel.
 // ============================================================
 
-const UNSPLASH = "https://images.unsplash.com";
-
-/** URL de Unsplash con ancho y calidad. Solo para portadas de blog (turismo). */
-export function img(id: string, w = 1200, q = 80): string {
-  return `${UNSPLASH}/${id}?auto=format&fit=crop&w=${w}&q=${q}`;
-}
-
 // Fondo del hero: fachada del hotel con jardín y cielo abierto
 export const heroImage = "/imagenes/fachada-jardin.jpg";
 
@@ -29,7 +22,7 @@ export const dobleFotos = [
   "/imagenes/doble-3.jpg",
 ];
 
-// Mosaico de galería del Inicio (6 fotos variadas: exteriores + habitaciones)
+// Mosaico de galería del Inicio (8 fotos variadas: exteriores + habitaciones)
 export const galeria = [
   "/imagenes/corredor-arcos.jpg",
   "/imagenes/doble-2.jpg",
@@ -37,10 +30,16 @@ export const galeria = [
   "/imagenes/fachada-entrada.jpg",
   "/imagenes/fachada-lateral.jpg",
   "/imagenes/doble-5.jpg",
+  "/imagenes/entrada-noche.jpg",
+  "/imagenes/doble-estancia.jpg",
 ];
 
-// Portadas para los posts del blog (turismo Huasteca) — stock temático
-export const blogCovers = {
-  "que-hacer-en-axtla-de-terrazas": img("photo-1542314831-068cd1dbfeeb", 1600),
-  "como-llegar-a-axtla-de-terrazas": img("photo-1571003123894-1f0594d2b5d9", 1600),
+// Fotos extra por tipo que NO están en la BD (la BD se sembró una sola vez).
+// Se unen en render en /habitaciones para no tocar datos de producción.
+export const fotosExtraPorSlug: Record<string, string[]> = {
+  doble: [
+    "/imagenes/doble-4.jpg",
+    "/imagenes/doble-6.jpg",
+    "/imagenes/doble-estancia.jpg",
+  ],
 };

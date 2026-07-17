@@ -7,10 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { site } from "@/lib/site";
-
-// Por defecto abre el cliente de correo (mailto). Para recibir los mensajes
-// en una bandeja sin abrir el correo del visitante, pega tu URL de Formspree.
-const FORMSPREE_URL = ""; // TODO: URL de Formspree (ej. https://formspree.io/f/xxxx)
+import { track } from "@/lib/track";
 
 export function ContactForm() {
   const [form, setForm] = useState({ nombre: "", whatsapp: "", mensaje: "" });
@@ -33,19 +30,24 @@ export function ContactForm() {
       setSent(true);
       return;
     }
-    if (FORMSPREE_URL) {
-      setLoading(true);
-      try {
-        await fetch(FORMSPREE_URL, {
-          method: "POST",
-          headers: { Accept: "application/json", "Content-Type": "application/json" },
-          body: JSON.stringify(form),
-        });
+    // Envío al buzón del hotel vía /api/contacto (Brevo/Resend).
+    setLoading(true);
+    try {
+      const res = await fetch("/api/contacto", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, empresa: honeypot }),
+      });
+      const data = await res.json().catch(() => ({ ok: false }));
+      if (data.ok) {
+        track("contact_submit", { method: "api" });
         setSent(true);
-      } finally {
-        setLoading(false);
+        return;
       }
-      return;
+    } catch {
+      // sin conexión o error del servidor: caer al fallback mailto
+    } finally {
+      setLoading(false);
     }
     // Fallback: abrir el correo con el mensaje pre-rellenado
     const subject = `Mensaje de ${form.nombre || "un huésped"} — ${site.name}`;
@@ -53,6 +55,7 @@ export function ContactForm() {
     window.location.href = `mailto:${site.email}?subject=${encodeURIComponent(
       subject,
     )}&body=${encodeURIComponent(body)}`;
+    track("contact_submit", { method: "mailto" });
     setSent(true);
   }
 

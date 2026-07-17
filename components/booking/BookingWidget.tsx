@@ -7,6 +7,7 @@ import { motion, useReducedMotion } from "motion/react";
 import { EASE_OUT } from "@/components/motion/easing";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
+import { track } from "@/lib/track";
 
 const STORAGE_KEY = "mc_busqueda";
 
@@ -98,6 +99,12 @@ export function BookingWidget({
       return;
     }
     setError(null);
+    track("search_availability", {
+      checkin,
+      checkout,
+      huespedes: Number(huespedes),
+      noches: nightsBetween(checkin, checkout),
+    });
     try {
       localStorage.setItem(
         STORAGE_KEY,

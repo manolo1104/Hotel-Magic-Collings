@@ -19,14 +19,16 @@ export default function Home() {
   return (
     <>
       <JsonLd data={homeGraphJsonLd()} />
+      {/* Orden CRO: deseo (habitaciones) → argumento (directo vs OTA) →
+          prueba social (reseñas) → contexto → objeciones → cierre */}
       <Hero />
       <BarraValor />
-      <Amenidades />
       <VistazoHabitaciones />
       <Estancia />
+      <Resenas />
+      <Amenidades />
       <Huasteca />
       <Galeria />
-      <Resenas />
       <Faq />
       <CtaFinal />
     </>

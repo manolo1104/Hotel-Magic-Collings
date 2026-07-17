@@ -44,8 +44,15 @@ export function Navbar() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href);
+  // Activo por prefijo; si dos items coinciden (p. ej. "Blog" y "Qué hacer",
+  // que apunta a un post del blog), gana el href más específico.
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    if (!pathname.startsWith(href)) return false;
+    return !site.nav.some(
+      (n) => n.href.length > href.length && pathname.startsWith(n.href),
+    );
+  };
 
   return (
     <header
