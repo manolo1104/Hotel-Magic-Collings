@@ -71,8 +71,6 @@ export default function RootLayout({
       className={`${sans.variable} ${heading.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col" suppressHydrationWarning>
-        {/* Conexión anticipada al host de las imágenes (origen del LCP) */}
-        <link rel="preconnect" href="https://images.unsplash.com" />
         {/* Skip link (WCAG 2.4.1): visible solo al enfocar con teclado */}
         <a
           href="#contenido"

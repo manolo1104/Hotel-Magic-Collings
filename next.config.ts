@@ -10,10 +10,7 @@ const nextConfig: NextConfig = {
     // bytes en móvil sin pérdida visible (LCP/INP mejores).
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    remotePatterns: [
-      { protocol: "https", hostname: "images.unsplash.com" },
-      { protocol: "https", hostname: "picsum.photos" },
-    ],
+    // Todas las imágenes son locales (public/imagenes). Sin orígenes remotos.
   },
   // Headers básicos de seguridad (OWASP). Sin CSP para no romper next/og e inline.
   async headers() {

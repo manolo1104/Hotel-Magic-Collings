@@ -26,13 +26,13 @@ export default function Home() {
       <BarraValor />
       <VistazoHabitaciones />
       <Estancia />
+      <Ubicacion />
       <Resenas />
       <Amenidades />
       <Huasteca />
       <Galeria />
       <Faq />
       <CtaFinal />
-      <Ubicacion />
     </>
   );
 }

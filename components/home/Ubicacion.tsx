@@ -3,8 +3,8 @@ import { site, waLink } from "@/lib/site";
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/motion/Reveal";
 
-// Sección de cierre: ubica el hotel en el mapa justo antes del footer.
-// Refuerza la confianza (ver dónde vas a dormir) y da salida a "Cómo llegar".
+// Ubicación en el mapa, tras la comparativa "reservar directo": refuerza la
+// confianza (ver dónde vas a dormir, en pleno centro) antes de las reseñas.
 const mapsDir = `https://www.google.com/maps/dir/?api=1&destination=${site.geo.lat},${site.geo.lng}`;
 const mapEmbed =
   site.mapEmbedSrc ||

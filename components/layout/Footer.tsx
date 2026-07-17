@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   Leaf,
   MessageCircle,
@@ -167,7 +168,7 @@ export function Footer() {
           <p>
             © {year} {site.legalName}. Todos los derechos reservados.
           </p>
-          <div className="flex flex-wrap items-center gap-4">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <Link
               href="/terminos"
               className="transition-colors hover:text-brand-foreground"
@@ -180,7 +181,24 @@ export function Footer() {
             >
               Aviso de privacidad
             </Link>
-            <p>Hecho con cariño en la Huasteca Potosina.</p>
+            <p>Con cariño en la Huasteca Potosina.</p>
+            {/* Crédito de la plataforma que impulsa el sitio */}
+            <a
+              href="https://kora-hotel.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Hecho por Kora"
+              className="inline-flex items-center gap-1.5 opacity-70 transition-opacity hover:opacity-100"
+            >
+              <span>Hecho por</span>
+              <Image
+                src="/kora-logo.png"
+                alt="Kora"
+                width={39}
+                height={18}
+                className="h-[18px] w-auto"
+              />
+            </a>
           </div>
         </div>
       </div>

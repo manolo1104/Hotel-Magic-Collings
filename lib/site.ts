@@ -64,8 +64,9 @@ export const site = {
   },
 
   // ── Analytics ─────────────────────────────────────────────
-  // Se activa poniendo NEXT_PUBLIC_GA_ID=G-XXXX en el entorno (vacío = sin GA).
-  gaId: process.env.NEXT_PUBLIC_GA_ID ?? "",
+  // GA4 del hotel. La env NEXT_PUBLIC_GA_ID (si se define) tiene prioridad;
+  // si no, se usa este ID por defecto. El ID de medición es público.
+  gaId: process.env.NEXT_PUBLIC_GA_ID || "G-KK9ZZMZXE8",
 
   // ── Navegación ────────────────────────────────────────────
   // Sin "Inicio": el logo ya lleva al home (6 items + CTA desbordan en md).
