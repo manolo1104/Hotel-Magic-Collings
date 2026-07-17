@@ -15,6 +15,7 @@ export function GET(): Response {
   const paginas = [
     `- [Inicio](${base}/): presentación del hotel y buscador de disponibilidad.`,
     `- [Habitaciones y tarifas](${base}/habitaciones): tipos de habitación, capacidad, amenidades y tarifas.`,
+    `- [Galería de fotos](${base}/galeria): fotos reales del hotel — fachada, corredor de arcos y habitaciones.`,
     `- [Ubicación y contacto](${base}/contacto): cómo llegar, mapa, WhatsApp, teléfono y correo.`,
     `- [Nosotros](${base}/nosotros): quiénes somos — hotel familiar de ${site.rooms} habitaciones atendido en persona por sus dueños.`,
     `- [Términos y políticas de reserva](${base}/terminos): pago y anticipo, cancelaciones, llegada y salida.`,

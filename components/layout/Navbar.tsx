@@ -78,7 +78,8 @@ export function Navbar() {
         </Link>
 
         {/* Desktop */}
-        <div className="hidden items-center gap-1 md:flex">
+        {/* Desktop desde lg: 6 items + CTA no caben a 768px */}
+        <div className="hidden items-center gap-1 lg:flex">
           {site.nav.map((item) => {
             const active = isActive(item.href);
             return (
@@ -116,7 +117,7 @@ export function Navbar() {
           type="button"
           ref={menuBtnRef}
           onClick={() => setOpen((v) => !v)}
-          className="relative inline-flex size-11 items-center justify-center rounded-lg text-brand md:hidden"
+          className="relative inline-flex size-11 items-center justify-center rounded-lg text-brand lg:hidden"
           aria-label={open ? "Cerrar menú" : "Abrir menú"}
           aria-expanded={open}
         >
@@ -143,7 +144,7 @@ export function Navbar() {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: reduce ? 0 : 0.32, ease: EASE_DRAWER }}
-            className="overflow-hidden border-t border-border/70 bg-background md:hidden"
+            className="overflow-hidden border-t border-border/70 bg-background lg:hidden"
           >
             <div className="mx-auto flex max-w-[1400px] flex-col gap-1 px-4 py-3 sm:px-6">
               {site.nav.map((item, i) => (

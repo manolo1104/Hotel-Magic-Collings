@@ -71,6 +71,7 @@ export const site = {
   // Sin "Inicio": el logo ya lleva al home (6 items + CTA desbordan en md).
   nav: [
     { label: "Habitaciones", href: "/habitaciones" },
+    { label: "Galería", href: "/galeria" },
     { label: "Qué hacer", href: "/blog/que-hacer-en-axtla-de-terrazas" },
     { label: "Blog", href: "/blog" },
     { label: "Nosotros", href: "/nosotros" },

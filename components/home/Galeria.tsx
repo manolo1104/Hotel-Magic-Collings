@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { galeria } from "@/lib/images";
 import { Photo } from "@/components/Photo";
 import { Reveal } from "@/components/motion/Reveal";
@@ -36,6 +38,13 @@ export function Galeria() {
           Un hotel boutique en la Huasteca Potosina, donde el descanso se siente
           en casa. Toca cualquier foto para verla en grande.
         </p>
+        <Link
+          href="/galeria"
+          className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary underline-offset-4 hover:underline"
+        >
+          Ver galería completa
+          <ArrowRight className="size-4" aria-hidden />
+        </Link>
       </Reveal>
 
       <Gallery photos={photos}>
