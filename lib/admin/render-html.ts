@@ -18,8 +18,14 @@ function fmt(iso: string): string {
   }
 }
 
-const BRAND = "#143a2a";
-const ACCENT = "#b35b29";
+// Tokens Garza & Río (alineados con lib/email/templates.ts)
+const BRAND = "#234A31"; // verde ribera
+const ACCENT = "#B75C38"; // terracota
+const PAPEL = "#FCF8F0";
+const ARENA = "#C9A968";
+const LINEA = "#E2D8C6";
+const SERIF = "Georgia,'Times New Roman',serif";
+const MONO = "'Courier New',Courier,monospace";
 
 function doc(titulo: string, inner: string, forPrint?: boolean): string {
   const printScript = forPrint
@@ -28,24 +34,27 @@ function doc(titulo: string, inner: string, forPrint?: boolean): string {
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${titulo}</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-  *{box-sizing:border-box} body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1c1c1a;background:#f7f3ea;padding:24px}
-  .sheet{max-width:640px;margin:0 auto;background:#fff;border:1px solid #e7e1d4;border-radius:14px;overflow:hidden}
-  .hd{background:${BRAND};color:#fff;padding:24px 28px}
-  .hd h1{margin:0;font-size:20px} .hd p{margin:2px 0 0;font-size:12px;color:#cfe0d4}
+  *{box-sizing:border-box} body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#23281F;background:${PAPEL};padding:24px}
+  .sheet{max-width:640px;margin:0 auto;background:#FBFAF4;border:1px solid ${LINEA};border-radius:14px;overflow:hidden}
+  .hd{background:${BRAND};color:#fff;padding:22px 28px;display:flex;align-items:center;gap:14px}
+  .hd img{display:block;width:44px;height:44px;border-radius:11px}
+  .hd h1{margin:0;font-size:20px;font-family:${SERIF};font-weight:600} .hd p{margin:4px 0 0;font-size:10px;font-family:${MONO};letter-spacing:3px;text-transform:uppercase;color:${ARENA}}
   .bd{padding:24px 28px}
-  .chip{display:inline-block;background:#e8f0ea;color:${BRAND};font-size:12px;font-weight:700;padding:5px 11px;border-radius:999px}
+  h2{font-family:${SERIF};font-weight:600}
+  .chip{display:inline-block;background:#E6EDE7;color:${BRAND};font-size:11px;font-family:${MONO};font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:6px 12px;border-radius:999px}
   table{width:100%;border-collapse:collapse;margin:16px 0}
-  td{padding:8px 0;font-size:14px;border-bottom:1px solid #ece6d9}
-  td.k{color:#6b6b63} td.v{text-align:right;font-weight:500}
+  td{padding:8px 0;font-size:14px;border-bottom:1px solid ${LINEA}}
+  td.k{color:#6E6656} td.v{text-align:right;font-weight:500}
   .tot td{border:0;padding-top:14px;font-size:16px;font-weight:700;color:${BRAND}}
-  .ft{padding:16px 28px;background:#faf7f0;border-top:1px solid #ece6d9;font-size:12px;color:#6b6b63}
+  .ft{padding:16px 28px;background:${PAPEL};border-top:1px solid ${LINEA};font-size:12px;color:#6E6656}
+  .ft .mono{font-family:${MONO};font-size:10px;letter-spacing:2px;text-transform:uppercase;color:${ARENA};margin-top:6px}
   .btn{display:inline-block;margin:16px 28px 0;color:${ACCENT};font-size:13px}
   @media print{.noprint{display:none}body{background:#fff;padding:0}.sheet{border:0}}
 </style></head><body>
 <div class="sheet">
-  <div class="hd"><h1>Hotel Magic Collinn</h1><p>${site.address.street}, ${site.locality}, ${site.region}</p></div>
+  <div class="hd"><img src="/correo/garza.png" alt="La garza de Magic Collinn"><div><h1>Hotel Magic Collinn</h1><p>Axtla &middot; Huasteca Potosina</p></div></div>
   <div class="bd">${inner}</div>
-  <div class="ft">Reserva directa, sin intermediarios · WhatsApp ${site.phone} · ${site.email}</div>
+  <div class="ft">${site.address.street}, ${site.locality}, ${site.region} · WhatsApp ${site.phone} · ${site.email}<div class="mono">Reserva directa, sin intermediarios</div></div>
 </div>
 <a class="btn noprint" href="#" onclick="window.print();return false">🖨️ Imprimir / Guardar PDF</a>
 ${printScript}
@@ -64,6 +73,7 @@ export function bookingHtml(b: BookingView, opts?: { forPrint?: boolean }): stri
   <tr><td class="k">Salida</td><td class="v">${fmt(b.checkout)} · antes de ${site.checkOut} h</td></tr>
   <tr><td class="k">Huéspedes</td><td class="v">${b.huespedes}</td></tr>
   <tr><td class="k">Contacto</td><td class="v">${b.whatsapp}${b.email ? " · " + b.email : ""}</td></tr>
+  ${b.nosConociste ? `<tr><td class="k">Nos conoció por</td><td class="v">${b.nosConociste}</td></tr>` : ""}
   <tr><td class="k">Pagado</td><td class="v">${mxn(b.montoPagado)}</td></tr>
   <tr><td class="k">Saldo en el hotel</td><td class="v">${mxn(saldo)}</td></tr>
   <tr class="tot"><td>Total de la estancia</td><td class="v">${mxn(b.total)}</td></tr>

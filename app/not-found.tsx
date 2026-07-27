@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Leaf, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { GarzaMark } from "@/components/brand/GarzaMark";
 import { Button } from "@/components/ui/button";
 
 export default function NotFound() {
@@ -7,7 +8,7 @@ export default function NotFound() {
     <div className="mx-auto flex w-full max-w-[1400px] flex-1 items-center px-4 pt-28 pb-20 sm:px-6">
       <div className="mx-auto max-w-md text-center">
         <span className="mx-auto inline-flex size-14 items-center justify-center rounded-full bg-brand text-brand-foreground">
-          <Leaf className="size-7 text-support" strokeWidth={1.75} aria-hidden />
+          <GarzaMark className="size-8 text-brand-foreground" />
         </span>
         <h1 className="mt-6 font-heading text-3xl font-semibold sm:text-4xl">
           Página no encontrada

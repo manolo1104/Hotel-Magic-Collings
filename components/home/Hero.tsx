@@ -1,5 +1,6 @@
 import { Fragment } from "react";
-import { Leaf, Check } from "lucide-react";
+import { Check } from "lucide-react";
+import { GarzaMark } from "@/components/brand/GarzaMark";
 import { Photo } from "@/components/Photo";
 import { BookingWidget } from "@/components/booking/BookingWidget";
 import { heroImage } from "@/lib/images";
@@ -40,8 +41,8 @@ export function Hero() {
             className="anim-in-fade flex items-center gap-2 text-sm font-medium text-brand-foreground/90"
             style={{ animationDelay: "0.05s" }}
           >
-            <Leaf className="size-4 text-support" strokeWidth={1.75} aria-hidden />
-            Hotel boutique en la Huasteca Potosina
+            <GarzaMark className="size-5 text-sand" />
+            Descanso honesto en la Huasteca Potosina
           </p>
           <h1 className="mt-4 font-heading text-5xl font-semibold leading-[1.0] text-white sm:text-6xl lg:text-[5.25rem]">
             {titulo.map((w, i) => (
@@ -60,8 +61,8 @@ export function Hero() {
             className="anim-in mt-6 max-w-xl text-lg leading-relaxed text-white/90 sm:text-xl"
             style={{ animationDelay: "0.7s" }}
           >
-            Hotel boutique de 6 habitaciones en el centro de Axtla de Terrazas.
-            Reserva directo, sin intermediarios.
+            Hotel de 6 habitaciones en el centro de Axtla de Terrazas: limpio,
+            tranquilo y a precio justo. Reserva directo, sin intermediarios.
           </p>
         </div>
 

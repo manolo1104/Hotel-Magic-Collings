@@ -5,7 +5,8 @@ import { notFound } from "next/navigation";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { ChevronRight, ArrowLeft, Leaf, Clock, MessageCircle } from "lucide-react";
+import { ChevronRight, ArrowLeft, Clock, MessageCircle } from "lucide-react";
+import { GarzaMark } from "@/components/brand/GarzaMark";
 import {
   getAllSlugs,
   getPostBySlug,
@@ -95,7 +96,7 @@ export default async function PostPage({ params }: { params: Params }) {
         <header className="mt-5">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
             <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
-              <Leaf className="size-4 text-support" aria-hidden />
+              <GarzaMark className="size-4 text-brand" />
               Equipo de Magic Collinn
             </span>
             <span aria-hidden>·</span>
@@ -159,7 +160,7 @@ export default async function PostPage({ params }: { params: Params }) {
           </h2>
           <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
             Reserva directo en Magic Collinn y vive la Huasteca desde un hotel
-            boutique en pleno centro.
+            limpio y tranquilo en pleno centro.
           </p>
           <Button
             className="mt-5 h-11 px-6"
@@ -172,14 +173,14 @@ export default async function PostPage({ params }: { params: Params }) {
         {/* Sobre el autor (señal E-E-A-T: fuente local, transparencia) */}
         <div className="mt-12 flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 sm:flex-row sm:items-start">
           <span className="inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-brand text-brand-foreground">
-            <Leaf className="size-6 text-support" aria-hidden />
+            <GarzaMark className="size-7 text-brand-foreground" />
           </span>
           <div>
             <h2 className="font-heading text-lg font-semibold">
               Sobre {site.name}
             </h2>
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-              Somos un hotel boutique en el centro de {site.locality}. Vivimos
+              Somos un hotel pequeño en el centro de {site.locality}. Vivimos
               aquí y conocemos la Huasteca Potosina de primera mano: escribimos
               estas guías para ayudarte a planear tu viaje con información local y
               actual. ¿Tienes una duda concreta? Escríbenos por WhatsApp y con

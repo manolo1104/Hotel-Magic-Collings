@@ -12,10 +12,10 @@ import {
   Users,
   ClipboardCheck,
   Globe2,
-  Leaf,
   Menu,
   X,
 } from "lucide-react";
+import { GarzaMark } from "@/components/brand/GarzaMark";
 import { LogoutButton } from "./LogoutButton";
 
 // `ready: false` = sección aún no construida (se activa fase por fase).
@@ -111,7 +111,7 @@ export function AdminSidebar() {
             className="hidden items-center gap-2.5 border-b border-border px-5 py-5 lg:flex"
           >
             <span className="inline-flex size-9 items-center justify-center rounded-xl bg-brand text-brand-foreground">
-              <Leaf className="size-5 text-support" strokeWidth={1.75} aria-hidden />
+              <GarzaMark className="size-5 text-brand-foreground" />
             </span>
             <span className="leading-tight">
               <span className="block font-heading text-lg font-semibold">Magic Collinn</span>

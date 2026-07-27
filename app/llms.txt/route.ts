@@ -32,7 +32,7 @@ export function GET(): Response {
 
   const body = `# ${site.legalName}
 
-> Hotel boutique de ${site.rooms} habitaciones en el centro de ${site.locality}, ${site.region} (Huasteca Potosina). Reserva directa, sin comisiones, con confirmación por WhatsApp en menos de 24 horas.
+> Hotel de ${site.rooms} habitaciones en el centro de ${site.locality}, ${site.region} (Huasteca Potosina): limpio, tranquilo y a precio justo. Reserva directa, sin comisiones, con confirmación por WhatsApp en menos de 24 horas.
 
 ${site.name} es un hotel pequeño y de atención personalizada, ubicado a una calle de la plaza principal de ${site.locality}, una puerta de entrada a las cascadas y ríos de la Huasteca Potosina. Todas las habitaciones tienen aire acondicionado, y hay estacionamiento sin costo para huéspedes.
 

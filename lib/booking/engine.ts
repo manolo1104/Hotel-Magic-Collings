@@ -181,6 +181,8 @@ export async function createBooking(
     return { ok: false, error: "Revisa tu número de WhatsApp." };
   if ((input.email?.trim().length ?? 0) > 120)
     return { ok: false, error: "El correo es demasiado largo." };
+  if ((input.nosConociste?.trim().length ?? 0) > 60)
+    return { ok: false, error: "La respuesta de dónde nos conociste es demasiado larga." };
 
   await ensureDb();
 
@@ -234,6 +236,7 @@ export async function createBooking(
       nombre: input.nombre.trim(),
       whatsapp: input.whatsapp.trim(),
       email: input.email?.trim() || null,
+      nosConociste: input.nosConociste?.trim() || "",
       estado: "pendiente",
       total,
       estadoPago: conPago ? "iniciado" : "no_iniciado",
@@ -465,6 +468,7 @@ export async function createManualBooking(input: {
   montoPagado?: number; // anticipo/pago en efectivo ya registrado
   notas?: string;
   origen?: string; // manual (default) | whatsapp | booking | expedia
+  nosConociste?: string;
 }): Promise<CreateBookingResult> {
   const huespedes = Math.floor(Number(input.huespedes));
   const error = validateRange({
@@ -528,6 +532,7 @@ export async function createManualBooking(input: {
       saldoPendiente: Math.max(0, total - montoPagado),
       origen: input.origen?.trim() || "manual",
       notas: input.notas?.trim() || "",
+      nosConociste: input.nosConociste?.trim() || "",
     })
     .returning({ id: bookings.id });
 
@@ -548,6 +553,7 @@ export async function updateBooking(
     montoPagado?: number;
     estado?: string;
     notas?: string;
+    nosConociste?: string;
   },
 ): Promise<{ ok: boolean; error?: string }> {
   await ensureDb();
@@ -594,6 +600,8 @@ export async function updateBooking(
   if (changes.huespedes != null) set.huespedes = Math.floor(changes.huespedes);
   if (changes.estado) set.estado = changes.estado;
   if (changes.notas != null) set.notas = changes.notas.trim();
+  if (changes.nosConociste != null)
+    set.nosConociste = changes.nosConociste.trim().slice(0, 60);
 
   await db.update(bookings).set(set).where(eq(bookings.id, id));
   return { ok: true };

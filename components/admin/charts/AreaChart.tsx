@@ -32,11 +32,11 @@ export function AreaChart({
         role="img"
         aria-label="Tendencia de ingresos"
       >
-        <path d={area} fill="var(--color-brand, #143a2a)" opacity={0.12} />
+        <path d={area} fill="var(--color-brand, #234A31)" opacity={0.12} />
         <path
           d={line}
           fill="none"
-          stroke="var(--color-brand, #143a2a)"
+          stroke="var(--color-brand, #234A31)"
           strokeWidth={1.5}
           vectorEffect="non-scaling-stroke"
         />

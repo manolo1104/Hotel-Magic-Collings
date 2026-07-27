@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NOS_CONOCISTE_OPCIONES } from "@/lib/booking/types";
 import type { BookingView } from "@/lib/booking/engine";
 
 export interface TipoOpcion {
@@ -39,6 +40,7 @@ const VACIO = {
   montoPagado: "",
   notas: "",
   origen: "manual",
+  nosConociste: "",
   estado: "confirmada",
 };
 
@@ -64,6 +66,7 @@ export function ReservationModal({ open, onClose, tipos, reserva, onSaved }: Pro
         montoPagado: String(reserva.montoPagado ?? 0),
         notas: reserva.notas ?? "",
         origen: reserva.origen ?? "manual",
+        nosConociste: reserva.nosConociste ?? "",
         estado: reserva.estado,
       });
     } else {
@@ -94,6 +97,7 @@ export function ReservationModal({ open, onClose, tipos, reserva, onSaved }: Pro
         total: form.total === "" ? undefined : Number(form.total),
         montoPagado: form.montoPagado === "" ? undefined : Number(form.montoPagado),
         notas: form.notas,
+        nosConociste: form.nosConociste,
       };
       const payload = reserva
         ? { ...base, estado: form.estado }
@@ -215,6 +219,23 @@ export function ReservationModal({ open, onClose, tipos, reserva, onSaved }: Pro
               </select>
             </div>
           )}
+
+          <div className="grid gap-1.5">
+            <Label htmlFor="m-conociste">¿De dónde nos conoció?</Label>
+            <select
+              id="m-conociste"
+              value={form.nosConociste}
+              onChange={(e) => set("nosConociste", e.target.value)}
+              className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+            >
+              <option value="">Sin dato</option>
+              {NOS_CONOCISTE_OPCIONES.map((op) => (
+                <option key={op} value={op}>
+                  {op}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <div className="grid gap-1.5">
             <Label htmlFor="m-notas">Notas internas</Label>

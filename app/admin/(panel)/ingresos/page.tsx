@@ -19,6 +19,7 @@ export default async function IngresosPage() {
 
   const maxTipo = Math.max(1, ...k.porTipo.map((t) => t.ingreso));
   const maxOrigen = Math.max(1, ...k.porOrigen.map((o) => o.ingreso));
+  const maxConociste = Math.max(1, ...k.porNosConociste.map((c) => c.ingreso));
   const origenLabel: Record<string, string> = {
     web: "Sitio web",
     whatsapp: "WhatsApp",
@@ -85,6 +86,24 @@ export default async function IngresosPage() {
             ) : (
               k.porOrigen.map((o) => (
                 <Barra key={o.origen} label={origenLabel[o.origen] ?? o.origen} sub={`${o.reservas} reservas`} valor={mxn(o.ingreso)} pct={(o.ingreso / maxOrigen) * 100} />
+              ))
+            )}
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-border bg-card p-5">
+          <h2 className="font-heading text-lg font-semibold">¿De dónde nos conocen?</h2>
+          <p className="text-xs text-muted-foreground">
+            Este año · lo que respondió el huésped al reservar
+          </p>
+          <div className="mt-4 space-y-3">
+            {k.porNosConociste.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Aún sin respuestas. El dato se pide en el formulario de reserva.
+              </p>
+            ) : (
+              k.porNosConociste.map((c) => (
+                <Barra key={c.canal} label={c.canal} sub={`${c.reservas} reservas`} valor={mxn(c.ingreso)} pct={(c.ingreso / maxConociste) * 100} />
               ))
             )}
           </div>

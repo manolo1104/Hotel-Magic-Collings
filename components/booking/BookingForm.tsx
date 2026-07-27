@@ -21,7 +21,7 @@ import { site, waLink } from "@/lib/site";
 import { track } from "@/lib/track";
 import { bookingIcs } from "@/lib/ics";
 import { PaymentBrick } from "./PaymentBrick";
-import type { ModalidadPago } from "@/lib/booking/types";
+import { NOS_CONOCISTE_OPCIONES, type ModalidadPago } from "@/lib/booking/types";
 
 interface Props {
   slug: string;
@@ -55,7 +55,7 @@ export function BookingForm({
   const [step, setStep] = useState<Step>("datos");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [form, setForm] = useState({ nombre: "", whatsapp: "", email: "" });
+  const [form, setForm] = useState({ nombre: "", whatsapp: "", email: "", nosConociste: "" });
   const [modalidad, setModalidad] = useState<ModalidadPago>("total");
   const [bookingId, setBookingId] = useState("");
   const [monto, setMonto] = useState(0);
@@ -347,6 +347,25 @@ export function BookingForm({
             onChange={(e) => update("email", e.target.value)}
             placeholder="tu@correo.com"
           />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="nosConociste">
+            ¿De dónde nos conociste?{" "}
+            <span className="text-muted-foreground">(opcional)</span>
+          </Label>
+          <select
+            id="nosConociste"
+            value={form.nosConociste}
+            onChange={(e) => update("nosConociste", e.target.value)}
+            className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-base text-foreground transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
+          >
+            <option value="">Prefiero no decir</option>
+            {NOS_CONOCISTE_OPCIONES.map((op) => (
+              <option key={op} value={op}>
+                {op}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 

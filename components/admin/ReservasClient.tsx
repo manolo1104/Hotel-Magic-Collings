@@ -198,7 +198,7 @@ export function ReservasClient({
                       {badgePago(b)}
                     </div>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      {b.nombreTipo} · {b.numeroCuarto} · {fmt(b.checkin)} → {fmt(b.checkout)} · {b.huespedes} huésp. · {b.id.slice(0, 8).toUpperCase()}
+                      {b.nombreTipo} · {b.numeroCuarto} · {fmt(b.checkin)} → {fmt(b.checkout)} · {b.huespedes} huésp. · {b.id.slice(0, 8).toUpperCase()}{b.nosConociste ? ` · vía ${b.nosConociste}` : ""}
                     </p>
                   </div>
                   <div className="text-right text-sm">

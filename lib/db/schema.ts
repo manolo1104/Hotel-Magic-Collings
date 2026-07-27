@@ -69,6 +69,8 @@ export const bookings = pgTable("bookings", {
   // Origen de la reserva: web | whatsapp | manual | booking | expedia
   origen: text("origen").notNull().default("web"),
   notas: text("notas").notNull().default(""), // notas internas del hotel
+  // "¿De dónde nos conociste?" — respuesta opcional del huésped al reservar
+  nosConociste: text("nos_conociste").notNull().default(""),
 
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

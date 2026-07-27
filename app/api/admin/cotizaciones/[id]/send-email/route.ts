@@ -14,7 +14,7 @@ export async function POST(
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   if (!correosActivos())
     return NextResponse.json(
-      { ok: false, error: "El correo no está configurado (RESEND_API_KEY)." },
+      { ok: false, error: "El correo no está configurado." },
       { status: 503 },
     );
   const { id } = await params;

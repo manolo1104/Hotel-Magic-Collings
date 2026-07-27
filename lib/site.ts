@@ -9,7 +9,7 @@ export const site = {
   name: "Magic Collinn",
   // Nombre completo de marca para títulos/Schema
   legalName: "Hotel Magic Collinn",
-  tagline: "Hotel boutique en el corazón de Axtla de Terrazas",
+  tagline: "Descanso honesto en el corazón de la Huasteca",
   // Dominio: se usa para metadataBase, sitemap y Open Graph.
   // www es la URL canónica (el apex hotelmagicollinn.com reenvía 301 a www).
   url: "https://www.hotelmagicollinn.com",

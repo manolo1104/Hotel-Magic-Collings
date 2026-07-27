@@ -51,6 +51,7 @@ const DDL = [
     emails_sent_at timestamp,
     origen text NOT NULL DEFAULT 'web',
     notas text NOT NULL DEFAULT '',
+    nos_conociste text NOT NULL DEFAULT '',
     created_at timestamp NOT NULL DEFAULT now()
   )`,
   `CREATE TABLE IF NOT EXISTS quotes (
@@ -143,6 +144,7 @@ const MIGRATIONS = [
   `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS emails_sent_at timestamp`,
   `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS origen text NOT NULL DEFAULT 'web'`,
   `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS notas text NOT NULL DEFAULT ''`,
+  `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS nos_conociste text NOT NULL DEFAULT ''`,
 ];
 
 export async function seedRooms(): Promise<void> {

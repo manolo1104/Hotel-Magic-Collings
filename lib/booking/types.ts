@@ -37,6 +37,18 @@ export interface AvailabilityResult {
 // undefined = reserva sin pago en línea (flujo WhatsApp tradicional)
 export type ModalidadPago = "total" | "anticipo";
 
+// Opciones del campo "¿De dónde nos conociste?" (compartidas entre el
+// formulario público y el panel admin). El campo es opcional y acepta
+// también texto libre corto (p. ej. reservas importadas).
+export const NOS_CONOCISTE_OPCIONES = [
+  "Google",
+  "Facebook / Instagram",
+  "Booking / Expedia",
+  "Recomendación",
+  "Ya me había hospedado",
+  "Otro",
+] as const;
+
 export interface CreateBookingInput {
   slug: string; // tipo de habitación
   checkin: string;
@@ -45,6 +57,7 @@ export interface CreateBookingInput {
   nombre: string;
   whatsapp: string;
   email?: string;
+  nosConociste?: string;
   modalidadPago?: ModalidadPago;
 }
 

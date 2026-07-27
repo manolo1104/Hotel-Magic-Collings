@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import {
-  Leaf,
   MessageCircle,
   Phone,
   Mail,
@@ -10,6 +9,7 @@ import {
 } from "lucide-react";
 import { site, waLink } from "@/lib/site";
 import { getAllPosts } from "@/lib/content";
+import { GarzaMark } from "@/components/brand/GarzaMark";
 
 // Iconos de redes inline (lucide-react ya no incluye iconos de marcas)
 function FacebookIcon({ className }: { className?: string }) {
@@ -42,9 +42,15 @@ export function Footer() {
     <footer className="mt-auto bg-brand text-brand-foreground">
       <div className="mx-auto grid max-w-[1400px] gap-10 px-4 py-14 sm:px-6 sm:grid-cols-2 lg:grid-cols-4">
         <div className="max-w-xs">
-          <div className="flex items-center gap-2 font-heading text-xl font-semibold">
-            <Leaf className="size-5 text-support" strokeWidth={1.75} aria-hidden />
-            {site.name}
+          {/* Lockup de marca del brand book: garza blanca + wordmark + etiqueta mono arena */}
+          <div className="flex items-center gap-2.5">
+            <GarzaMark className="size-8 text-brand-foreground" />
+            <div>
+              <div className="font-heading text-xl font-semibold">{site.name}</div>
+              <div className="font-mono text-[9px] uppercase tracking-[0.3em] text-sand">
+                Axtla · Huasteca Potosina
+              </div>
+            </div>
           </div>
           <p className="mt-3 text-sm leading-relaxed text-brand-foreground/70">
             {site.tagline}. {site.locality}, {site.region}. Reserva directa, sin

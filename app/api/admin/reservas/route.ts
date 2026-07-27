@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
         : undefined,
     notas: body.notas ? String(body.notas) : undefined,
     origen: body.origen ? String(body.origen) : undefined,
+    nosConociste: body.nosConociste ? String(body.nosConociste) : undefined,
   });
   return NextResponse.json(result, { status: result.ok ? 201 : 400 });
 }

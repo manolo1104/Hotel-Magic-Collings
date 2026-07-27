@@ -17,6 +17,7 @@ export interface KPIData {
   reservasAnio: number;
   porTipo: { nombre: string; reservas: number; ingreso: number }[];
   porOrigen: { origen: string; reservas: number; ingreso: number }[];
+  porNosConociste: { canal: string; reservas: number; ingreso: number }[];
   serie: { mes: string; etiqueta: string; ingreso: number }[];
 }
 
@@ -67,6 +68,7 @@ export function calcKPIs(
 
   const tipoMap = new Map<string, { reservas: number; ingreso: number }>();
   const origenMap = new Map<string, { reservas: number; ingreso: number }>();
+  const conocisteMap = new Map<string, { reservas: number; ingreso: number }>();
   for (const b of delAnio) {
     const t = tipoMap.get(b.nombreTipo) ?? { reservas: 0, ingreso: 0 };
     t.reservas++;
@@ -76,6 +78,12 @@ export function calcKPIs(
     o.reservas++;
     o.ingreso += b.total;
     origenMap.set(b.origen, o);
+    if (b.nosConociste) {
+      const c = conocisteMap.get(b.nosConociste) ?? { reservas: 0, ingreso: 0 };
+      c.reservas++;
+      c.ingreso += b.total;
+      conocisteMap.set(b.nosConociste, c);
+    }
   }
 
   const serie: KPIData["serie"] = [];
@@ -104,6 +112,9 @@ export function calcKPIs(
       .sort((a, b) => b.ingreso - a.ingreso),
     porOrigen: Array.from(origenMap.entries())
       .map(([origen, v]) => ({ origen, ...v }))
+      .sort((a, b) => b.ingreso - a.ingreso),
+    porNosConociste: Array.from(conocisteMap.entries())
+      .map(([canal, v]) => ({ canal, ...v }))
       .sort((a, b) => b.ingreso - a.ingreso),
     serie,
   };

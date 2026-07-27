@@ -5,6 +5,7 @@
 // formulario cae al fallback mailto: (nunca se pierde el mensaje).
 // ============================================================
 import { correosActivos, enviarEmail } from "@/lib/email/resend";
+import { chip, fila, layout, tablaResumen } from "@/lib/email/templates";
 import { site } from "@/lib/site";
 
 const MAX = { nombre: 120, whatsapp: 40, mensaje: 4000 };
@@ -49,13 +50,18 @@ export async function POST(request: Request): Promise<Response> {
   // Bandeja del hotel: CONTACT_TO > OWNER_EMAIL > correo público del sitio.
   const to = process.env.CONTACT_TO || process.env.OWNER_EMAIL || site.email;
 
-  const html = `
-    <div style="font-family:system-ui,sans-serif;line-height:1.6">
-      <h2 style="margin:0 0 12px">Nuevo mensaje desde el sitio web</h2>
-      <p><strong>Nombre:</strong> ${esc(nombre)}</p>
-      <p><strong>WhatsApp:</strong> ${esc(whatsapp)}</p>
-      <p style="white-space:pre-wrap"><strong>Mensaje:</strong><br/>${esc(mensaje)}</p>
-    </div>`;
+  const inner = `
+${chip("Mensaje del sitio", "rio")}
+<h1 style="font-family:Georgia,'Times New Roman',serif;font-size:23px;font-weight:600;margin:18px 0 6px;color:#23281F;">Nuevo mensaje desde la web</h1>
+${tablaResumen(
+  fila("Nombre", esc(nombre)) +
+    fila(
+      "WhatsApp",
+      `<a href="https://wa.me/${esc(whatsapp).replace(/[^0-9]/g, "")}" style="color:#B75C38;">${esc(whatsapp)}</a>`,
+    ),
+)}
+<p style="font-size:14px;line-height:1.65;color:#4a4d40;margin:0;white-space:pre-wrap;">${esc(mensaje)}</p>`;
+  const html = layout(`Mensaje de ${nombre} desde el sitio web`, inner);
 
   const enviado = await enviarEmail({
     to,

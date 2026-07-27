@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Hanken_Grotesk } from "next/font/google";
+import { Newsreader, Hanken_Grotesk, Space_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { Footer } from "@/components/layout/Footer";
@@ -13,24 +13,32 @@ const sans = Hanken_Grotesk({
   display: "swap",
 });
 
-// Titulares: serif editorial con carácter (Fraunces), en la línea Aman/Hoxton.
-// No es la serif "default de IA" (Playfair); su óptica cálida vende atmósfera.
-const heading = Fraunces({
+// Titulares: Newsreader, la serif del brand book "Garza & Río" — literaria,
+// de contraste suave, cálida y editorial sin caer en lo corporativo.
+const heading = Newsreader({
   subsets: ["latin"],
   variable: "--font-heading",
   display: "swap",
   // Solo los pesos que usan los titulares (instancias estáticas, mucho más
   // ligeras que la variable completa) → la fuente crítica llega antes en móvil
   // lento y el titular (LCP) pinta su forma final cuanto antes.
-  weight: ["400", "600", "700"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const description = `Hotel boutique de ${site.rooms} habitaciones en el centro de ${site.locality}, ${site.region}. Aire acondicionado, estacionamiento y reserva directa sin comisión.`;
+// Etiquetas y datos (kickers, lockup de marca): Space Mono, el accent del brand book.
+const mono = Space_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+  weight: ["400", "700"],
+});
+
+const description = `Hotel de ${site.rooms} habitaciones en el centro de ${site.locality}, ${site.region}: limpio, tranquilo y a precio justo. Aire acondicionado, estacionamiento y reserva directa sin comisión.`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: `${site.legalName} · Hotel boutique en ${site.locality}, ${site.regionCode}`,
+    default: `${site.legalName} · Hotel en el centro de ${site.locality}, ${site.regionCode}`,
     template: `%s · ${site.name}`,
   },
   description,
@@ -44,21 +52,21 @@ export const metadata: Metadata = {
     locale: "es_MX",
     url: site.url,
     siteName: site.legalName,
-    title: `${site.legalName} · Hotel boutique en ${site.locality}`,
+    title: `${site.legalName} · Hotel en el centro de ${site.locality}`,
     description,
     // La imagen OG la genera app/opengraph-image.tsx (marca, 1200×630).
   },
   twitter: {
     card: "summary_large_image",
-    title: `${site.legalName} · Hotel boutique en ${site.locality}`,
+    title: `${site.legalName} · Hotel en el centro de ${site.locality}`,
     description,
     // twitter:image también lo provee app/opengraph-image.tsx.
   },
 };
 
 export const viewport: Viewport = {
-  // Color de marca en la UI del navegador (barra en móvil)
-  themeColor: "#143a2a",
+  // Color de marca en la UI del navegador (barra en móvil) — verde ribera
+  themeColor: "#234A31",
 };
 
 export default function RootLayout({
@@ -68,7 +76,7 @@ export default function RootLayout({
     <html
       lang="es"
       data-scroll-behavior="smooth"
-      className={`${sans.variable} ${heading.variable} h-full antialiased`}
+      className={`${sans.variable} ${heading.variable} ${mono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col" suppressHydrationWarning>
         {/* Skip link (WCAG 2.4.1): visible solo al enfocar con teclado */}

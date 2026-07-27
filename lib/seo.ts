@@ -19,7 +19,7 @@ const postalAddress = {
   addressCountry: site.address.country,
 };
 
-const hotelDescription = `Hotel boutique de ${site.rooms} habitaciones en el centro de ${site.locality}, ${site.region}. Aire acondicionado, estacionamiento y reserva directa sin comisión.`;
+const hotelDescription = `Hotel de ${site.rooms} habitaciones en el centro de ${site.locality}, ${site.region}: limpio, tranquilo y a precio justo. Aire acondicionado, estacionamiento y reserva directa sin comisión.`;
 
 /** Entidad Hotel (LocalBusiness) — fuente de verdad del grafo. */
 export function hotelEntity(): Record<string, unknown> {

@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Leaf } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import { GarzaMark } from "@/components/brand/GarzaMark";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -69,11 +70,7 @@ export function Navbar() {
           className="group flex items-center gap-2 font-heading text-lg font-semibold tracking-tight text-brand"
           aria-label={`${site.name}, inicio`}
         >
-          <Leaf
-            className="size-5 text-support transition-transform duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-rotate-12"
-            strokeWidth={1.75}
-            aria-hidden
-          />
+          <GarzaMark className="size-6 text-brand transition-transform duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-0.5" />
           {site.name}
         </Link>
 

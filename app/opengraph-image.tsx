@@ -1,10 +1,10 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Hotel Magic Collinn, hotel boutique en Axtla de Terrazas";
+export const alt = "Hotel Magic Collinn, hotel en el centro de Axtla de Terrazas";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-// Tarjeta social de marca (verde Huasteca + crema + acento terracota).
+// Tarjeta social de marca "Garza & Rio" (verde ribera + crema + arena + terracota).
 // Texto sin tildes a propósito: la fuente por defecto de Satori no garantiza
 // todos los glifos acentuados.
 export default function OpengraphImage() {
@@ -17,29 +17,42 @@ export default function OpengraphImage() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          backgroundColor: "#143a2a",
+          backgroundColor: "#234A31",
           padding: "80px",
           fontFamily: "sans-serif",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <div
-            style={{
-              width: "18px",
-              height: "18px",
-              borderRadius: "9999px",
-              backgroundColor: "#3f9b72",
-            }}
-          />
-          <div style={{ color: "#3f9b72", fontSize: "30px", fontWeight: 600 }}>
-            Hotel boutique en la Huasteca Potosina
+          <svg
+            viewBox="0 0 120 150"
+            width={44}
+            height={55}
+            fill="none"
+            stroke="#FBFAF4"
+            strokeWidth={7}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path
+              d="M58 80 C 30 78 26 55 54 53 C 78 51 92 60 108 68 C 90 80 74 82 58 80 Z"
+              fill="#FBFAF4"
+              stroke="none"
+            />
+            <path d="M60 54 C 54 40 68 38 62 24" />
+            <circle cx="61" cy="20" r="6.5" fill="#FBFAF4" stroke="none" />
+            <path d="M57 18 L40 22" />
+            <path d="M52 80 L44 128 M60 80 L64 128" />
+            <path d="M44 128 l-9 4 M64 128 l9 4" />
+          </svg>
+          <div style={{ color: "#C9A968", fontSize: "30px", fontWeight: 600 }}>
+            Descanso honesto en la Huasteca Potosina
           </div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" }}>
           <div
             style={{
-              color: "#f3efe2",
+              color: "#F5EFE2",
               fontSize: "104px",
               fontWeight: 700,
               lineHeight: 1.02,
@@ -51,7 +64,7 @@ export default function OpengraphImage() {
           <div
             style={{
               marginTop: "28px",
-              color: "#e7e1d2",
+              color: "#E5DFD0",
               fontSize: "40px",
               fontWeight: 400,
             }}
@@ -63,7 +76,7 @@ export default function OpengraphImage() {
         <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
           <div
             style={{
-              backgroundColor: "#b35b29",
+              backgroundColor: "#B75C38",
               color: "#fffefb",
               fontSize: "28px",
               fontWeight: 600,
@@ -73,7 +86,7 @@ export default function OpengraphImage() {
           >
             Reserva directa, sin comisiones
           </div>
-          <div style={{ color: "#cdd8cf", fontSize: "26px" }}>
+          <div style={{ color: "#CBD6CD", fontSize: "26px" }}>
             hotelmagicollinn.com
           </div>
         </div>

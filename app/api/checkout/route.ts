@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
     nombre: String(body.nombre ?? ""),
     whatsapp: String(body.whatsapp ?? ""),
     email: body.email ? String(body.email) : undefined,
+    nosConociste: body.nosConociste ? String(body.nosConociste) : undefined,
     modalidadPago: modalidad,
   });
 

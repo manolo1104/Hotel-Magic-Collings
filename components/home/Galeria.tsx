@@ -35,8 +35,8 @@ export function Galeria() {
           Un vistazo a Magic Collinn
         </h2>
         <p className="mt-3 leading-relaxed text-muted-foreground">
-          Un hotel boutique en la Huasteca Potosina, donde el descanso se siente
-          en casa. Toca cualquier foto para verla en grande.
+          Un hotel sencillo y cuidado en la Huasteca Potosina, donde te sientes
+          como en casa. Toca cualquier foto para verla en grande.
         </p>
         <Link
           href="/galeria"
