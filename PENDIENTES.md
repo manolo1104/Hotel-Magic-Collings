@@ -36,8 +36,13 @@ acondicionado.
 3. **¿Los precios cambian en temporada alta** (Semana Santa, Xantolo, puentes)?
    Hoy se cargó tarifa plana todo el año. Con el channel manager conectado, esa
    tarifa plana se publica en Booking los 365 días.
-4. **Fotos propias de cada tipo nuevo** (Gersay dijo que las manda). Hoy los
-   cinco tipos reutilizan las dos galerías que ya había.
+4. ~~Fotos propias de cada tipo~~ ✅ **RECIBIDAS** (25 fotos, 31 jul + 6 ago).
+   Ya están en `public/imagenes/` clasificadas por lo que se ve en cada una y
+   conectadas a su tipo en `lib/images.ts`. Se distinguen así: King Size = cama
+   king con sábana negra; Matrimonial = almohadas rojas y colcha blanca floral;
+   Doble Queen = dos camas, pared amarilla; Departamento = paredes BLANCAS.
+   **Aparecen en el sitio al correr `db:tarifas`** (la galería del Inicio y
+   /galeria ya las muestran hoy, porque no dependen de la base).
 
 Ojo: él mismo avisó que **la opción Matrimonial desaparece en ~1 semana** y que
 en 3–4 semanas habrá camas individuales en algunas King/Queen, y que mandará la
@@ -57,8 +62,8 @@ Sin argumentos solo actualiza precios y textos. Es idempotente.
 tienen `precios` vacío y el motor cae a su `tarifa_base` de siempre.
 
 ### Otros datos pendientes
-- **Fotos profesionales** de habitaciones y áreas. Hoy son fotos de celular
-  (reales, en `public/imagenes/`). Una sesión pro elevaría todo el sitio.
+- **Fotos profesionales**: las 25 de Gersay son reales pero de celular y con
+  luz de interior. Una sesión pro elevaría todo el sitio; no urge.
 - **GA_ID** (`NEXT_PUBLIC_GA_ID=G-XXXX`) para encender la medición de reservas.
 - Confirmar **política de mascotas** (hoy: sin mascotas, cancelación 72 h).
 

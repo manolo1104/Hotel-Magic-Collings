@@ -10,15 +10,17 @@ type From = "bottom" | "left" | "right" | "top";
 
 // 8 imágenes con ritmo: 4 anchas (col-span-2) intercaladas → la cuadrícula
 // de 4 columnas cierra en 3 filas exactas (2+2+4+4 = 12 spans).
+// El texto alternativo describe la foto REAL de cada posición: si se reordena
+// `galeria` en lib/images.ts hay que reordenarlo aquí también.
 const tiles: { src: string; alt: string; wide: boolean; from: From }[] = [
-  { src: galeria[0], alt: "Corredor con arcos y plantas del Hotel Magic Collinn", wide: true, from: "left" },
-  { src: galeria[1], alt: "Habitación doble del Hotel Magic Collinn", wide: false, from: "bottom" },
-  { src: galeria[2], alt: "Habitación con cama matrimonial y climatización", wide: false, from: "bottom" },
-  { src: galeria[3], alt: "Entrada principal del Hotel Magic Collinn en Axtla de Terrazas", wide: false, from: "bottom" },
-  { src: galeria[4], alt: "Fachada y jardín del Hotel Magic Collinn", wide: true, from: "right" },
-  { src: galeria[5], alt: "Habitación amplia con sala de estar", wide: false, from: "bottom" },
-  { src: galeria[6], alt: "Entrada del Hotel Magic Collinn iluminada de noche", wide: true, from: "left" },
-  { src: galeria[7], alt: "Habitación doble con sala de estar", wide: true, from: "right" },
+  { src: galeria[0], alt: "Corredor de arcos amarillos con plantas y vista al jardín del Hotel Magic Collinn", wide: true, from: "left" },
+  { src: galeria[1], alt: "Habitación Doble Queen con dos camas Queen Size", wide: false, from: "bottom" },
+  { src: galeria[2], alt: "Habitación King Size con salita, pantalla y salida al balcón", wide: false, from: "bottom" },
+  { src: galeria[3], alt: "Pórtico del hotel lleno de plantas", wide: false, from: "bottom" },
+  { src: galeria[4], alt: "Fachada del Hotel Magic Collinn en la esquina de Francisco I. Madero, Axtla de Terrazas", wide: true, from: "right" },
+  { src: galeria[5], alt: "Habitación Matrimonial con cama matrimonial y tocador", wide: false, from: "bottom" },
+  { src: galeria[6], alt: "Patio empedrado del hotel con setos y estacionamiento", wide: true, from: "left" },
+  { src: galeria[7], alt: "Corredor con acceso a las habitaciones y sillones de descanso", wide: true, from: "right" },
 ];
 
 // Versión grande de cada foto para el lightbox

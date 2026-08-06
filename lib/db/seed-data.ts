@@ -19,11 +19,17 @@
 // ⚠️ FALTA CONFIRMAR CON GERSAY antes de sembrar esto en producción:
 //   · cuántas habitaciones FÍSICAS hay de cada tipo (campo `units`)
 //   · si el departamento se puede rentar completo (6 personas) y a qué precio
-//   · fotos propias de cada tipo (hoy se reutilizan las que ya había)
 // Además, él avisó que la opción Matrimonial desaparece en ~1 semana y que en
 // 3–4 semanas habrá camas individuales en algunas King/Queen.
 // ============================================================
-import { sencillaFotos, dobleFotos } from "../images";
+import {
+  matrimonialFotos,
+  kingFotos,
+  dobleQueenFotos,
+  depaQueenFotos,
+  depaMatrimonialFotos,
+  sencillaFotos,
+} from "../images";
 
 export interface RoomTypeSeed {
   slug: string;
@@ -57,7 +63,7 @@ export const roomTypeSeed: RoomTypeSeed[] = [
     tarifaBase: 720,
     precios: [720, 840],
     amenidades: AMENIDADES_BASE,
-    fotos: sencillaFotos,
+    fotos: matrimonialFotos,
     units: [], // ⚠️ pendiente: cuántas hay
   },
   {
@@ -69,7 +75,7 @@ export const roomTypeSeed: RoomTypeSeed[] = [
     tarifaBase: 900,
     precios: [900, 1080],
     amenidades: AMENIDADES_BASE,
-    fotos: sencillaFotos,
+    fotos: kingFotos,
     units: [], // ⚠️ pendiente: cuántas hay
   },
   {
@@ -81,7 +87,7 @@ export const roomTypeSeed: RoomTypeSeed[] = [
     tarifaBase: 1200,
     precios: [1200, 1200, 1320, 1440],
     amenidades: AMENIDADES_BASE,
-    fotos: dobleFotos,
+    fotos: dobleQueenFotos,
     units: [], // ⚠️ pendiente: cuántas hay
   },
   {
@@ -93,7 +99,7 @@ export const roomTypeSeed: RoomTypeSeed[] = [
     tarifaBase: 900,
     precios: [900, 1080],
     amenidades: AMENIDADES_BASE,
-    fotos: dobleFotos,
+    fotos: depaQueenFotos,
     units: [], // ⚠️ pendiente: cuántas hay
   },
   {
@@ -105,7 +111,7 @@ export const roomTypeSeed: RoomTypeSeed[] = [
     tarifaBase: 1020,
     precios: [1020, 1020, 1140, 1260],
     amenidades: AMENIDADES_BASE,
-    fotos: dobleFotos,
+    fotos: depaMatrimonialFotos,
     units: [], // ⚠️ pendiente: cuántas hay
   },
   {

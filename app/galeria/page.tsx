@@ -18,9 +18,10 @@ export const metadata: Metadata = {
 
 type From = "bottom" | "left" | "right" | "top";
 
-// Las 15 fotos reales del hotel (public/imagenes/), con ritmo de anchas:
-// en md:grid-cols-4 los spans suman 20 → 5 filas exactas, sin huecos.
-// La primera es col-span-2 también en móvil → 16 spans = 8 filas parejas.
+// Las 24 fotos reales del hotel (public/imagenes/), con ritmo de anchas.
+// CUADRÍCULA: en md:grid-cols-4 los spans suman 32 (24 fotos + 8 anchas) → 8
+// filas exactas, sin huecos. En móvil (2 columnas) solo 2 son anchas → 26
+// spans = 13 filas parejas. Si agregas o quitas fotos, rehaz esta cuenta.
 const tiles: {
   src: string;
   alt: string;
@@ -28,21 +29,35 @@ const tiles: {
   wideMobile?: boolean;
   from: From;
 }[] = [
+  // Exteriores y áreas comunes
   { src: "/imagenes/fachada-jardin.jpg", alt: "Fachada y jardín del Hotel Magic Collinn", wide: true, wideMobile: true, from: "left" },
-  { src: "/imagenes/corredor-arcos.jpg", alt: "Corredor con arcos y plantas del hotel", wide: true, from: "right" },
-  { src: "/imagenes/fachada-entrada.jpg", alt: "Entrada principal del Hotel Magic Collinn en Axtla de Terrazas", from: "bottom" },
+  { src: "/imagenes/corredor-arcos-jardin.jpg", alt: "Corredor de arcos amarillos con plantas y vista al jardín", wide: true, from: "right" },
+  { src: "/imagenes/fachada-esquina.jpg", alt: "Fachada del hotel en la esquina de Francisco I. Madero, Axtla de Terrazas", from: "bottom" },
   { src: "/imagenes/entrada-noche.jpg", alt: "Entrada del hotel iluminada de noche", wide: true, from: "left" },
-  { src: "/imagenes/fachada-lateral.jpg", alt: "Vista lateral de la fachada del hotel", from: "bottom" },
-  { src: "/imagenes/sencilla-1.jpg", alt: "Habitación sencilla con cama matrimonial y clima", from: "bottom" },
-  { src: "/imagenes/sencilla-2.jpg", alt: "Habitación sencilla, vista hacia la ventana", from: "bottom" },
-  { src: "/imagenes/sencilla-3.jpg", alt: "Detalle de la habitación sencilla", from: "bottom" },
-  { src: "/imagenes/doble-1.jpg", alt: "Habitación doble con dos camas matrimoniales", from: "bottom" },
-  { src: "/imagenes/doble-2.jpg", alt: "Habitación doble del Hotel Magic Collinn", from: "bottom" },
-  { src: "/imagenes/doble-estancia.jpg", alt: "Habitación doble con sala de estar", wide: true, from: "right" },
-  { src: "/imagenes/doble-3.jpg", alt: "Habitación doble, vista general", from: "bottom" },
-  { src: "/imagenes/doble-4.jpg", alt: "Detalle de la habitación doble", from: "bottom" },
-  { src: "/imagenes/doble-5.jpg", alt: "Habitación doble amplia y climatizada", wide: true, from: "bottom" },
-  { src: "/imagenes/doble-6.jpg", alt: "Habitación doble, otra vista", from: "bottom" },
+  { src: "/imagenes/porche-plantas.jpg", alt: "Pórtico del hotel lleno de plantas colgantes", from: "bottom" },
+  { src: "/imagenes/corredor-habitaciones.jpg", alt: "Corredor con acceso a las habitaciones y sillones de descanso", from: "bottom" },
+  { src: "/imagenes/patio-empedrado.jpg", alt: "Patio empedrado del hotel con setos recortados", wide: true, from: "right" },
+  { src: "/imagenes/fachada-calle.jpg", alt: "Entrada del Hotel Magic Collinn desde la calle", from: "bottom" },
+  // Habitación King Size
+  { src: "/imagenes/king-2.jpg", alt: "Habitación King Size con salita, pantalla y salida al balcón", wide: true, from: "left" },
+  { src: "/imagenes/king-1.jpg", alt: "Cama King Size con cabecera de ratán en la habitación King", from: "bottom" },
+  { src: "/imagenes/king-3.jpg", alt: "Habitación King Size con clóset y tocador", from: "bottom" },
+  // Habitación Matrimonial
+  { src: "/imagenes/matrimonial-1.jpg", alt: "Habitación Matrimonial con tocador y espejo", from: "bottom" },
+  { src: "/imagenes/matrimonial-2.jpg", alt: "Habitación Matrimonial con pantalla y salida al balcón", from: "bottom" },
+  { src: "/imagenes/matrimonial-3.jpg", alt: "Detalle de la habitación Matrimonial con clóset", from: "bottom" },
+  // Habitación Doble Queen
+  { src: "/imagenes/doble-queen-2.jpg", alt: "Habitación Doble Queen con dos camas Queen Size y tocador", wide: true, from: "right" },
+  { src: "/imagenes/doble-queen-1.jpg", alt: "Habitación Doble Queen con dos camas y pantalla", from: "bottom" },
+  { src: "/imagenes/doble-queen-3.jpg", alt: "Habitación Doble Queen con salita y salida al corredor", from: "bottom" },
+  { src: "/imagenes/doble-queen-4.jpg", alt: "Habitación Doble Queen amplia con sofá", from: "bottom" },
+  { src: "/imagenes/doble-queen-5.jpg", alt: "Habitación Doble Queen con dos camas y tocador", from: "bottom" },
+  { src: "/imagenes/doble-queen-7.jpg", alt: "Habitación Doble Queen, vista general", from: "bottom" },
+  { src: "/imagenes/doble-queen-8.jpg", alt: "Habitación Doble Queen con sala de estar", from: "bottom" },
+  // Departamento
+  { src: "/imagenes/depa-matrimonial-2.jpg", alt: "Habitación del departamento con dos camas matrimoniales", wide: true, from: "left" },
+  { src: "/imagenes/depa-queen-1.jpg", alt: "Habitación con cama Queen Size del departamento", wide: true, wideMobile: true, from: "right" },
+  { src: "/imagenes/patio-estacionamiento.jpg", alt: "Patio con estacionamiento techado del hotel", from: "bottom" },
 ];
 
 const photos = tiles.map((t) => ({ src: t.src, alt: t.alt }));

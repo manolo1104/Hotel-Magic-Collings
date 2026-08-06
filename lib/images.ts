@@ -1,7 +1,15 @@
 // ============================================================
 // IMÁGENES DEL HOTEL — Magic Collinn
-// Fotos REALES del hotel (jun 2026) en public/imagenes/.
+// Fotos REALES del hotel en public/imagenes/.
 // next/image las optimiza en runtime a AVIF/WebP.
+//
+// Las galerías por tipo vienen de las fotos que mandó Gersay el 31 jul 2026,
+// clasificadas por lo que se ve en cada una:
+//   · King Size  → una cama king con sábana negra, pared amarilla
+//   · Matrimonial→ una cama con almohadas rojas y colcha blanca floral
+//   · Doble Queen→ dos camas, pared amarilla
+//   · Departamento→ paredes BLANCAS (decoración distinta al resto del hotel)
+//
 // Las portadas de blog usan stock temático de turismo (Unsplash),
 // porque ilustran lugares de la Huasteca, no el hotel.
 // ============================================================
@@ -9,7 +17,44 @@
 // Fondo del hero: fachada del hotel con jardín y cielo abierto
 export const heroImage = "/imagenes/fachada-jardin.jpg";
 
-// Galerías por tipo de habitación (la 1ª es la portada en /habitaciones)
+// ── Galerías por tipo de habitación ─────────────────────────
+// La primera de cada lista es la portada en /habitaciones.
+
+export const matrimonialFotos = [
+  "/imagenes/matrimonial-1.jpg",
+  "/imagenes/matrimonial-2.jpg",
+  "/imagenes/matrimonial-3.jpg",
+];
+
+export const kingFotos = [
+  "/imagenes/king-2.jpg", // la más amplia: cama king, salita y balcón
+  "/imagenes/king-1.jpg",
+  "/imagenes/king-3.jpg",
+];
+
+export const dobleQueenFotos = [
+  "/imagenes/doble-queen-2.jpg", // portada: se ven las dos camas completas
+  "/imagenes/doble-queen-1.jpg",
+  "/imagenes/doble-queen-3.jpg",
+  "/imagenes/doble-queen-4.jpg",
+  "/imagenes/doble-queen-5.jpg",
+  "/imagenes/doble-queen-6.jpg",
+  "/imagenes/doble-queen-7.jpg",
+  "/imagenes/doble-queen-8.jpg",
+];
+
+export const depaQueenFotos = [
+  "/imagenes/depa-queen-1.jpg",
+  "/imagenes/depa-queen-2.jpg",
+];
+
+export const depaMatrimonialFotos = [
+  "/imagenes/depa-matrimonial-2.jpg", // portada: se ven las dos camas
+  "/imagenes/depa-matrimonial-1.jpg",
+];
+
+// Galerías del inventario ANTERIOR (2 tipos). Se conservan porque la base de
+// producción todavía las referencia hasta correr `npm run db:tarifas`.
 export const sencillaFotos = [
   "/imagenes/sencilla-1.jpg",
   "/imagenes/sencilla-2.jpg",
@@ -24,14 +69,14 @@ export const dobleFotos = [
 
 // Mosaico de galería del Inicio (8 fotos variadas: exteriores + habitaciones)
 export const galeria = [
-  "/imagenes/corredor-arcos.jpg",
-  "/imagenes/doble-2.jpg",
-  "/imagenes/sencilla-1.jpg",
-  "/imagenes/fachada-entrada.jpg",
-  "/imagenes/fachada-lateral.jpg",
-  "/imagenes/doble-5.jpg",
-  "/imagenes/entrada-noche.jpg",
-  "/imagenes/doble-estancia.jpg",
+  "/imagenes/corredor-arcos-jardin.jpg",
+  "/imagenes/doble-queen-2.jpg",
+  "/imagenes/king-2.jpg",
+  "/imagenes/porche-plantas.jpg",
+  "/imagenes/fachada-esquina.jpg",
+  "/imagenes/matrimonial-1.jpg",
+  "/imagenes/patio-empedrado.jpg",
+  "/imagenes/corredor-habitaciones.jpg",
 ];
 
 // Fotos extra por tipo que NO están en la BD (la BD se sembró una sola vez).
