@@ -20,7 +20,13 @@ export const roomTypes = pgTable("room_types", {
   nombre: text("nombre").notNull(),
   descripcion: text("descripcion").notNull(),
   capacidad: integer("capacidad").notNull(),
+  // Precio "desde" (el de 1 persona). Es lo que se muestra donde todavía no se
+  // sabe cuánta gente viene: portada, /habitaciones, schema.org.
   tarifaBase: integer("tarifa_base").notNull(), // MXN por noche
+  // Precio por noche SEGÚN CUÁNTA GENTE se hospeda, que es como cobra el hotel:
+  // posición 0 = 1 persona, posición 1 = 2 personas, etc.
+  // Ej. Doble Queen = [1200, 1200, 1320, 1440]. Vacío = se usa tarifaBase.
+  precios: integer("precios").array().notNull().default([]),
   amenidades: text("amenidades").array().notNull().default([]),
   fotos: text("fotos").array().notNull().default([]),
   // Id de la "habitación" equivalente en Beds24 (el channel manager). Beds24

@@ -75,8 +75,10 @@ export function RoomResultCard({
               {formatMXN(tipo.precioTotal)}
             </p>
             <p className="text-xs text-muted-foreground">
+              {/* precioNoche, no tarifaBase: el hotel cobra según cuánta
+                  gente entra, y aquí ya sabemos cuántos son. */}
               {tipo.noches} {tipo.noches === 1 ? "noche" : "noches"} ·{" "}
-              {formatMXN(tipo.tarifaBase)} / noche
+              {formatMXN(tipo.precioNoche)} / noche
             </p>
           </div>
           <div className="flex flex-col items-end gap-1.5">

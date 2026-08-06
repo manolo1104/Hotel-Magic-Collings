@@ -20,6 +20,8 @@ export interface AvailableRoomType {
   fotos: string[];
   disponibles: number; // unidades libres en el rango
   noches: number;
+  /** Precio de una noche para el número de huéspedes buscado. */
+  precioNoche: number;
   precioTotal: number;
 }
 

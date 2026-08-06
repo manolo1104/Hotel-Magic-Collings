@@ -39,8 +39,8 @@ export const site = {
     "https://www.google.com/maps?q=Hotel+Magic+Collinn,+Axtla+de+Terrazas&z=16&hl=es&output=embed",
 
   // ── Operación ─────────────────────────────────────────────
-  checkIn: "15:00", // Confirmado por el dueño
-  checkOut: "12:00", // Confirmado por el dueño
+  checkIn: "13:00", // Confirmado por Gersay (31 jul 2026)
+  checkOut: "11:00", // Confirmado por Gersay (31 jul 2026)
   petsAllowed: false as boolean | null, // Confirmado: no se reciben mascotas
   rooms: 6,
   roomCategories: 2, // 6 habitaciones repartidas en 2 categorías (sencilla y doble)

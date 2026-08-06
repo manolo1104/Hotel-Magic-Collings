@@ -68,6 +68,25 @@ export function formatMXN(n: number): string {
   return `$${Math.round(n).toLocaleString("es-MX")} MXN`;
 }
 
+/**
+ * Precio de UNA noche según cuánta gente se hospeda, que es como cobra el
+ * hotel: una Doble Queen son $1,200 con dos personas y $1,440 con cuatro.
+ *
+ * `precios` va indexado por ocupación (posición 0 = 1 persona). Si el tipo no
+ * tiene tabla de precios cargada se usa `tarifaBase`, y si vienen más
+ * huéspedes que precios se cobra el último (el de ocupación máxima) en vez de
+ * caer a `undefined` y facturar NaN.
+ */
+export function precioPorNoche(
+  tipo: { tarifaBase: number; precios?: number[] | null },
+  huespedes: number,
+): number {
+  const precios = tipo.precios ?? [];
+  if (precios.length === 0) return tipo.tarifaBase;
+  const n = Math.max(1, Math.floor(Number(huespedes) || 1));
+  return precios[Math.min(n, precios.length) - 1];
+}
+
 /** Valida un rango de fechas + huéspedes. Devuelve mensaje de error o null. */
 export function validateRange(p: AvailabilityParams): string | null {
   if (!isValidISODate(p.checkin) || !isValidISODate(p.checkout))
@@ -152,6 +171,7 @@ export async function getAvailability(
       const typeRooms = allRooms.filter((r) => r.roomTypeId === t.id && r.activa);
       const ocupadas = typeRooms.filter((r) => occupied.has(r.id)).length;
       const disponibles = typeRooms.length - ocupadas;
+      const precioNoche = precioPorNoche(t, huespedes);
       return {
         id: t.id,
         slug: t.slug,
@@ -163,7 +183,8 @@ export async function getAvailability(
         fotos: t.fotos,
         disponibles,
         noches,
-        precioTotal: t.tarifaBase * noches,
+        precioNoche,
+        precioTotal: precioNoche * noches,
       };
     })
     .filter(
@@ -226,7 +247,8 @@ export async function createBooking(
     };
 
   const noches = calcNights(input.checkin, input.checkout);
-  const total = tipo.tarifaBase * noches;
+  // El precio depende de cuánta gente entra, no solo del tipo de habitación.
+  const total = precioPorNoche(tipo, huespedes) * noches;
 
   // Modalidad de pago: cuánto se cobra en línea ahora y el hold del cuarto.
   //  · sin modalidad → reserva por WhatsApp (sin pago en línea)
@@ -529,7 +551,7 @@ export async function createManualBooking(input: {
   const total =
     input.total != null && input.total >= 0
       ? Math.round(input.total)
-      : tipo.tarifaBase * noches;
+      : precioPorNoche(tipo, huespedes) * noches;
   const montoPagado =
     input.montoPagado != null && input.montoPagado > 0
       ? Math.round(input.montoPagado)
@@ -932,7 +954,9 @@ export async function createQuote(input: {
   const precioTotal =
     input.precioTotal != null && input.precioTotal >= 0
       ? Math.round(input.precioTotal)
-      : (tipo?.tarifaBase ?? 0) * noches;
+      : tipo
+        ? precioPorNoche(tipo, huespedes) * noches
+        : 0;
   const [created] = await db
     .insert(quotes)
     .values({

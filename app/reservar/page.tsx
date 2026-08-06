@@ -129,8 +129,9 @@ export default async function ReservarPage({ searchParams }: { searchParams: SP 
               </div>
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">
+                  {/* precio de la ocupación buscada, no el "desde" */}
                   {tipo.noches} {tipo.noches === 1 ? "noche" : "noches"} ×{" "}
-                  {formatMXN(tipo.tarifaBase)}
+                  {formatMXN(tipo.precioNoche)}
                 </dt>
                 <dd className="font-medium">{formatMXN(tipo.precioTotal)}</dd>
               </div>

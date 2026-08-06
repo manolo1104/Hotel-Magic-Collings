@@ -18,7 +18,8 @@ const DDL = [
     capacidad integer NOT NULL,
     tarifa_base integer NOT NULL,
     amenidades text[] NOT NULL DEFAULT '{}',
-    fotos text[] NOT NULL DEFAULT '{}'
+    fotos text[] NOT NULL DEFAULT '{}',
+    precios integer[] NOT NULL DEFAULT '{}'
   )`,
   `CREATE TABLE IF NOT EXISTS rooms (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -157,6 +158,8 @@ const MIGRATIONS = [
   `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS origen text NOT NULL DEFAULT 'web'`,
   `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS notas text NOT NULL DEFAULT ''`,
   `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS nos_conociste text NOT NULL DEFAULT ''`,
+  // Precio por ocupación (el hotel cobra distinto según cuánta gente entra)
+  `ALTER TABLE room_types ADD COLUMN IF NOT EXISTS precios integer[] NOT NULL DEFAULT '{}'`,
   // Channel manager (Beds24 ↔ Booking.com)
   `ALTER TABLE room_types ADD COLUMN IF NOT EXISTS beds24_room_id integer`,
   `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS beds24_booking_id integer`,
@@ -180,6 +183,7 @@ export async function seedRooms(): Promise<void> {
         descripcion: t.descripcion,
         capacidad: t.capacidad,
         tarifaBase: t.tarifaBase,
+        precios: [...t.precios],
         amenidades: [...t.amenidades],
         fotos: [...t.fotos],
       })

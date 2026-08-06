@@ -4,16 +4,63 @@ Lo que quedó fuera del alcance de este rediseño, con recomendación de priorid
 
 ---
 
-## 1. Datos reales del dueño — `[CONFIRMAR CON DUEÑO]`  (prioridad ALTA)
-Sin estos, el sitio topa en "muy bueno"; con ellos llega a "de revista".
+## 1. Datos reales del dueño — `[CONFIRMAR CON GERSAY]`  (prioridad ALTA)
 
-- **Tarifas reales** por noche. Hoy: `$850` sencilla / `$1,200` doble (placeholder
-  en `lib/db/seed-data.ts`). El sitio ya está listo; solo falta el número real.
-- **Fotos profesionales** de las habitaciones y áreas. Hoy son fotos de celular
+### ✅ Recibido el 31 jul 2026: tarifas reales
+
+El hotel cobra **por ocupación** — la misma habitación cuesta distinto según
+cuánta gente entra. El motor ya lo soporta (`precioPorNoche` en
+`lib/booking/engine.ts`, columna `room_types.precios` indexada por número de
+huéspedes). Cargado en `lib/db/seed-data.ts`:
+
+|                          | 1 persona | 2 personas | 3 personas | 4 personas |
+|--------------------------|----------:|-----------:|-----------:|-----------:|
+| Matrimonial              |      $720 |       $840 |          — |          — |
+| King Size                |      $900 |     $1,080 |          — |          — |
+| Doble Queen              |    $1,200 |     $1,200 |     $1,320 |     $1,440 |
+| Depa · 1 cama Queen      |      $900 |     $1,080 |          — |          — |
+| Depa · 2 camas matrimon. |    $1,020 |     $1,020 |     $1,140 |     $1,260 |
+
+También confirmó **check-in 13:00 / check-out 11:00** (el sitio decía 15:00 y
+12:00 — ya corregido en `lib/site.ts`) y las amenidades: estacionamiento, IPTV
+con 300+ canales y 10,000 títulos, agua caliente, WiFi satelital y aire
+acondicionado.
+
+### 🔴 Sigue faltando para poder aplicarlo en producción
+
+1. **Cuántas habitaciones FÍSICAS hay de cada tipo.** Es el dato que bloquea:
+   determina cuántas se pueden vender a la vez. Equivocarse por arriba = venderle
+   a alguien un cuarto que no existe.
+2. **El departamento**: la tabla cobra sus dos recámaras por separado, pero el
+   texto dice "6 personas máximo". ¿Se puede rentar completo? ¿A qué precio?
+3. **¿Los precios cambian en temporada alta** (Semana Santa, Xantolo, puentes)?
+   Hoy se cargó tarifa plana todo el año. Con el channel manager conectado, esa
+   tarifa plana se publica en Booking los 365 días.
+4. **Fotos propias de cada tipo nuevo** (Gersay dijo que las manda). Hoy los
+   cinco tipos reutilizan las dos galerías que ya había.
+
+Ojo: él mismo avisó que **la opción Matrimonial desaparece en ~1 semana** y que
+en 3–4 semanas habrá camas individuales en algunas King/Queen, y que mandará la
+distribución final. Conviene esperarla antes de publicar precios en Booking.
+
+### Cómo se aplica cuando llegue el dato
+
+```
+npm run db:tarifas -- matrimonial=2 king-size=1 doble-queen=2 depa-queen=1 depa-matrimonial=1
+```
+
+Crea o actualiza los tipos, ajusta los cuartos físicos y **nunca borra un cuarto
+con reservas** (lo desactiva, que deja de venderse pero conserva el historial).
+Sin argumentos solo actualiza precios y textos. Es idempotente.
+
+**Mientras no se corra, producción no cambia de precio:** los tipos viejos
+tienen `precios` vacío y el motor cae a su `tarifa_base` de siempre.
+
+### Otros datos pendientes
+- **Fotos profesionales** de habitaciones y áreas. Hoy son fotos de celular
   (reales, en `public/imagenes/`). Una sesión pro elevaría todo el sitio.
 - **GA_ID** (`NEXT_PUBLIC_GA_ID=G-XXXX`) para encender la medición de reservas.
-- Confirmar **política de mascotas / horarios** si algo cambió (hoy: check-in 15:00,
-  check-out 12:00, sin mascotas, cancelación 72 h — ya cargados).
+- Confirmar **política de mascotas** (hoy: sin mascotas, cancelación 72 h).
 
 ## 2. Publicar el trabajo de backend guardado  (prioridad ALTA)
 - La rama **`backend-pendiente`** tiene los "24 arreglos" de seguridad/reservas + el
