@@ -72,13 +72,17 @@ export function CanalesClient({
     router.refresh();
   }
 
+  // El contenedor y el padding los pone la página (app/admin/(panel)/canales).
   return (
-    <div className="mx-auto w-full max-w-[1100px] px-4 pt-6 pb-20 sm:px-6 lg:pt-8">
+    <div>
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-heading text-2xl font-semibold sm:text-3xl">Canales OTA</h1>
+          <h2 className="font-heading text-xl font-semibold sm:text-2xl">
+            Otros canales (calendarios iCal)
+          </h2>
           <p className="text-sm text-muted-foreground">
-            Importa reservas de Booking / Expedia para evitar overbooking
+            Solo de ENTRADA y solo para OTAs que no pasen por el channel manager.
+            Lo de Booking.com se gestiona arriba.
           </p>
         </div>
         {canales.length > 0 && (

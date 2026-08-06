@@ -4,6 +4,7 @@
 // ============================================================
 import { eq, desc, and } from "drizzle-orm";
 import { db } from "@/lib/db";
+import { conCandado } from "@/lib/db/lock";
 import { ensureDb } from "@/lib/db/ensure";
 import { otaChannels, blocks, rooms } from "@/lib/db/schema";
 import type { OtaChannel } from "@/lib/db/schema";
@@ -123,15 +124,32 @@ export async function syncChannel(
   }
 }
 
-export async function syncAllChannels(): Promise<{ canales: number; bloqueos: number; errores: number }> {
-  await ensureDb();
-  const channels = await db.select().from(otaChannels).where(eq(otaChannels.activo, true));
-  let bloqueos = 0;
-  let errores = 0;
-  for (const ch of channels) {
-    const r = await syncChannel(ch);
-    bloqueos += r.count;
-    if (!r.ok) errores++;
-  }
-  return { canales: channels.length, bloqueos, errores };
+export interface SyncResult {
+  canales: number;
+  bloqueos: number;
+  errores: number;
+  /** true = otra corrida tenía el candado y esta se omitió (no es un error). */
+  omitido?: boolean;
+}
+
+/**
+ * Sincroniza todos los canales activos.
+ * Va bajo candado porque cada canal BORRA y reinserta sus bloqueos: dos
+ * corridas encimadas dejan una ventana sin bloqueos = riesgo de sobreventa.
+ * Lo llaman el reloj (lib/scheduler.ts), el endpoint de cron y el panel.
+ */
+export async function syncAllChannels(): Promise<SyncResult> {
+  const r = await conCandado("ical-sync", async () => {
+    await ensureDb();
+    const channels = await db.select().from(otaChannels).where(eq(otaChannels.activo, true));
+    let bloqueos = 0;
+    let errores = 0;
+    for (const ch of channels) {
+      const res = await syncChannel(ch);
+      bloqueos += res.count;
+      if (!res.ok) errores++;
+    }
+    return { canales: channels.length, bloqueos, errores };
+  });
+  return r ?? { canales: 0, bloqueos: 0, errores: 0, omitido: true };
 }

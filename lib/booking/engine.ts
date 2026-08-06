@@ -25,6 +25,23 @@ export const HIDDEN_SLUGS = new Set<string>([
   "prueba", // cuarto de $10 para probar cobros reales de Mercado Pago
 ]);
 
+// ── Aviso al channel manager (Beds24 → Booking.com) ─────────
+/**
+ * Avisa a Beds24 de un cambio SIN hacer esperar al huésped ni al panel.
+ * Se importa de forma perezosa para no cargar el channel manager en cada
+ * petición y para evitar un ciclo de importaciones con lib/beds24/sync.
+ *
+ * Si esto falla no se pierde nada: el reloj reconcilia lo que quede pendiente
+ * en su siguiente corrida (comparando el estado real contra `beds24_estado`).
+ */
+type SyncBeds24 = typeof import("@/lib/beds24/sync");
+function avisarBeds24(accion: (m: SyncBeds24) => Promise<unknown>): void {
+  if (!process.env.BEDS24_REFRESH_TOKEN?.trim()) return;
+  void import("@/lib/beds24/sync")
+    .then(accion)
+    .catch((e) => console.error("[beds24] aviso inmediato falló (lo hará el reloj):", e));
+}
+
 // ── Helpers puros de fecha/precio ───────────────────────────
 const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -247,6 +264,12 @@ export async function createBooking(
     })
     .returning({ id: bookings.id, estado: bookings.estado });
 
+  // Cierra la fecha en Booking desde YA, incluso mientras el huésped teclea la
+  // tarjeta: el sitio cuenta el "hold" como ocupado, y si Booking no se entera
+  // podría vender el mismo cuarto en esos 30 minutos. Si el pago no se
+  // completa, el reloj cancela el espejo solo y la fecha se libera.
+  avisarBeds24((m) => m.reconciliarReserva(created.id));
+
   return {
     ok: true,
     id: created.id,
@@ -385,6 +408,8 @@ export async function marcarPagoRechazado(
     .update(bookings)
     .set({ estado: "cancelada", estadoPago: "rechazado", mpPaymentId: paymentId, mpStatus })
     .where(and(eq(bookings.id, bookingId), ne(bookings.estadoPago, "pagado")));
+  // Pago rechazado → el cuarto vuelve a estar a la venta, también en Booking.
+  avisarBeds24((m) => m.reconciliarReserva(bookingId));
 }
 
 /**
@@ -536,6 +561,8 @@ export async function createManualBooking(input: {
     })
     .returning({ id: bookings.id });
 
+  avisarBeds24((m) => m.reconciliarReserva(created.id));
+
   return { ok: true, id: created.id, estado: "confirmada", total };
 }
 
@@ -604,6 +631,8 @@ export async function updateBooking(
     set.nosConociste = changes.nosConociste.trim().slice(0, 60);
 
   await db.update(bookings).set(set).where(eq(bookings.id, id));
+  // Las fechas o el estado pudieron cambiar → que Booking se entere.
+  avisarBeds24((m) => m.reconciliarReserva(id));
   return { ok: true };
 }
 
@@ -616,6 +645,8 @@ export async function cancelBooking(id: string): Promise<{ ok: boolean; error?: 
     .where(eq(bookings.id, id))
     .returning({ id: bookings.id });
   if (res.length === 0) return { ok: false, error: "Reserva no encontrada." };
+  // Libera la fecha también en Booking.
+  avisarBeds24((m) => m.reconciliarReserva(id));
   return { ok: true };
 }
 
@@ -793,13 +824,18 @@ export async function blockDates(input: {
     .where(eq(rooms.id, input.roomId))
     .limit(1);
   if (!room) return { ok: false, error: "Cuarto no encontrado." };
-  await db.insert(blocks).values({
-    roomId: input.roomId,
-    checkin: input.checkin,
-    checkout: input.checkout,
-    motivo: input.motivo === "mantenimiento" ? "mantenimiento" : "manual",
-    nota: input.nota?.trim() || "",
-  });
+  const [creado] = await db
+    .insert(blocks)
+    .values({
+      roomId: input.roomId,
+      checkin: input.checkin,
+      checkout: input.checkout,
+      motivo: input.motivo === "mantenimiento" ? "mantenimiento" : "manual",
+      nota: input.nota?.trim() || "",
+    })
+    .returning({ id: blocks.id });
+  // Cerrar por mantenimiento aquí debe cerrar también en Booking.
+  avisarBeds24((m) => m.reconciliarBloqueo(creado.id));
   return { ok: true };
 }
 
@@ -811,9 +847,12 @@ export async function unblock(id: string): Promise<{ ok: boolean; error?: string
   const res = await db
     .delete(blocks)
     .where(and(eq(blocks.id, id), ne(blocks.motivo, "ota")))
-    .returning({ id: blocks.id });
+    .returning({ id: blocks.id, beds24BookingId: blocks.beds24BookingId });
   if (res.length === 0)
     return { ok: false, error: "Bloqueo no encontrado o pertenece a un canal OTA." };
+  // La fila ya no existe: la baja en Beds24 se apunta aparte para que el reloj
+  // la ejecute, o la fecha se quedaría cerrada en Booking para siempre.
+  avisarBeds24((m) => m.encolarBaja(res[0].beds24BookingId));
   return { ok: true };
 }
 

@@ -123,6 +123,18 @@ const DDL = [
     responsable text NOT NULL DEFAULT '',
     created_at timestamp NOT NULL DEFAULT now()
   )`,
+  `CREATE TABLE IF NOT EXISTS beds24_cola (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    beds24_booking_id integer NOT NULL,
+    intentos integer NOT NULL DEFAULT 0,
+    ultimo_error text,
+    created_at timestamp NOT NULL DEFAULT now()
+  )`,
+  `CREATE TABLE IF NOT EXISTS app_state (
+    clave text PRIMARY KEY,
+    valor text NOT NULL DEFAULT '',
+    updated_at timestamp NOT NULL DEFAULT now()
+  )`,
 ];
 
 // Migraciones idempotentes para BASES DE DATOS YA EXISTENTES (PGlite local o
@@ -145,6 +157,17 @@ const MIGRATIONS = [
   `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS origen text NOT NULL DEFAULT 'web'`,
   `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS notas text NOT NULL DEFAULT ''`,
   `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS nos_conociste text NOT NULL DEFAULT ''`,
+  // Channel manager (Beds24 ↔ Booking.com)
+  `ALTER TABLE room_types ADD COLUMN IF NOT EXISTS beds24_room_id integer`,
+  `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS beds24_booking_id integer`,
+  `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS beds24_estado text`,
+  `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS beds24_synced_at timestamp`,
+  `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS beds24_error text`,
+  `ALTER TABLE blocks ADD COLUMN IF NOT EXISTS beds24_booking_id integer`,
+  `ALTER TABLE blocks ADD COLUMN IF NOT EXISTS beds24_estado text`,
+  // Una reserva de Beds24 se importa UNA sola vez aunque lleguen el webhook y
+  // la repesca a la vez: el índice único hace que la carrera falle en la BD.
+  `CREATE UNIQUE INDEX IF NOT EXISTS bookings_beds24_id_uq ON bookings (beds24_booking_id) WHERE beds24_booking_id IS NOT NULL`,
 ];
 
 export async function seedRooms(): Promise<void> {

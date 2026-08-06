@@ -23,6 +23,10 @@ export const roomTypes = pgTable("room_types", {
   tarifaBase: integer("tarifa_base").notNull(), // MXN por noche
   amenidades: text("amenidades").array().notNull().default([]),
   fotos: text("fotos").array().notNull().default([]),
+  // Id de la "habitación" equivalente en Beds24 (el channel manager). Beds24
+  // trabaja por TIPO con un número de unidades (qty), igual que nosotros, así
+  // que el emparejamiento va aquí y no en cada cuarto físico. null = sin conectar.
+  beds24RoomId: integer("beds24_room_id"),
 });
 
 // 6 registros físicos (3 sencillas + 3 dobles)
@@ -65,6 +69,16 @@ export const bookings = pgTable("bookings", {
   expiraEn: timestamp("expira_en"), // hold del cuarto mientras paga
   koraPushedAt: timestamp("kora_pushed_at"), // idempotencia push a Kora
   emailsSentAt: timestamp("emails_sent_at"), // idempotencia de correos
+
+  // ── Channel manager (Beds24 → Booking.com) ─────────────────
+  // id de esta reserva DENTRO de Beds24 (null = todavía no se ha subido).
+  beds24BookingId: integer("beds24_booking_id"),
+  // Último estado que logramos dejar en Beds24: confirmed | cancelled.
+  // El reloj compara este valor con el estado deseado y reconcilia lo que falte,
+  // así una subida fallida se reintenta sola en la siguiente corrida.
+  beds24Estado: text("beds24_estado"),
+  beds24SyncedAt: timestamp("beds24_synced_at"),
+  beds24Error: text("beds24_error"), // último error, para verlo en el panel
 
   // Origen de la reserva: web | whatsapp | manual | booking | expedia
   origen: text("origen").notNull().default("web"),
@@ -126,7 +140,30 @@ export const blocks = pgTable("blocks", {
   otaChannelId: uuid("ota_channel_id").references(() => otaChannels.id),
   uid: text("uid"), // UID del VEVENT (idempotencia)
   nota: text("nota").notNull().default(""),
+  // Bloqueo espejo en Beds24 (reserva con status "black"): cierra la fecha
+  // también en Booking cuando el hotel bloquea por mantenimiento.
+  beds24BookingId: integer("beds24_booking_id"),
+  beds24Estado: text("beds24_estado"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Cola de bajas pendientes en Beds24. Cuando el panel BORRA un bloqueo, la fila
+// desaparece y con ella el id de Beds24; sin esta lápida, la fecha se quedaría
+// cerrada en Booking para siempre. El reloj vacía la cola.
+export const beds24Cola = pgTable("beds24_cola", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  beds24BookingId: integer("beds24_booking_id").notNull(),
+  intentos: integer("intentos").notNull().default(0),
+  ultimoError: text("ultimo_error"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Estado del sistema en pares clave/valor (p. ej. hasta cuándo se leyeron las
+// reservas de Beds24). Evita releer todo el historial en cada corrida.
+export const appState = pgTable("app_state", {
+  clave: text("clave").primaryKey(),
+  valor: text("valor").notNull().default(""),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 // Notas CRM por huésped (clave = email en minúsculas)
@@ -174,6 +211,7 @@ export type Quote = typeof quotes.$inferSelect;
 export type NewQuote = typeof quotes.$inferInsert;
 export type Block = typeof blocks.$inferSelect;
 export type OtaChannel = typeof otaChannels.$inferSelect;
+export type Beds24Pendiente = typeof beds24Cola.$inferSelect;
 export type GuestNote = typeof guestNotes.$inferSelect;
 export type CleaningLog = typeof cleaningLog.$inferSelect;
 export type MaintenanceTask = typeof maintenanceTasks.$inferSelect;
