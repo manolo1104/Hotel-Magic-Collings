@@ -26,6 +26,15 @@ interface Props {
   tipos: TipoOpcion[];
   reserva?: BookingView | null;
   onSaved: () => void;
+  /** Precarga al crear desde el calendario: día clicado y cuarto de esa fila. */
+  defaults?: {
+    checkin?: string;
+    checkout?: string;
+    slug?: string;
+    roomId?: string;
+    /** Solo para mostrar: "vas a reservar el cuarto 102". */
+    numeroCuarto?: string;
+  } | null;
 }
 
 const VACIO = {
@@ -44,7 +53,7 @@ const VACIO = {
   estado: "confirmada",
 };
 
-export function ReservationModal({ open, onClose, tipos, reserva, onSaved }: Props) {
+export function ReservationModal({ open, onClose, tipos, reserva, onSaved, defaults }: Props) {
   const [form, setForm] = useState({ ...VACIO });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,9 +79,14 @@ export function ReservationModal({ open, onClose, tipos, reserva, onSaved }: Pro
         estado: reserva.estado,
       });
     } else {
-      setForm({ ...VACIO, slug: tipos[0]?.slug ?? "" });
+      setForm({
+        ...VACIO,
+        slug: defaults?.slug || tipos[0]?.slug || "",
+        checkin: defaults?.checkin ?? "",
+        checkout: defaults?.checkout ?? "",
+      });
     }
-  }, [open, reserva, tipos]);
+  }, [open, reserva, tipos, defaults]);
 
   function set(k: keyof typeof form, v: string) {
     setForm((f) => ({ ...f, [k]: v }));
@@ -101,7 +115,16 @@ export function ReservationModal({ open, onClose, tipos, reserva, onSaved }: Pro
       };
       const payload = reserva
         ? { ...base, estado: form.estado }
-        : { ...base, slug: form.slug, origen: form.origen };
+        : {
+            ...base,
+            slug: form.slug,
+            origen: form.origen,
+            // Solo vale si el tipo elegido sigue siendo el del cuarto clicado;
+            // si el dueño lo cambió, el motor lo ignora y busca uno libre.
+            ...(defaults?.roomId && form.slug === defaults.slug
+              ? { roomId: defaults.roomId }
+              : {}),
+          };
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
@@ -134,6 +157,13 @@ export function ReservationModal({ open, onClose, tipos, reserva, onSaved }: Pro
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={guardar} className="grid gap-4">
+          {!editando && defaults?.numeroCuarto && (
+            <p className="rounded-lg bg-accent px-3 py-2 text-xs text-accent-foreground">
+              Desde el calendario: cuarto <strong>{defaults.numeroCuarto}</strong>
+              {defaults.checkin ? `, llegada ${defaults.checkin}` : ""}. Si cambias el
+              tipo de habitación, el sistema elegirá otro cuarto libre.
+            </p>
+          )}
           <div className="grid gap-1.5">
             <Label htmlFor="m-nombre">Huésped</Label>
             <Input id="m-nombre" required value={form.nombre} onChange={(e) => set("nombre", e.target.value)} />

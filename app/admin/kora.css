@@ -216,6 +216,46 @@
   white-space: nowrap;
 }
 
+/* ── Calendario: rejilla de mini-meses, uno por cuarto ────── */
+/* El fondo gris + gap de 1px dibuja las divisiones sin bordes por celda.
+   En móvil un mes ocupa todo el ancho para que cada día sea táctil (~44px). */
+.panel-kora .k-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .panel-kora .k-cal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.panel-kora .k-navbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 9px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: border-color 0.15s var(--ease-out), color 0.15s var(--ease-out);
+}
+.panel-kora .k-navbtn:hover:not(:disabled) {
+  border-color: var(--k-forest);
+  color: var(--k-forest);
+}
+.panel-kora .k-navbtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* ── Estado vacío ─────────────────────────────────────────── */
 .panel-kora .k-empty {
   border: 1px dashed var(--border);

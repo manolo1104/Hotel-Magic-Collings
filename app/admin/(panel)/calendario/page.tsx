@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
-import { getCalendarMonth, getGanttBookings } from "@/lib/booking/engine";
+import {
+  getCalendarMonth,
+  getGanttBookings,
+  getRoomTypes,
+  listBookings,
+  todayISO,
+} from "@/lib/booking/engine";
 import { CalendarioClient } from "@/components/admin/CalendarioClient";
 
 export const metadata: Metadata = { title: "Calendario", robots: { index: false } };
@@ -16,6 +22,23 @@ export default async function CalendarioPage() {
     month === 12
       ? `${year + 1}-01-01`
       : `${year}-${String(month + 1).padStart(2, "0")}-01`;
-  const gantt = await getGanttBookings(calendar.days[0], afterLast);
-  return <CalendarioClient initialCalendar={calendar} initialGantt={gantt} />;
+  const [gantt, tipos, reservas] = await Promise.all([
+    getGanttBookings(calendar.days[0], afterLast),
+    // includeHidden: el panel sí ve los tipos internos (p. ej. el cuarto de prueba)
+    getRoomTypes({ includeHidden: true }),
+    listBookings(),
+  ]);
+  return (
+    <CalendarioClient
+      initialCalendar={calendar}
+      initialGantt={gantt}
+      tipos={tipos.map((t) => ({
+        slug: t.slug,
+        nombre: t.nombre,
+        capacidad: t.capacidad,
+      }))}
+      reservas={reservas}
+      hoy={todayISO()}
+    />
+  );
 }

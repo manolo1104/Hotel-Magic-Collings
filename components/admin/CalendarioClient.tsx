@@ -1,38 +1,53 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Loader2, Trash2, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { CalendarData, GanttBooking } from "@/lib/booking/engine";
+import type { CalendarData, GanttBooking, BookingView } from "@/lib/booking/engine";
+import { AvailabilityCalendar, type DiaClicado } from "./AvailabilityCalendar";
+import { ReservationModal, type TipoOpcion } from "./ReservationModal";
 
 const MESES = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
   "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
 ];
 
-function cellCls(s: string): string {
-  if (s === "reservada") return "bg-brand";
-  if (s === "bloqueada") return "bg-amber-400";
-  return "bg-support/10";
-}
-
 export function CalendarioClient({
   initialCalendar,
   initialGantt,
+  tipos,
+  reservas,
+  hoy,
 }: {
   initialCalendar: CalendarData;
   initialGantt: GanttBooking[];
+  tipos: TipoOpcion[];
+  reservas: BookingView[];
+  hoy: string;
 }) {
+  const router = useRouter();
   const [cal, setCal] = useState(initialCalendar);
   const [gantt, setGantt] = useState(initialGantt);
   const [vista, setVista] = useState<"disp" | "time">("disp");
   const [loading, setLoading] = useState(false);
   const [bloq, setBloq] = useState({ roomId: "", checkin: "", checkout: "", nota: "" });
   const [err, setErr] = useState<string | null>(null);
+  // Modal de reserva abierto desde una celda del calendario.
+  const [modal, setModal] = useState<{
+    reserva: BookingView | null;
+    defaults: {
+      checkin?: string;
+      checkout?: string;
+      slug?: string;
+      roomId?: string;
+      numeroCuarto?: string;
+    } | null;
+  } | null>(null);
 
-  async function cargar(year: number, month: number) {
+  const cargar = useCallback(async (year: number, month: number) => {
     setLoading(true);
     const res = await fetch(`/api/admin/calendario?year=${year}&month=${month}`);
     const data = await res.json();
@@ -41,7 +56,8 @@ export function CalendarioClient({
       setGantt(data.gantt);
     }
     setLoading(false);
-  }
+  }, []);
+
   function prev() {
     const m = cal.month === 1 ? 12 : cal.month - 1;
     const y = cal.month === 1 ? cal.year - 1 : cal.year;
@@ -51,6 +67,33 @@ export function CalendarioClient({
     const m = cal.month === 12 ? 1 : cal.month + 1;
     const y = cal.month === 12 ? cal.year + 1 : cal.year;
     cargar(y, m);
+  }
+  function irHoy() {
+    const [y, m] = hoy.split("-").map(Number);
+    cargar(y, m);
+  }
+
+  // Nueva reserva desde un día libre: el tipo del cuarto y la fecha ya puestos,
+  // salida la noche siguiente (una noche, que es lo que el dueño acaba de clicar).
+  function nuevaDesdeCalendario(d: DiaClicado) {
+    const tipo = tipos.find((t) => t.nombre === d.tipo);
+    const [y, m, dd] = d.fecha.split("-").map(Number);
+    const salida = new Date(Date.UTC(y, m - 1, dd + 1));
+    setModal({
+      reserva: null,
+      defaults: {
+        checkin: d.fecha,
+        checkout: salida.toISOString().slice(0, 10),
+        slug: tipo?.slug,
+        roomId: d.roomId,
+        numeroCuarto: d.numero,
+      },
+    });
+  }
+
+  function editarDesdeCalendario(bookingId: string) {
+    const r = reservas.find((x) => x.id === bookingId);
+    if (r) setModal({ reserva: r, defaults: null });
   }
 
   async function crearBloqueo(e: React.FormEvent) {
@@ -84,17 +127,6 @@ export function CalendarioClient({
           <h1 className="k-title">Calendario</h1>
           <p className="k-subtitle">Disponibilidad del hotel y bloqueos</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="secondary" size="lg" onClick={prev} aria-label="Mes anterior">
-            <ChevronLeft className="size-4" />
-          </Button>
-          <span className="min-w-[150px] text-center text-sm font-semibold text-[var(--k-forest)]">
-            {loading ? "…" : `${MESES[cal.month - 1]} ${cal.year}`}
-          </span>
-          <Button variant="secondary" size="lg" onClick={next} aria-label="Mes siguiente">
-            <ChevronRight className="size-4" />
-          </Button>
-        </div>
       </header>
 
       {/* Toggle de vista */}
@@ -107,50 +139,34 @@ export function CalendarioClient({
         </button>
       </div>
 
-      {/* Leyenda */}
-      <div className="mt-3 flex flex-wrap gap-4 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1.5"><i className="size-3 rounded-sm bg-support/10" />Libre</span>
-        <span className="flex items-center gap-1.5"><i className="size-3 rounded-sm bg-brand" />Reservada</span>
-        <span className="flex items-center gap-1.5"><i className="size-3 rounded-sm bg-amber-400" />Bloqueada</span>
-      </div>
-
       {vista === "disp" ? (
-        <div className="k-card mt-4 overflow-x-auto">
-          <table className="border-collapse text-xs">
-            <thead>
-              <tr>
-                <th className="sticky left-0 z-10 bg-card px-3 py-2.5 text-left text-[0.68rem] font-semibold tracking-[0.09em] uppercase text-[var(--k-sage)]">
-                  Cuarto
-                </th>
-                {cal.days.map((d) => (
-                  <th key={d} className="w-7 px-0 py-2 text-center font-normal text-muted-foreground">
-                    {Number(d.slice(-2))}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {cal.rooms.map((r) => (
-                <tr key={r.id} className="border-t border-border">
-                  <td className="sticky left-0 z-10 bg-card px-3 py-1.5 whitespace-nowrap">
-                    <span className="font-semibold text-[var(--k-forest)]">{r.numero}</span>{" "}
-                    <span className="text-muted-foreground">{r.tipo}</span>
-                  </td>
-                  {cal.days.map((d) => (
-                    <td key={d} className="p-0.5">
-                      <div
-                        className={`mx-auto h-6 w-6 rounded-sm ${cellCls(cal.grid[r.id]?.[d] ?? "libre")}`}
-                        title={`${r.numero} · ${d} · ${cal.grid[r.id]?.[d] ?? "libre"}`}
-                      />
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <AvailabilityCalendar
+          cal={cal}
+          hoy={hoy}
+          loading={loading}
+          onPrev={prev}
+          onNext={next}
+          onHoy={irHoy}
+          onRefresh={() => cargar(cal.year, cal.month)}
+          onNuevaReserva={nuevaDesdeCalendario}
+          onEditarReserva={editarDesdeCalendario}
+        />
       ) : (
         <div className="k-card mt-4 overflow-x-auto p-4 sm:p-5">
+          <div className="mb-4 flex items-center gap-2">
+            <button onClick={prev} aria-label="Mes anterior" className="k-navbtn">
+              <ChevronLeft className="size-4" />
+            </button>
+            <span className="min-w-[150px] text-center text-sm font-semibold text-[var(--k-forest)]">
+              {loading ? "…" : `${MESES[cal.month - 1]} ${cal.year}`}
+            </span>
+            <button onClick={next} aria-label="Mes siguiente" className="k-navbtn">
+              <ChevronRight className="size-4" />
+            </button>
+            <button onClick={irHoy} className="k-navbtn px-3 text-xs font-medium">
+              Hoy
+            </button>
+          </div>
           {gantt.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
               Sin reservas en {MESES[cal.month - 1]}.
@@ -253,6 +269,20 @@ export function CalendarioClient({
           <Loader2 className="size-4 animate-spin" /> Cargando…
         </div>
       )}
+
+      {/* Crear / editar reserva desde una celda del calendario */}
+      <ReservationModal
+        open={modal !== null}
+        onClose={() => setModal(null)}
+        tipos={tipos}
+        reserva={modal?.reserva ?? null}
+        defaults={modal?.defaults ?? null}
+        onSaved={() => {
+          setModal(null);
+          cargar(cal.year, cal.month); // repinta el calendario
+          router.refresh(); // y refresca la lista de reservas del servidor
+        }}
+      />
     </div>
   );
 }

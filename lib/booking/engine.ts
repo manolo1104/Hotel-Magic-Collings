@@ -4,7 +4,7 @@
 // inventario a Kora sustituyendo solo la fuente de datos (no la UI).
 // Patrón de lógica inspirado en mi-hotel/lib/booking.ts (referencia).
 // ============================================================
-import { and, eq, gt, lt, ne, or, isNull, sql, desc, asc } from "drizzle-orm";
+import { and, eq, gt, lt, lte, ne, or, isNull, sql, desc, asc } from "drizzle-orm";
 import { db } from "../db";
 import { ensureDb } from "../db/ensure";
 import { roomTypes, rooms, bookings, blocks, guestNotes, quotes } from "../db/schema";
@@ -522,6 +522,10 @@ export async function createManualBooking(input: {
   notas?: string;
   origen?: string; // manual (default) | whatsapp | booking | expedia
   nosConociste?: string;
+  // Cuarto preferido. Lo manda el calendario: si el dueño hizo clic en el 102,
+  // la reserva debe caer en el 102 y no en el primer libre de ese tipo. Si está
+  // ocupado o no es de ese tipo, se ignora y se elige normal.
+  roomId?: string;
 }): Promise<CreateBookingResult> {
   const huespedes = Math.floor(Number(input.huespedes));
   const error = validateRange({
@@ -549,7 +553,9 @@ export async function createManualBooking(input: {
     .from(rooms)
     .where(and(eq(rooms.roomTypeId, tipo.id), eq(rooms.activa, true)));
   const occupied = await occupiedRoomIds(input.checkin, input.checkout);
-  const free = typeRooms.find((r) => !occupied.has(r.id));
+  const preferido =
+    input.roomId && typeRooms.find((r) => r.id === input.roomId && !occupied.has(r.id));
+  const free = preferido || typeRooms.find((r) => !occupied.has(r.id));
   if (!free)
     return { ok: false, error: "No hay cuartos libres de ese tipo en esas fechas." };
 
@@ -684,11 +690,28 @@ function pad2(n: number): string {
 }
 
 export type DayStatus = "libre" | "reservada" | "bloqueada";
+
+/** Reserva que toca el mes, con lo justo para la ficha de un día del calendario. */
+export interface CalendarBooking {
+  id: string;
+  roomId: string;
+  nombre: string;
+  checkin: string;
+  checkout: string;
+  noches: number;
+  huespedes: number;
+  total: number;
+  montoPagado: number;
+  estadoPago: string;
+  origen: string;
+  ref: string; // folio corto que el panel ya enseña (8 primeros del uuid)
+}
+
 export interface CalendarData {
   year: number;
   month: number; // 1-12
   days: string[];
-  rooms: { id: string; numero: string; tipo: string }[];
+  rooms: { id: string; numero: string; tipo: string; tarifa: number }[];
   grid: Record<string, Record<string, DayStatus>>;
   bloqueos: {
     id: string;
@@ -696,8 +719,11 @@ export interface CalendarData {
     checkin: string;
     checkout: string;
     motivo: string;
+    origen: string | null;
     nota: string;
   }[];
+  /** Reservas que traslapan el mes: la ficha del día las busca por cuarto+fecha. */
+  reservas: CalendarBooking[];
 }
 
 /** Estado (libre/reservada/bloqueada) de cada cuarto × día del mes. */
@@ -715,15 +741,27 @@ export async function getCalendarMonth(
 
   const [roomsRows, bookingRows, blockRows] = await Promise.all([
     db
-      .select({ id: rooms.id, numero: rooms.numero, tipo: roomTypes.nombre })
+      .select({
+        id: rooms.id,
+        numero: rooms.numero,
+        tipo: roomTypes.nombre,
+        tarifa: roomTypes.tarifaBase,
+      })
       .from(rooms)
       .leftJoin(roomTypes, eq(rooms.roomTypeId, roomTypes.id))
       .where(eq(rooms.activa, true)),
     db
       .select({
+        id: bookings.id,
         roomId: bookings.roomId,
         checkin: bookings.checkin,
         checkout: bookings.checkout,
+        nombre: bookings.nombre,
+        huespedes: bookings.huespedes,
+        total: bookings.total,
+        montoPagado: bookings.montoPagado,
+        estadoPago: bookings.estadoPago,
+        origen: bookings.origen,
       })
       .from(bookings)
       .where(
@@ -772,6 +810,7 @@ export async function getCalendarMonth(
       id: r.id,
       numero: r.numero,
       tipo: r.tipo ?? "—",
+      tarifa: r.tarifa ?? 0,
     })),
     grid,
     bloqueos: blockRows.map((b) => ({
@@ -780,7 +819,22 @@ export async function getCalendarMonth(
       checkin: b.checkin,
       checkout: b.checkout,
       motivo: b.motivo,
+      origen: b.origen,
       nota: b.nota,
+    })),
+    reservas: bookingRows.map((b) => ({
+      id: b.id,
+      roomId: b.roomId,
+      nombre: b.nombre,
+      checkin: b.checkin,
+      checkout: b.checkout,
+      noches: calcNights(b.checkin, b.checkout),
+      huespedes: b.huespedes,
+      total: b.total,
+      montoPagado: b.montoPagado,
+      estadoPago: b.estadoPago,
+      origen: b.origen,
+      ref: b.id.slice(0, 8).toUpperCase(),
     })),
   };
 }
@@ -881,6 +935,88 @@ export async function unblock(id: string): Promise<{ ok: boolean; error?: string
   // La fila ya no existe: la baja en Beds24 se apunta aparte para que el reloj
   // la ejecute, o la fecha se quedaría cerrada en Booking para siempre.
   avisarBeds24((m) => m.encolarBaja(res[0].beds24BookingId));
+  return { ok: true };
+}
+
+/** Suma días a una fecha ISO (YYYY-MM-DD) sin arrastrar zona horaria. */
+function addDaysISO(iso: string, days: number): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d + days));
+  return `${dt.getUTCFullYear()}-${pad2(dt.getUTCMonth() + 1)}-${pad2(dt.getUTCDate())}`;
+}
+
+/**
+ * Libera UN SOLO día de un cuarto, como el calendario de Paraíso.
+ *
+ * El panel guarda los bloqueos como RANGOS `[checkin, checkout)`, así que soltar
+ * un día de en medio no es un DELETE: hay que partir el rango en los dos trozos
+ * que sobreviven. Sin esto, desbloquear el 15 de un bloqueo del 10 al 20 abriría
+ * los diez días a la venta sin que nadie lo pida — justo el tipo de fuga que
+ * termina en sobreventa.
+ *
+ * Los bloqueos de OTA no se tocan: los gobierna la sincronización iCal/Beds24 y
+ * borrarlos aquí los repondría en la siguiente corrida.
+ */
+export async function unblockDay(input: {
+  roomId: string;
+  fecha: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  if (!UUID_RE.test(input.roomId))
+    return { ok: false, error: "Cuarto no válido." };
+  if (!isValidISODate(input.fecha))
+    return { ok: false, error: "Fecha no válida." };
+  await ensureDb();
+
+  const siguiente = addDaysISO(input.fecha, 1);
+  const cubren = await db
+    .select()
+    .from(blocks)
+    .where(
+      and(
+        eq(blocks.roomId, input.roomId),
+        lte(blocks.checkin, input.fecha),
+        gt(blocks.checkout, input.fecha),
+      ),
+    );
+
+  if (cubren.length === 0)
+    return { ok: false, error: "Esa fecha no está bloqueada." };
+  if (cubren.every((b) => b.motivo === "ota"))
+    return {
+      ok: false,
+      error:
+        "Esta fecha la cerró un canal (Booking/Expedia). Libérala en la extranet del canal, no aquí.",
+    };
+
+  for (const bl of cubren) {
+    if (bl.motivo === "ota") continue; // lo gestiona el sync, no el panel
+
+    await db.delete(blocks).where(eq(blocks.id, bl.id));
+    avisarBeds24((m) => m.encolarBaja(bl.beds24BookingId));
+
+    // Los dos trozos que sobreviven al quitar el día. Cualquiera puede quedar
+    // vacío (si el día era el primero o el último del rango).
+    const trozos = [
+      { checkin: bl.checkin, checkout: input.fecha },
+      { checkin: siguiente, checkout: bl.checkout },
+    ].filter((t) => t.checkin < t.checkout);
+
+    for (const t of trozos) {
+      const [nuevo] = await db
+        .insert(blocks)
+        .values({
+          roomId: bl.roomId,
+          checkin: t.checkin,
+          checkout: t.checkout,
+          motivo: bl.motivo,
+          origen: bl.origen,
+          nota: bl.nota,
+        })
+        .returning({ id: blocks.id });
+      avisarBeds24((m) => m.reconciliarBloqueo(nuevo.id));
+    }
+  }
+
   return { ok: true };
 }
 
