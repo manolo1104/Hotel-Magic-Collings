@@ -74,10 +74,10 @@ export function Beds24Panel({
   const sinEmparejar = estado.emparejamientos.filter((e) => e.beds24RoomId == null).length;
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-5">
+    <section className="k-card p-5 sm:p-6">
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="flex items-center gap-2 font-heading text-lg font-semibold">
+          <h2 className="k-section-title">
             <Link2 className="size-4 text-brand" /> Booking.com (channel manager)
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">

@@ -31,7 +31,7 @@ function fmt(iso: string) {
 const ESTADO: Record<string, { t: string; c: string }> = {
   borrador: { t: "Borrador", c: "bg-muted text-muted-foreground" },
   enviada: { t: "Enviada", c: "bg-amber-500/15 text-amber-700" },
-  aceptada: { t: "Aceptada", c: "bg-support/15 text-support" },
+  aceptada: { t: "Aceptada", c: "bg-support/12 text-support" },
   expirada: { t: "Expirada", c: "bg-destructive/10 text-destructive" },
 };
 
@@ -139,43 +139,48 @@ export function CotizacionesClient({
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1100px] px-4 pt-6 pb-20 sm:px-6 lg:pt-8">
-      <header className="flex flex-wrap items-center justify-between gap-3">
+    <div className="w-full max-w-[1200px]">
+      <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-heading text-2xl font-semibold sm:text-3xl">Cotizaciones</h1>
-          <p className="text-sm text-muted-foreground">{initial.length} cotizaciones</p>
+          <p className="k-eyebrow">Panel</p>
+          <h1 className="k-title">Cotizaciones</h1>
+          <p className="k-subtitle">{initial.length} cotizaciones</p>
         </div>
-        <Button className="gap-2" onClick={abrirNueva}>
+        <Button size="lg" className="gap-2" onClick={abrirNueva}>
           <Plus className="size-4" /> Nueva cotización
         </Button>
       </header>
 
-      {aviso && <p className="mt-4 rounded-lg bg-muted px-4 py-2 text-sm">{aviso}</p>}
+      {aviso && (
+        <p className="mt-4 rounded-lg bg-accent px-4 py-2 text-sm text-accent-foreground">{aviso}</p>
+      )}
 
       {initial.length === 0 ? (
-        <p className="mt-10 rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+        <p className="k-empty mt-8">
           Aún no hay cotizaciones. Crea una para enviar un presupuesto a un cliente.
         </p>
       ) : (
-        <div className="mt-5 grid gap-3">
+        <div className="mt-7 grid gap-2.5">
           {initial.map((q) => {
             const est = ESTADO[q.estado] ?? ESTADO.borrador;
             return (
-              <article key={q.id} className="rounded-2xl border border-border bg-card p-4">
+              <article key={q.id} className="k-card p-4 sm:p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h2 className="font-medium">{q.cliente}</h2>
-                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${est.c}`}>{est.t}</span>
+                      <h2 className="font-semibold text-[var(--k-forest)]">{q.cliente}</h2>
+                      <span className={`k-badge ${est.c}`}>{est.t}</span>
                     </div>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       {q.nombreTipo} · {fmt(q.checkin)} → {fmt(q.checkout)} · {q.noches} noches · {q.huespedes} huésp.
                       {q.bookingId ? " · ya es reserva" : ""}
                     </p>
                   </div>
-                  <div className="font-semibold text-primary">{mxn(q.precioTotal)}</div>
+                  <div className="text-lg font-semibold tabular-nums tracking-tight text-[var(--k-forest)]">
+                    {mxn(q.precioTotal)}
+                  </div>
                 </div>
-                <div className="mt-3 flex flex-wrap gap-1.5 border-t border-border pt-3">
+                <div className="mt-4 flex flex-wrap gap-1.5 border-t border-border pt-3">
                   <Act onClick={() => abrirEditar(q)} icon={<Pencil className="size-4" />} label="Editar" />
                   <Act onClick={() => window.open(`/api/admin/cotizaciones/${q.id}/render?print=1`, "_blank")} icon={<Printer className="size-4" />} label="PDF" />
                   {q.email && <Act onClick={() => enviar(q)} icon={<Mail className="size-4 text-brand" />} label="Enviar" />}
@@ -190,9 +195,13 @@ export function CotizacionesClient({
       )}
 
       <Dialog open={open} onOpenChange={(o) => !o && setOpen(false)}>
-        <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-md">
+        {/* `panel-kora`: el diálogo vive en un portal colgado de <body>, fuera del
+            shell del panel, y sin esta clase heredaría la paleta pública. */}
+        <DialogContent className="panel-kora max-h-[90dvh] overflow-y-auto sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editId ? "Editar cotización" : "Nueva cotización"}</DialogTitle>
+            <DialogTitle className="text-base font-semibold tracking-tight text-[var(--k-forest)]">
+              {editId ? "Editar cotización" : "Nueva cotización"}
+            </DialogTitle>
           </DialogHeader>
           <form onSubmit={guardar} className="grid gap-4">
             <div className="grid gap-1.5">
@@ -271,7 +280,7 @@ export function CotizacionesClient({
 
 function Act({ onClick, icon, label }: { onClick: () => void; icon: React.ReactNode; label: string }) {
   return (
-    <button onClick={onClick} className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-2.5 py-1.5 text-xs font-medium hover:bg-secondary">
+    <button onClick={onClick} className="k-chip">
       {icon} {label}
     </button>
   );

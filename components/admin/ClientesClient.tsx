@@ -27,27 +27,28 @@ export function ClientesClient({ perfiles }: { perfiles: GuestProfile[] }) {
   );
 
   return (
-    <div className="mx-auto w-full max-w-[1100px] px-4 pt-6 pb-20 sm:px-6 lg:pt-8">
+    <div className="w-full max-w-[1200px]">
       <header>
-        <h1 className="font-heading text-2xl font-semibold sm:text-3xl">Clientes</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="k-eyebrow">Panel</p>
+        <h1 className="k-title">Clientes</h1>
+        <p className="k-subtitle">
           {perfiles.length} huéspedes con correo registrado
         </p>
       </header>
 
-      <div className="relative mt-5 max-w-md">
+      <div className="relative mt-7 max-w-md">
         <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input placeholder="Buscar por nombre, correo o teléfono…" value={q} onChange={(e) => setQ(e.target.value)} className="pl-9" />
       </div>
 
       {lista.length === 0 ? (
-        <p className="mt-10 rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+        <p className="k-empty mt-8">
           {perfiles.length === 0
             ? "Aún no hay clientes con correo. Aparecerán al registrar reservas con email."
             : "Sin resultados."}
         </p>
       ) : (
-        <div className="mt-5 grid gap-3">
+        <div className="mt-5 grid gap-2.5">
           {lista.map((p) => (
             <ClienteCard key={p.email} p={p} fmt={fmt} />
           ))}
@@ -79,10 +80,10 @@ function ClienteCard({ p, fmt }: { p: GuestProfile; fmt: (s: string) => string }
   }
 
   return (
-    <article className="rounded-2xl border border-border bg-card p-5">
+    <article className="k-card p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-medium">{p.nombre}</h2>
+          <h2 className="font-semibold text-[var(--k-forest)]">{p.nombre}</h2>
           <p className="text-xs text-muted-foreground">
             {p.email} · {p.telefono}
           </p>
@@ -92,14 +93,22 @@ function ClienteCard({ p, fmt }: { p: GuestProfile; fmt: (s: string) => string }
             </p>
           )}
         </div>
-        <div className="flex gap-4 text-right text-sm">
+        <div className="flex gap-6 text-right">
           <div>
-            <div className="font-semibold text-primary">{p.totalReservas}</div>
-            <div className="text-xs text-muted-foreground">reservas</div>
+            <div className="text-lg font-semibold tabular-nums tracking-tight text-[var(--k-forest)]">
+              {p.totalReservas}
+            </div>
+            <div className="text-[0.68rem] font-semibold tracking-[0.09em] uppercase text-[var(--k-sage)]">
+              reservas
+            </div>
           </div>
           <div>
-            <div className="font-semibold text-primary">{mxn(p.totalGastado)}</div>
-            <div className="text-xs text-muted-foreground">gastado</div>
+            <div className="text-lg font-semibold tabular-nums tracking-tight text-[var(--k-forest)]">
+              {mxn(p.totalGastado)}
+            </div>
+            <div className="text-[0.68rem] font-semibold tracking-[0.09em] uppercase text-[var(--k-sage)]">
+              gastado
+            </div>
           </div>
         </div>
       </div>
@@ -140,7 +149,7 @@ function ClienteCard({ p, fmt }: { p: GuestProfile; fmt: (s: string) => string }
             href={`https://wa.me/${wa}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1.5 text-sm font-medium hover:bg-secondary"
+            className="k-chip"
           >
             <MessageCircle className="size-4 text-support" /> WhatsApp
           </a>

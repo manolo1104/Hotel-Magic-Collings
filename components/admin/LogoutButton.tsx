@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export function LogoutButton() {
   const router = useRouter();
@@ -11,9 +10,11 @@ export function LogoutButton() {
     router.push("/admin/login");
     router.refresh();
   }
+  // Vive dentro del sidebar oscuro (verde bosque Kora): no usa el <Button> de
+  // shadcn, que está pensado para superficies claras.
   return (
-    <Button variant="secondary" size="sm" className="gap-1.5" onClick={salir}>
-      <LogOut className="size-4" aria-hidden /> Salir
-    </Button>
+    <button type="button" className="k-logout" onClick={salir}>
+      <LogOut className="size-4" strokeWidth={1.5} aria-hidden /> Cerrar sesión
+    </button>
   );
 }

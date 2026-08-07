@@ -1,5 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Newsreader, Hanken_Grotesk, Space_Mono } from "next/font/google";
+import {
+  Newsreader,
+  Hanken_Grotesk,
+  Space_Mono,
+  Plus_Jakarta_Sans,
+} from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { Footer } from "@/components/layout/Footer";
@@ -31,6 +36,17 @@ const mono = Space_Mono({
   variable: "--font-mono",
   display: "swap",
   weight: ["400", "700"],
+});
+
+// Panel interno (/admin): tipografía de Kora. `preload: false` para que el
+// sitio público —que no la usa— no la descargue; solo se carga cuando el
+// tema del panel la referencia vía --font-jakarta.
+const panel = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-jakarta",
+  display: "swap",
+  weight: ["400", "500", "600", "700", "800"],
+  preload: false,
 });
 
 const description = `Hotel de ${site.rooms} habitaciones en el centro de ${site.locality}, ${site.region}: limpio, tranquilo y a precio justo. Aire acondicionado, estacionamiento y reserva directa sin comisión.`;
@@ -76,7 +92,7 @@ export default function RootLayout({
     <html
       lang="es"
       data-scroll-behavior="smooth"
-      className={`${sans.variable} ${heading.variable} ${mono.variable} h-full antialiased`}
+      className={`${sans.variable} ${heading.variable} ${mono.variable} ${panel.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col" suppressHydrationWarning>
         {/* Skip link (WCAG 2.4.1): visible solo al enfocar con teclado */}

@@ -36,7 +36,7 @@ function opsState(b: BookingView, today: string): { key: OpsKey; label: string; 
   if (b.estado === "cancelada" || b.estado === "expirada")
     return { key: "CANCELADA", label: "Cancelada", cls: "bg-destructive/10 text-destructive" };
   if (b.checkin === today)
-    return { key: "LLEGA_HOY", label: "Llega hoy", cls: "bg-support/15 text-support" };
+    return { key: "LLEGA_HOY", label: "Llega hoy", cls: "bg-support/12 text-support" };
   if (b.checkout === today)
     return { key: "SALE_HOY", label: "Sale hoy", cls: "bg-amber-500/15 text-amber-700" };
   if (b.checkin < today && b.checkout > today)
@@ -48,14 +48,14 @@ function opsState(b: BookingView, today: string): { key: OpsKey; label: string; 
 
 function badgePago(b: BookingView) {
   const map: Record<string, { t: string; c: string }> = {
-    pagado: { t: "Pagada", c: "bg-support/15 text-support" },
+    pagado: { t: "Pagada", c: "bg-support/12 text-support" },
     parcial: { t: "Anticipo", c: "bg-amber-500/15 text-amber-700" },
     iniciado: { t: "Esperando pago", c: "bg-amber-500/15 text-amber-700" },
     no_iniciado: { t: "Sin pago en línea", c: "bg-muted text-muted-foreground" },
     rechazado: { t: "Pago rechazado", c: "bg-destructive/10 text-destructive" },
   };
   const it = map[b.estadoPago] ?? map.no_iniciado;
-  return <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${it.c}`}>{it.t}</span>;
+  return <span className={`k-badge ${it.c}`}>{it.t}</span>;
 }
 
 export function ReservasClient({
@@ -109,15 +109,17 @@ export function ReservasClient({
   const tiposNombres = Array.from(new Set(initial.map((b) => b.nombreTipo)));
 
   return (
-    <div className="mx-auto w-full max-w-[1100px] px-4 pt-6 pb-20 sm:px-6 lg:pt-8">
-      <header className="flex flex-wrap items-center justify-between gap-3">
+    <div className="w-full max-w-[1200px]">
+      <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-heading text-2xl font-semibold sm:text-3xl">Reservas</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="k-eyebrow">Panel</p>
+          <h1 className="k-title">Reservas</h1>
+          <p className="k-subtitle">
             {initial.length} reservas · {pagadas} pagadas · {mxn(ingreso)} cobrado en línea
           </p>
         </div>
         <Button
+          size="lg"
           className="gap-2"
           onClick={() => {
             setEditando(null);
@@ -129,7 +131,7 @@ export function ReservasClient({
       </header>
 
       {/* Controles */}
-      <div className="mt-5 flex flex-wrap items-center gap-2">
+      <div className="mt-7 flex flex-wrap items-center gap-2">
         <div className="relative min-w-[200px] flex-1">
           <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -142,7 +144,7 @@ export function ReservasClient({
         <select
           value={tipo}
           onChange={(e) => setTipo(e.target.value)}
-          className="h-9 rounded-lg border border-input bg-card px-3 text-sm"
+          className="h-9 rounded-lg border border-input bg-card px-3 text-sm text-foreground"
         >
           <option value="">Toda habitación</option>
           {tiposNombres.map((t) => (
@@ -152,7 +154,7 @@ export function ReservasClient({
         <select
           value={filtroOps}
           onChange={(e) => setFiltroOps(e.target.value)}
-          className="h-9 rounded-lg border border-input bg-card px-3 text-sm"
+          className="h-9 rounded-lg border border-input bg-card px-3 text-sm text-foreground"
         >
           <option value="">Todo estado</option>
           <option value="LLEGA_HOY">Llega hoy</option>
@@ -163,6 +165,7 @@ export function ReservasClient({
           <option value="CANCELADA">Canceladas</option>
         </select>
         <Button
+          size="lg"
           variant={soloHoy ? "default" : "secondary"}
           className="gap-1.5"
           onClick={() => setSoloHoy((v) => !v)}
@@ -172,50 +175,48 @@ export function ReservasClient({
       </div>
 
       {aviso && (
-        <p className="mt-4 rounded-lg bg-muted px-4 py-2 text-sm text-foreground">{aviso}</p>
+        <p className="mt-4 rounded-lg bg-accent px-4 py-2 text-sm text-accent-foreground">{aviso}</p>
       )}
 
       {/* Lista */}
       {lista.length === 0 ? (
-        <p className="mt-10 rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-          No hay reservas en este filtro.
-        </p>
+        <p className="k-empty mt-8">No hay reservas en este filtro.</p>
       ) : (
-        <div className="mt-5 grid gap-3">
+        <div className="mt-5 grid gap-2.5">
           {lista.map((b) => {
             const ops = opsState(b, today);
             const saldo = b.saldoPendiente ?? Math.max(0, b.total - (b.montoPagado ?? 0));
             const wa = b.whatsapp.replace(/[^0-9]/g, "");
             return (
-              <article key={b.id} className="rounded-2xl border border-border bg-card p-4">
+              <article key={b.id} className="k-card p-4 sm:p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="font-medium">{b.nombre}</h2>
-                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${ops.cls}`}>
-                        {ops.label}
-                      </span>
+                      <h2 className="font-semibold text-[var(--k-forest)]">{b.nombre}</h2>
+                      <span className={`k-badge ${ops.cls}`}>{ops.label}</span>
                       {badgePago(b)}
                     </div>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       {b.nombreTipo} · {b.numeroCuarto} · {fmt(b.checkin)} → {fmt(b.checkout)} · {b.huespedes} huésp. · {b.id.slice(0, 8).toUpperCase()}{b.nosConociste ? ` · vía ${b.nosConociste}` : ""}
                     </p>
                   </div>
-                  <div className="text-right text-sm">
-                    <div className="font-semibold text-primary">{mxn(b.total)}</div>
+                  <div className="text-right">
+                    <div className="text-lg font-semibold tabular-nums tracking-tight text-[var(--k-forest)]">
+                      {mxn(b.total)}
+                    </div>
                     {saldo > 0 && (
                       <div className="text-xs text-muted-foreground">saldo {mxn(saldo)}</div>
                     )}
                   </div>
                 </div>
-                <div className="mt-3 flex flex-wrap gap-1.5 border-t border-border pt-3">
+                <div className="mt-4 flex flex-wrap gap-1.5 border-t border-border pt-3">
                   <IconBtn onClick={() => { setEditando(b); setModalOpen(true); }} icon={<Pencil className="size-4" />} label="Editar" />
                   <IconBtn onClick={() => window.open(`/api/admin/reservas/${b.id}/render?print=1`, "_blank")} icon={<Printer className="size-4" />} label="PDF" />
                   <a
                     href={`https://wa.me/${wa}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-2.5 py-1.5 text-xs font-medium hover:bg-secondary"
+                    className="k-chip"
                   >
                     <MessageCircle className="size-4 text-support" /> WhatsApp
                   </a>
@@ -245,10 +246,7 @@ export function ReservasClient({
 
 function IconBtn({ onClick, icon, label }: { onClick: () => void; icon: React.ReactNode; label: string }) {
   return (
-    <button
-      onClick={onClick}
-      className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-2.5 py-1.5 text-xs font-medium hover:bg-secondary"
-    >
+    <button onClick={onClick} className="k-chip">
       {icon} {label}
     </button>
   );

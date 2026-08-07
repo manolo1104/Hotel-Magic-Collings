@@ -27,10 +27,14 @@ export default async function CanalesPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1100px] px-4 pt-6 pb-20 sm:px-6 lg:pt-8">
-      <h1 className="mb-5 font-heading text-2xl font-semibold sm:text-3xl">Canales de venta</h1>
+    <div className="w-full max-w-[1200px]">
+      <header className="mb-7">
+        <p className="k-eyebrow">Panel</p>
+        <h1 className="k-title">Canales de venta</h1>
+        <p className="k-subtitle">Channel manager y calendarios de OTAs</p>
+      </header>
       <Beds24Panel estado={estado} habitaciones={habitaciones} errorConexion={errorConexion} />
-      <div className="mt-8">
+      <div className="mt-6">
         <CanalesClient canales={canales} cuartos={cuartos} />
       </div>
     </div>

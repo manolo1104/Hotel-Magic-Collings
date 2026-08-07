@@ -77,7 +77,7 @@ export function CanalesClient({
     <div>
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="font-heading text-xl font-semibold sm:text-2xl">
+          <h2 className="k-section-title text-[1.15rem]">
             Otros canales (calendarios iCal)
           </h2>
           <p className="text-sm text-muted-foreground">
@@ -99,12 +99,12 @@ export function CanalesClient({
         {/* Lista */}
         <div className="grid gap-3">
           {canales.length === 0 ? (
-            <p className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+            <p className="k-empty">
               Aún no hay canales conectados. Agrega el enlace iCal de tu anuncio de Booking.
             </p>
           ) : (
             canales.map((c) => (
-              <article key={c.id} className="rounded-2xl border border-border bg-card p-4">
+              <article key={c.id} className="k-card p-4 sm:p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
@@ -137,8 +137,8 @@ export function CanalesClient({
         </div>
 
         {/* Form */}
-        <form onSubmit={agregar} className="h-fit rounded-2xl border border-border bg-card p-5">
-          <h2 className="flex items-center gap-2 font-heading text-lg font-semibold">
+        <form onSubmit={agregar} className="k-card h-fit p-5 sm:p-6">
+          <h2 className="k-section-title">
             <Plus className="size-4 text-brand" /> Conectar canal
           </h2>
           <details className="mt-2 text-xs text-muted-foreground">

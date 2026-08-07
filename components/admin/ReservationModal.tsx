@@ -124,9 +124,14 @@ export function ReservationModal({ open, onClose, tipos, reserva, onSaved }: Pro
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-md">
+      {/* `panel-kora`: el diálogo vive en un portal colgado de <body>, fuera del
+          shell del panel. Sin esta clase heredaría la paleta del sitio público
+          (papel + terracota) en lugar del tema Kora. */}
+      <DialogContent className="panel-kora max-h-[90dvh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{editando ? "Editar reserva" : "Nueva reserva"}</DialogTitle>
+          <DialogTitle className="text-base font-semibold tracking-tight text-[var(--k-forest)]">
+            {editando ? "Editar reserva" : "Nueva reserva"}
+          </DialogTitle>
         </DialogHeader>
         <form onSubmit={guardar} className="grid gap-4">
           <div className="grid gap-1.5">

@@ -29,14 +29,17 @@ export default async function IngresosPage() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-[1100px] px-4 pt-6 pb-20 sm:px-6 lg:pt-8">
-      <h1 className="font-heading text-2xl font-semibold sm:text-3xl">Ingresos</h1>
-      <p className="text-sm text-muted-foreground">
-        Mes en curso y tendencia de los últimos 12 meses
-      </p>
+    <div className="w-full max-w-[1200px]">
+      <header>
+        <p className="k-eyebrow">Panel</p>
+        <h1 className="k-title">Ingresos</h1>
+        <p className="k-subtitle">
+          Mes en curso y tendencia de los últimos 12 meses
+        </p>
+      </header>
 
       {/* KPI cards */}
-      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Card
           label="Ingreso del mes"
           value={mxn(k.ingresoMes)}
@@ -53,19 +56,19 @@ export default async function IngresosPage() {
       </div>
 
       {/* Tendencia */}
-      <section className="mt-6 rounded-2xl border border-border bg-card p-5">
-        <h2 className="font-heading text-lg font-semibold">Tendencia de ingresos</h2>
-        <p className="text-xs text-muted-foreground">Últimos 12 meses (por mes de llegada)</p>
+      <section className="k-card mt-4 p-5 sm:p-6">
+        <h2 className="k-section-title">Tendencia de ingresos</h2>
+        <p className="mt-1 text-xs text-muted-foreground">Últimos 12 meses (por mes de llegada)</p>
         <div className="mt-4">
           <AreaChart data={k.serie.map((s) => ({ etiqueta: s.etiqueta, valor: s.ingreso }))} />
         </div>
       </section>
 
       {/* Breakdowns */}
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <section className="rounded-2xl border border-border bg-card p-5">
-          <h2 className="font-heading text-lg font-semibold">Por tipo de habitación</h2>
-          <p className="text-xs text-muted-foreground">Este año</p>
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <section className="k-card p-5 sm:p-6">
+          <h2 className="k-section-title">Por tipo de habitación</h2>
+          <p className="mt-1 text-xs text-muted-foreground">Este año</p>
           <div className="mt-4 space-y-3">
             {k.porTipo.length === 0 ? (
               <p className="text-sm text-muted-foreground">Sin datos.</p>
@@ -77,9 +80,9 @@ export default async function IngresosPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-border bg-card p-5">
-          <h2 className="font-heading text-lg font-semibold">Por origen</h2>
-          <p className="text-xs text-muted-foreground">Este año</p>
+        <section className="k-card p-5 sm:p-6">
+          <h2 className="k-section-title">Por origen</h2>
+          <p className="mt-1 text-xs text-muted-foreground">Este año</p>
           <div className="mt-4 space-y-3">
             {k.porOrigen.length === 0 ? (
               <p className="text-sm text-muted-foreground">Sin datos.</p>
@@ -91,9 +94,9 @@ export default async function IngresosPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-border bg-card p-5">
-          <h2 className="font-heading text-lg font-semibold">¿De dónde nos conocen?</h2>
-          <p className="text-xs text-muted-foreground">
+        <section className="k-card p-5 sm:p-6">
+          <h2 className="k-section-title">¿De dónde nos conocen?</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
             Este año · lo que respondió el huésped al reservar
           </p>
           <div className="mt-4 space-y-3">
@@ -125,17 +128,17 @@ function Card({
   extraTone?: "up" | "down";
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-4">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="mt-1 font-heading text-xl font-semibold sm:text-2xl">{value}</div>
+    <div className="k-kpi">
+      <p className="k-kpi-label">{label}</p>
+      <p className="k-kpi-value">{value}</p>
       {extra && (
-        <div
-          className={`mt-0.5 text-xs ${
-            extraTone === "up" ? "text-support" : extraTone === "down" ? "text-destructive" : "text-muted-foreground"
+        <p
+          className={`k-kpi-sub ${
+            extraTone === "up" ? "text-support" : extraTone === "down" ? "text-destructive" : ""
           }`}
         >
           {extra}
-        </div>
+        </p>
       )}
     </div>
   );

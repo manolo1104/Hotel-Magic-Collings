@@ -77,51 +77,51 @@ export function CalendarioClient({
   const numeroDe = (id: string) => cal.rooms.find((r) => r.id === id)?.numero ?? id;
 
   return (
-    <div className="mx-auto w-full max-w-[1100px] px-4 pt-6 pb-20 sm:px-6 lg:pt-8">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-heading text-2xl font-semibold sm:text-3xl">Calendario</h1>
+    <div className="w-full max-w-[1200px]">
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="k-eyebrow">Panel</p>
+          <h1 className="k-title">Calendario</h1>
+          <p className="k-subtitle">Disponibilidad del hotel y bloqueos</p>
+        </div>
         <div className="flex items-center gap-2">
-          <Button variant="secondary" size="sm" onClick={prev} aria-label="Mes anterior">
+          <Button variant="secondary" size="lg" onClick={prev} aria-label="Mes anterior">
             <ChevronLeft className="size-4" />
           </Button>
-          <span className="min-w-[150px] text-center text-sm font-medium">
+          <span className="min-w-[150px] text-center text-sm font-semibold text-[var(--k-forest)]">
             {loading ? "…" : `${MESES[cal.month - 1]} ${cal.year}`}
           </span>
-          <Button variant="secondary" size="sm" onClick={next} aria-label="Mes siguiente">
+          <Button variant="secondary" size="lg" onClick={next} aria-label="Mes siguiente">
             <ChevronRight className="size-4" />
           </Button>
         </div>
       </header>
 
       {/* Toggle de vista */}
-      <div className="mt-4 inline-flex rounded-lg border border-border bg-card p-1 text-sm">
-        <button
-          onClick={() => setVista("disp")}
-          className={`rounded-md px-3 py-1.5 ${vista === "disp" ? "bg-brand text-brand-foreground" : "text-muted-foreground"}`}
-        >
+      <div className="k-tabs mt-7">
+        <button onClick={() => setVista("disp")} data-active={vista === "disp"} className="k-tab">
           Disponibilidad
         </button>
-        <button
-          onClick={() => setVista("time")}
-          className={`rounded-md px-3 py-1.5 ${vista === "time" ? "bg-brand text-brand-foreground" : "text-muted-foreground"}`}
-        >
+        <button onClick={() => setVista("time")} data-active={vista === "time"} className="k-tab">
           Línea de tiempo
         </button>
       </div>
 
       {/* Leyenda */}
       <div className="mt-3 flex flex-wrap gap-4 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1.5"><i className="size-3 rounded bg-support/10" />Libre</span>
-        <span className="flex items-center gap-1.5"><i className="size-3 rounded bg-brand" />Reservada</span>
-        <span className="flex items-center gap-1.5"><i className="size-3 rounded bg-amber-400" />Bloqueada</span>
+        <span className="flex items-center gap-1.5"><i className="size-3 rounded-sm bg-support/10" />Libre</span>
+        <span className="flex items-center gap-1.5"><i className="size-3 rounded-sm bg-brand" />Reservada</span>
+        <span className="flex items-center gap-1.5"><i className="size-3 rounded-sm bg-amber-400" />Bloqueada</span>
       </div>
 
       {vista === "disp" ? (
-        <div className="mt-4 overflow-x-auto rounded-2xl border border-border bg-card">
+        <div className="k-card mt-4 overflow-x-auto">
           <table className="border-collapse text-xs">
             <thead>
               <tr>
-                <th className="sticky left-0 z-10 bg-card px-3 py-2 text-left font-medium">Cuarto</th>
+                <th className="sticky left-0 z-10 bg-card px-3 py-2.5 text-left text-[0.68rem] font-semibold tracking-[0.09em] uppercase text-[var(--k-sage)]">
+                  Cuarto
+                </th>
                 {cal.days.map((d) => (
                   <th key={d} className="w-7 px-0 py-2 text-center font-normal text-muted-foreground">
                     {Number(d.slice(-2))}
@@ -133,7 +133,7 @@ export function CalendarioClient({
               {cal.rooms.map((r) => (
                 <tr key={r.id} className="border-t border-border">
                   <td className="sticky left-0 z-10 bg-card px-3 py-1.5 whitespace-nowrap">
-                    <span className="font-medium">{r.numero}</span>{" "}
+                    <span className="font-semibold text-[var(--k-forest)]">{r.numero}</span>{" "}
                     <span className="text-muted-foreground">{r.tipo}</span>
                   </td>
                   {cal.days.map((d) => (
@@ -150,7 +150,7 @@ export function CalendarioClient({
           </table>
         </div>
       ) : (
-        <div className="mt-4 overflow-x-auto rounded-2xl border border-border bg-card p-4">
+        <div className="k-card mt-4 overflow-x-auto p-4 sm:p-5">
           {gantt.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
               Sin reservas en {MESES[cal.month - 1]}.
@@ -166,9 +166,9 @@ export function CalendarioClient({
                 const left = (start / total) * 100;
                 const width = Math.max(2, ((end - start) / total) * 100);
                 return (
-                  <div key={i} className="relative h-7 rounded bg-secondary/40">
+                  <div key={i} className="relative h-7 rounded-md bg-secondary">
                     <div
-                      className="absolute top-0 flex h-7 items-center overflow-hidden rounded bg-brand px-2 text-xs text-brand-foreground"
+                      className="absolute top-0 flex h-7 items-center overflow-hidden rounded-md bg-brand px-2 text-xs font-medium text-brand-foreground"
                       style={{ left: `${left}%`, width: `${width}%` }}
                       title={`${g.nombre} · ${g.numero}`}
                     >
@@ -183,10 +183,10 @@ export function CalendarioClient({
       )}
 
       {/* Bloquear fechas */}
-      <section className="mt-8 grid gap-6 lg:grid-cols-2">
-        <form onSubmit={crearBloqueo} className="rounded-2xl border border-border bg-card p-5">
-          <h2 className="flex items-center gap-2 font-heading text-lg font-semibold">
-            <Lock className="size-4 text-brand" /> Bloquear fechas
+      <section className="mt-6 grid gap-4 lg:grid-cols-2">
+        <form onSubmit={crearBloqueo} className="k-card p-5 sm:p-6">
+          <h2 className="k-section-title">
+            <Lock className="size-4 text-[var(--k-sage)]" /> Bloquear fechas
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
             Para mantenimiento o reservas tomadas por otro medio. El cuarto deja de aparecer disponible.
@@ -223,14 +223,14 @@ export function CalendarioClient({
           </div>
         </form>
 
-        <div className="rounded-2xl border border-border bg-card p-5">
-          <h2 className="font-heading text-lg font-semibold">Bloqueos del mes</h2>
+        <div className="k-card p-5 sm:p-6">
+          <h2 className="k-section-title">Bloqueos del mes</h2>
           {cal.bloqueos.length === 0 ? (
             <p className="mt-3 text-sm text-muted-foreground">No hay bloqueos este mes.</p>
           ) : (
             <ul className="mt-3 space-y-2">
               {cal.bloqueos.map((b) => (
-                <li key={b.id} className="flex items-center justify-between gap-3 rounded-lg bg-muted px-3 py-2 text-sm">
+                <li key={b.id} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2 text-sm">
                   <span>
                     <strong>{numeroDe(b.roomId)}</strong> · {b.checkin} → {b.checkout}
                     {b.motivo === "ota" ? " · OTA" : ""}

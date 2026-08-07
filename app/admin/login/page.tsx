@@ -39,15 +39,18 @@ export default function AdminLoginPage() {
 
   return (
     <div className="mx-auto flex min-h-[80dvh] w-full max-w-sm flex-col justify-center px-4 py-24">
-      <div className="rounded-2xl border border-border bg-card p-8">
-        <div className="mx-auto inline-flex size-12 items-center justify-center rounded-full bg-muted text-brand">
+      <div className="k-card p-8">
+        <div className="mx-auto inline-flex size-12 items-center justify-center rounded-full bg-accent text-brand">
           <Lock className="size-5" aria-hidden />
         </div>
-        <h1 className="mt-4 text-center font-heading text-2xl font-semibold">
-          Panel de reservas
+        <p className="mt-5 text-center text-[0.68rem] font-semibold tracking-[0.14em] uppercase text-[var(--k-sage)]">
+          Magic Collinn
+        </p>
+        <h1 className="mt-1.5 text-center text-2xl font-semibold tracking-tight text-[var(--k-forest)]">
+          Panel del hotel
         </h1>
-        <p className="mt-1 text-center text-sm text-muted-foreground">
-          Acceso del hotel Magic Collinn
+        <p className="mt-1.5 text-center text-sm text-muted-foreground">
+          Entra con la contraseña del hotel
         </p>
         <form onSubmit={onSubmit} className="mt-6 grid gap-4">
           <div className="grid gap-2">

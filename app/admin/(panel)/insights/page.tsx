@@ -36,17 +36,16 @@ export default async function InsightsPage() {
   const masVendida = porTipo[0] ?? null;
 
   return (
-    <div className="mx-auto w-full max-w-[1100px] px-4 pt-6 pb-20 sm:px-6 lg:pt-8">
+    <div className="w-full max-w-[1200px]">
       <header>
-        <h1 className="font-heading text-2xl font-semibold sm:text-3xl">Insights</h1>
-        <p className="text-sm text-muted-foreground">
-          Resumen de hoy y pronóstico de la semana
-        </p>
+        <p className="k-eyebrow">Panel</p>
+        <h1 className="k-title">Inicio</h1>
+        <p className="k-subtitle">Resumen de hoy y pronóstico de la semana</p>
       </header>
 
       {/* Tarjetas del día */}
-      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Card label="Ocupación hoy" value={`${d.ocupadosHoy}/${d.totalRooms}`} sub={`${d.ocupacionHoyPct}%`} tone="brand" />
+      <div className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Card label="Ocupación hoy" value={`${d.ocupadosHoy}/${d.totalRooms}`} sub={`${d.ocupacionHoyPct}% del hotel`} />
         <Card label="Llegan hoy" value={String(d.checkins.length)} sub="check-in" tone="support" />
         <Card label="Salen hoy" value={String(d.checkouts.length)} sub="check-out" tone="amber" />
         <Card label="En casa" value={String(d.enCasa)} sub="huéspedes activos" />
@@ -56,9 +55,9 @@ export default async function InsightsPage() {
       </div>
 
       {/* Pronóstico 7 días */}
-      <section className="mt-6 rounded-2xl border border-border bg-card p-5">
-        <h2 className="flex items-center gap-2 font-heading text-lg font-semibold">
-          <CalendarDays className="size-4 text-brand" /> Pronóstico de ocupación
+      <section className="k-card mt-4 p-5 sm:p-6">
+        <h2 className="k-section-title">
+          <CalendarDays className="size-4 text-[var(--k-sage)]" /> Pronóstico de ocupación
         </h2>
         <div className="mt-5 flex items-end justify-between gap-2" style={{ height: 130 }}>
           {d.forecast.map((f) => (
@@ -76,9 +75,9 @@ export default async function InsightsPage() {
       </section>
 
       {/* Habitación más vendida + desglose por tipo (este año) */}
-      <section className="mt-6 rounded-2xl border border-border bg-card p-5">
-        <h2 className="flex items-center gap-2 font-heading text-lg font-semibold">
-          <BedDouble className="size-4 text-brand" /> Habitación más vendida
+      <section className="k-card mt-4 p-5 sm:p-6">
+        <h2 className="k-section-title">
+          <BedDouble className="size-4 text-[var(--k-sage)]" /> Habitación más vendida
           <span className="ml-auto text-xs font-normal text-muted-foreground">
             Este año
           </span>
@@ -115,7 +114,7 @@ export default async function InsightsPage() {
       </section>
 
       {/* Movimientos de hoy */}
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <Lista
           titulo="Llegadas de hoy"
           icon={<LogIn className="size-4 text-support" />}
@@ -137,9 +136,9 @@ export default async function InsightsPage() {
       </div>
 
       {/* Próximas llegadas */}
-      <section className="mt-6 rounded-2xl border border-border bg-card p-5">
-        <h2 className="flex items-center gap-2 font-heading text-lg font-semibold">
-          <BedDouble className="size-4 text-brand" /> Próximas llegadas
+      <section className="k-card mt-4 p-5 sm:p-6">
+        <h2 className="k-section-title">
+          <BedDouble className="size-4 text-[var(--k-sage)]" /> Próximas llegadas
         </h2>
         {d.proximasLlegadas.length === 0 ? (
           <p className="mt-3 text-sm text-muted-foreground">No hay reservas futuras.</p>
@@ -178,18 +177,16 @@ function Card({
   tone?: "brand" | "support" | "amber";
 }) {
   const valueCls =
-    tone === "brand"
-      ? "text-brand"
-      : tone === "support"
-        ? "text-support"
-        : tone === "amber"
-          ? "text-amber-600"
-          : "text-foreground";
+    tone === "support"
+      ? "text-support"
+      : tone === "amber"
+        ? "text-amber-600"
+        : "";
   return (
-    <div className="rounded-2xl border border-border bg-card p-4">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className={`mt-1 font-heading text-2xl font-semibold ${valueCls}`}>{value}</div>
-      {sub && <div className="text-xs text-muted-foreground">{sub}</div>}
+    <div className="k-kpi">
+      <p className="k-kpi-label">{label}</p>
+      <p className={`k-kpi-value ${valueCls}`}>{value}</p>
+      {sub && <p className="k-kpi-sub">{sub}</p>}
     </div>
   );
 }
@@ -234,8 +231,8 @@ function Lista({
   items: { principal: string; secundario: string }[];
 }) {
   return (
-    <section className="rounded-2xl border border-border bg-card p-5">
-      <h2 className="flex items-center gap-2 font-heading text-lg font-semibold">
+    <section className="k-card p-5 sm:p-6">
+      <h2 className="k-section-title">
         {icon} {titulo}
       </h2>
       {items.length === 0 ? (

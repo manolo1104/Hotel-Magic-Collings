@@ -32,11 +32,14 @@ export function AreaChart({
         role="img"
         aria-label="Tendencia de ingresos"
       >
-        <path d={area} fill="var(--color-brand, #234A31)" opacity={0.12} />
+        {/* `--brand` / `--sand` son variables reales en tiempo de ejecución; las
+            `--color-*` del @theme inline se sustituyen en compilación y aquí no
+            existirían. Dentro de /admin valen la paleta Kora. */}
+        <path d={area} fill="var(--brand, #1B4332)" opacity={0.1} />
         <path
           d={line}
           fill="none"
-          stroke="var(--color-brand, #234A31)"
+          stroke="var(--brand, #1B4332)"
           strokeWidth={1.5}
           vectorEffect="non-scaling-stroke"
         />
@@ -46,7 +49,7 @@ export function AreaChart({
             cx={p.x}
             cy={p.y}
             r={1.6}
-            fill="var(--color-primary, #b35b29)"
+            fill="var(--sand, #52B788)"
             vectorEffect="non-scaling-stroke"
           />
         ))}

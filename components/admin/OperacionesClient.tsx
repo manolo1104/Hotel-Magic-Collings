@@ -22,25 +22,28 @@ export function OperacionesClient({
   const [tab, setTab] = useState<"limpieza" | "mant">("limpieza");
 
   return (
-    <div className="mx-auto w-full max-w-[1100px] px-4 pt-6 pb-20 sm:px-6 lg:pt-8">
-      <h1 className="font-heading text-2xl font-semibold sm:text-3xl">Operaciones</h1>
-      <div className="mt-4 inline-flex rounded-lg border border-border bg-card p-1 text-sm">
+    <div className="w-full max-w-[1200px]">
+      <header>
+        <p className="k-eyebrow">Panel</p>
+        <h1 className="k-title">Operaciones</h1>
+        <p className="k-subtitle">Limpieza del día y mantenimiento preventivo</p>
+      </header>
+
+      <div className="k-tabs mt-7">
         <button
           onClick={() => setTab("limpieza")}
-          className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 ${tab === "limpieza" ? "bg-brand text-brand-foreground" : "text-muted-foreground"}`}
+          data-active={tab === "limpieza"}
+          className="k-tab"
         >
           <Sparkles className="size-4" /> Limpieza hoy
         </button>
-        <button
-          onClick={() => setTab("mant")}
-          className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 ${tab === "mant" ? "bg-brand text-brand-foreground" : "text-muted-foreground"}`}
-        >
+        <button onClick={() => setTab("mant")} data-active={tab === "mant"} className="k-tab">
           <Wrench className="size-4" /> Mantenimiento
         </button>
       </div>
 
       {tab === "limpieza" ? (
-        <div className="mt-5 grid gap-3">
+        <div className="mt-5 grid gap-2.5">
           {cuartos.map((c) => (
             <CleaningCard key={c.roomId} cuarto={c} fecha={hoy} items={items} />
           ))}
@@ -98,29 +101,25 @@ function CleaningCard({
 
   const completo = done.size >= items.length;
   const badge = completo
-    ? { t: "Completa", c: "bg-support/15 text-support" }
+    ? { t: "Completa", c: "bg-support/12 text-support" }
     : done.size > 0
       ? { t: "En proceso", c: "bg-amber-500/15 text-amber-700" }
       : { t: "Pendiente", c: "bg-muted text-muted-foreground" };
 
   return (
-    <article className="rounded-2xl border border-border bg-card p-4">
+    <article className="k-card p-4 sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <h2 className="font-medium">Cuarto {cuarto.numero}</h2>
+          <h2 className="font-semibold text-[var(--k-forest)]">Cuarto {cuarto.numero}</h2>
           <span className="text-xs text-muted-foreground">{cuarto.tipo}</span>
           {cuarto.saleHoy && (
-            <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-medium text-amber-700">
-              Sale hoy
-            </span>
+            <span className="k-badge bg-amber-500/15 text-amber-700">Sale hoy</span>
           )}
           {cuarto.ocupado && !cuarto.saleHoy && (
-            <span className="rounded-full bg-brand/10 px-2 py-0.5 text-[11px] font-medium text-brand">
-              Ocupado
-            </span>
+            <span className="k-badge bg-brand/10 text-brand">Ocupado</span>
           )}
         </div>
-        <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${badge.c}`}>
+        <span className={`k-badge ${badge.c}`}>
           {badge.t} · {done.size}/{items.length}
         </span>
       </div>
@@ -131,9 +130,9 @@ function CleaningCard({
             <button
               key={it.id}
               onClick={() => toggle(it.id)}
-              className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-muted"
+              className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent"
             >
-              <span className={`flex size-5 items-center justify-center rounded border ${on ? "border-support bg-support text-white" : "border-input"}`}>
+              <span className={`flex size-5 items-center justify-center rounded-md border transition-colors ${on ? "border-support bg-support text-white" : "border-input"}`}>
                 {on && <Check className="size-3.5" />}
               </span>
               <span className={on ? "text-muted-foreground line-through" : ""}>{it.label}</span>
@@ -186,26 +185,26 @@ function Mantenimiento({ tareas }: { tareas: MaintTask[] }) {
   }
 
   return (
-    <div className="mt-5 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-      <div className="grid gap-3">
+    <div className="mt-5 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+      <div className="grid gap-2.5">
         {tareas.map((t) => {
           const tag = t.overdue
             ? { t: "Vencida", c: "bg-destructive/10 text-destructive" }
             : (t.diasRestantes ?? 99) <= 3
               ? { t: "Próxima", c: "bg-amber-500/15 text-amber-700" }
-              : { t: "Al día", c: "bg-support/15 text-support" };
+              : { t: "Al día", c: "bg-support/12 text-support" };
           return (
-            <article key={t.id} className="rounded-2xl border border-border bg-card p-4">
+            <article key={t.id} className="k-card p-4 sm:p-5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <h3 className="font-medium">{t.tarea}</h3>
+                  <h3 className="font-semibold text-[var(--k-forest)]">{t.tarea}</h3>
                   <p className="text-xs text-muted-foreground">
                     {t.ambito === "hotel" ? "Hotel" : `Cuarto ${t.ambito}`} · cada {t.frecuenciaDias} días
                     {t.proximaVez ? ` · próxima: ${t.proximaVez}` : ""}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${tag.c}`}>{tag.t}</span>
+                  <span className={`k-badge ${tag.c}`}>{tag.t}</span>
                   <Button onClick={() => done(t.id)} disabled={busy === t.id} size="sm" variant="secondary" className="gap-1.5">
                     {busy === t.id ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                     Hecho
@@ -217,9 +216,9 @@ function Mantenimiento({ tareas }: { tareas: MaintTask[] }) {
         })}
       </div>
 
-      <form onSubmit={agregar} className="h-fit rounded-2xl border border-border bg-card p-5">
-        <h3 className="flex items-center gap-2 font-heading text-lg font-semibold">
-          <Plus className="size-4 text-brand" /> Agregar tarea
+      <form onSubmit={agregar} className="k-card h-fit p-5 sm:p-6">
+        <h3 className="k-section-title">
+          <Plus className="size-4 text-[var(--k-sage)]" /> Agregar tarea
         </h3>
         <div className="mt-4 grid gap-3">
           <Input
