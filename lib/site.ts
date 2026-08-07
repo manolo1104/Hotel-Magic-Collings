@@ -22,7 +22,12 @@ export const site = {
   // WhatsApp en formato internacional sin signos (para wa.me)
   whatsapp: "524811009939", // Confirmado por el dueño (mismo número de reservación)
   phone: "+52 481 100 9939", // Confirmado por Google y sitio actual
-  email: "reservas@hotelmagicollinn.com", // TODO: correo real
+  // ⚠️ El buzón del hotel es este Gmail y NO se muestra como canal de contacto:
+  // el hotel atiende por WhatsApp. Solo aparece donde la ley lo exige (Aviso de
+  // Privacidad y Términos, para ejercer derechos ARCO) y en el schema.org.
+  // NO usar `reservas@hotelmagicollinn.com`: el dominio no tiene registros MX,
+  // así que todo lo que se envíe ahí REBOTA (se mostró meses en el sitio).
+  email: "hotelmagicslp@gmail.com",
 
   // ── Ubicación ─────────────────────────────────────────────
   address: {

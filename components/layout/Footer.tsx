@@ -3,7 +3,6 @@ import Image from "next/image";
 import {
   MessageCircle,
   Phone,
-  Mail,
   MapPin,
   ShieldCheck,
 } from "lucide-react";
@@ -147,15 +146,6 @@ export function Footer() {
               >
                 <Phone className="size-4 text-support" aria-hidden />
                 {site.phone}
-              </a>
-            </li>
-            <li>
-              <a
-                href={`mailto:${site.email}`}
-                className="inline-flex items-center gap-2 hover:text-brand-foreground"
-              >
-                <Mail className="size-4 text-support" aria-hidden />
-                {site.email}
               </a>
             </li>
             <li className="inline-flex items-start gap-2">

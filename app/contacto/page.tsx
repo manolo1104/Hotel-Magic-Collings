@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { MessageCircle, Phone, Mail, MapPin, Navigation } from "lucide-react";
+import { MessageCircle, Phone, MapPin, Navigation } from "lucide-react";
 import { site, waLink } from "@/lib/site";
 import { Button } from "@/components/ui/button";
 import { ContactForm } from "@/components/ContactForm";
@@ -79,19 +79,6 @@ export default function ContactoPage() {
                   <span className="block text-sm font-medium">Teléfono</span>
                   <span className="block text-xs text-muted-foreground">
                     {site.phone}
-                  </span>
-                </span>
-              </a>
-            </StaggerItem>
-            <StaggerItem>
-              <a href={`mailto:${site.email}`} className={cardCls}>
-                <span className="inline-flex size-10 items-center justify-center rounded-xl bg-muted text-brand">
-                  <Mail className="size-5" aria-hidden />
-                </span>
-                <span>
-                  <span className="block text-sm font-medium">Correo</span>
-                  <span className="block text-xs text-muted-foreground">
-                    {site.email}
                   </span>
                 </span>
               </a>

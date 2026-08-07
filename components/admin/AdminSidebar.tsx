@@ -11,7 +11,6 @@ import {
   TrendingUp,
   Users,
   ClipboardCheck,
-  Globe2,
   Menu,
   X,
 } from "lucide-react";
@@ -27,7 +26,11 @@ const NAV = [
   { href: "/admin/ingresos", label: "Ingresos", icon: TrendingUp, ready: true },
   { href: "/admin/clientes", label: "Clientes", icon: Users, ready: true },
   { href: "/admin/operaciones", label: "Operaciones", icon: ClipboardCheck, ready: true },
-  { href: "/admin/canales", label: "Canales", icon: Globe2, ready: true },
+  // "Canales" (channel manager Beds24 + calendarios iCal de OTAs) se retiró del
+  // menú el 8 ago 2026: el hotel dejó de trabajar con Booking.com, así que el
+  // sitio es el único canal de venta. El backend sigue completo y DORMIDO (sin
+  // BEDS24_REFRESH_TOKEN no hace nada), y la página /admin/canales sigue
+  // existiendo por si se vuelve a Booking: basta con devolver esta línea.
 ];
 
 export function AdminSidebar() {
