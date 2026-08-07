@@ -42,8 +42,11 @@ export const site = {
   checkIn: "13:00", // Confirmado por Gersay (31 jul 2026)
   checkOut: "11:00", // Confirmado por Gersay (31 jul 2026)
   petsAllowed: false as boolean | null, // Confirmado: no se reciben mascotas
-  rooms: 6,
-  roomCategories: 2, // 6 habitaciones repartidas en 2 categorías (sencilla y doble)
+  // Inventario real (7 ago 2026): 3 King Size + 3 Doble Queen + la Suite.
+  // La Matrimonial sigue en el catálogo pero hoy sin cuartos asignados, así que
+  // no se anuncia; en cuanto Gersay confirme cuántas hay, cambian estos dos.
+  rooms: 7,
+  roomCategories: 3,
   priceRange: "$$", // para Schema LodgingBusiness
 
   // ── Políticas y confianza (datos confirmados por el hotel) ─

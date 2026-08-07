@@ -23,6 +23,12 @@ import type {
 // panel /admin (que pasa includeHidden:true).
 export const HIDDEN_SLUGS = new Set<string>([
   "prueba", // cuarto de $10 para probar cobros reales de Mercado Pago
+  // Inventario ANTERIOR, sustituido por las categorías reales de Gersay
+  // (matrimonial, king-size, doble-queen, suite). Sus filas se conservan en la
+  // base porque cuelgan de ellas cuartos y reservas viejas, pero no deben
+  // venderse ni aparecer en el sitio: sus tarifas ($850/$1,200) eran de relleno.
+  "sencilla",
+  "doble",
 ]);
 
 // ── Aviso al channel manager (Beds24 → Booking.com) ─────────
@@ -1051,13 +1057,27 @@ export async function convertQuoteToBooking(
 }
 
 // ── Lectura simple de tipos (para /habitaciones) ────────────
-// Oculta los tipos internos (HIDDEN_SLUGS) salvo que se pida includeHidden.
+/**
+ * Tipos de habitación para el SITIO PÚBLICO (/habitaciones, /buscar, home).
+ *
+ * Se descartan dos cosas que no se pueden vender:
+ *   · los tipos internos o retirados (HIDDEN_SLUGS);
+ *   · los que no tienen NINGÚN cuarto físico activo — anunciar una categoría
+ *     sin inventario manda al huésped a un buscador que nunca se la ofrece.
+ *     Es el caso de la Matrimonial mientras Gersay termina de reacomodar.
+ *
+ * `includeHidden` es la vista del panel /admin: devuelve todo sin filtrar,
+ * porque ahí sí hay que ver los tipos retirados y los que se quedaron sin
+ * cuartos para poder administrarlos.
+ */
 export async function getRoomTypes(opts?: { includeHidden?: boolean }) {
   await ensureDb();
   const rows = await db.select().from(roomTypes).orderBy(roomTypes.tarifaBase);
-  return opts?.includeHidden
-    ? rows
-    : rows.filter((t) => !HIDDEN_SLUGS.has(t.slug));
+  if (opts?.includeHidden) return rows;
+
+  const activos = await db.select().from(rooms).where(eq(rooms.activa, true));
+  const conInventario = new Set(activos.map((r) => r.roomTypeId));
+  return rows.filter((t) => !HIDDEN_SLUGS.has(t.slug) && conInventario.has(t.id));
 }
 
 export async function getRoomTypeBySlug(slug: string) {

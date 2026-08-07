@@ -43,14 +43,13 @@ export const dobleQueenFotos = [
   "/imagenes/doble-queen-8.jpg",
 ];
 
-export const depaQueenFotos = [
-  "/imagenes/depa-queen-1.jpg",
-  "/imagenes/depa-queen-2.jpg",
-];
-
-export const depaMatrimonialFotos = [
-  "/imagenes/depa-matrimonial-2.jpg", // portada: se ven las dos camas
+// La Suite es el departamento COMPLETO (Gersay lo corrigió el 7 ago 2026: ya no
+// se renta por recámaras separadas). Estas 4 fotos son sus dos recámaras.
+export const suiteFotos = [
+  "/imagenes/depa-matrimonial-2.jpg", // portada: la recámara de 2 matrimoniales
   "/imagenes/depa-matrimonial-1.jpg",
+  "/imagenes/depa-queen-2.jpg", // la recámara con cama Queen
+  "/imagenes/depa-queen-1.jpg",
 ];
 
 // Galerías del inventario ANTERIOR (2 tipos). Se conservan porque la base de

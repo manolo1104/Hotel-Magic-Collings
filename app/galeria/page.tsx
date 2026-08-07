@@ -12,7 +12,7 @@ import { Gallery, GalleryTile } from "@/components/gallery/Lightbox";
 
 export const metadata: Metadata = {
   title: "Galería de fotos",
-  description: `Fotos reales del ${site.legalName} en ${site.locality}: fachada, corredor de arcos, habitaciones sencillas y dobles. Así se ve el hotel que vas a reservar.`,
+  description: `Fotos reales del ${site.legalName} en ${site.locality}: fachada, corredor de arcos, habitaciones King Size y Doble Queen, y la Suite. Así se ve el hotel que vas a reservar.`,
   alternates: { canonical: "/galeria" },
 };
 
@@ -55,8 +55,8 @@ const tiles: {
   { src: "/imagenes/doble-queen-7.jpg", alt: "Habitación Doble Queen, vista general", from: "bottom" },
   { src: "/imagenes/doble-queen-8.jpg", alt: "Habitación Doble Queen con sala de estar", from: "bottom" },
   // Departamento
-  { src: "/imagenes/depa-matrimonial-2.jpg", alt: "Habitación del departamento con dos camas matrimoniales", wide: true, from: "left" },
-  { src: "/imagenes/depa-queen-1.jpg", alt: "Habitación con cama Queen Size del departamento", wide: true, wideMobile: true, from: "right" },
+  { src: "/imagenes/depa-matrimonial-2.jpg", alt: "Recámara de la Suite con dos camas matrimoniales", wide: true, from: "left" },
+  { src: "/imagenes/depa-queen-1.jpg", alt: "Recámara de la Suite con cama Queen Size", wide: true, wideMobile: true, from: "right" },
   { src: "/imagenes/patio-estacionamiento.jpg", alt: "Patio con estacionamiento techado del hotel", from: "bottom" },
 ];
 
@@ -80,9 +80,9 @@ export default function GaleriaPage() {
         </h1>
         <Reveal delay={0.3} className="mt-4">
           <p className="leading-relaxed text-muted-foreground">
-            Fotos reales de {site.name}: la fachada, el corredor de arcos y
-            nuestras habitaciones sencillas y dobles. Lo que ves es lo que te
-            recibe. Toca cualquier foto para verla en grande.
+            Fotos reales de {site.name}: la fachada, el corredor de arcos,
+            nuestras habitaciones King Size y Doble Queen, y la Suite. Lo que
+            ves es lo que te recibe. Toca cualquier foto para verla en grande.
           </p>
         </Reveal>
       </header>

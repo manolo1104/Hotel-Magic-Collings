@@ -18,8 +18,8 @@ export async function VistazoHabitaciones() {
             Habitaciones para cada viaje
           </h2>
           <p className="mt-3 leading-relaxed text-muted-foreground">
-            Seis habitaciones repartidas en dos categorías (sencilla y doble),
-            climatizadas y cómodas. Elige la que mejor se ajuste a tu estancia.
+            Habitaciones King Size y Doble Queen, y una Suite para grupos
+            grandes. Elige la que mejor se ajuste a tu estancia.
           </p>
         </Reveal>
 

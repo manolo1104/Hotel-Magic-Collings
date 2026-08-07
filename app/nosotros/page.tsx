@@ -63,8 +63,8 @@ export default function NosotrosPage() {
               Pequeño a propósito
             </h2>
             <p className="mt-3 leading-relaxed text-muted-foreground">
-              Tenemos {site.rooms} habitaciones en dos categorías —sencillas y
-              dobles—, todas climatizadas y cuidadas al detalle. Ser un hotel
+              Tenemos {site.rooms} habitaciones —King Size, Doble Queen y una
+              Suite—, todas climatizadas y cuidadas al detalle. Ser un hotel
               pequeño no es una limitación: es lo que nos permite hacer lo que
               un hotel grande no puede. Te mostramos la habitación antes de que
               te instales, te conocemos por tu nombre y estamos pendientes de lo

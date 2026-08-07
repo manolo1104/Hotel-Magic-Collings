@@ -39,7 +39,7 @@ ${site.name} es un hotel pequeño y de atención personalizada, ubicado a una ca
 ## Datos clave
 - Dirección: ${site.address.street}, ${site.address.locality}, ${site.address.region}, C.P. ${site.address.postalCode}, México.
 - Teléfono y WhatsApp: ${site.phone}.
-- Habitaciones: ${site.rooms} en total, en ${site.roomCategories} categorías (sencilla, hasta 2 personas; doble, hasta 4 personas).
+- Habitaciones: ${site.rooms} en total, en ${site.roomCategories} categorías (King Size, hasta 2 personas; Doble Queen, hasta 4 personas; Suite, el departamento completo de dos recámaras, hasta 6 personas).
 - Amenidades: ${amenities.map((a) => a.title.toLowerCase()).join(", ")}.
 - Check-in: a partir de las ${site.checkIn} h · Check-out: hasta las ${site.checkOut} h.
 - Cómo reservar: directo en ${base}. Se eligen fechas y huéspedes, se confirma la disponibilidad y la reserva se confirma por WhatsApp en menos de 24 horas.

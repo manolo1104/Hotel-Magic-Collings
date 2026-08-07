@@ -2,23 +2,26 @@
 // DATOS SEMILLA — tipos de habitación y cuartos físicos
 // Imports RELATIVOS a propósito (compatibles con tsx/seed).
 //
-// TARIFAS REALES confirmadas por Gersay el 31 jul 2026.
+// TARIFAS REALES confirmadas por Gersay el 31 jul 2026 y CORREGIDAS por él
+// mismo el 7 ago 2026 (el departamento se confundía con las habitaciones).
 //
 // El hotel cobra POR OCUPACIÓN: la misma habitación cuesta distinto según
 // cuánta gente entra. Por eso `precios` va indexado por número de huéspedes
 // (posición 0 = 1 persona) y `tarifaBase` es solo el precio "desde", que es lo
 // que se muestra donde todavía no se sabe cuánta gente viene.
 //
-//              1 persona   2 personas  3 personas  4 personas
+//              1 persona   2 personas  3 personas  4 personas   …   6 personas
 //   Matrimonial   $720        $840          —           —
 //   King Size     $900      $1,080          —           —
 //   Doble Queen $1,200      $1,200      $1,320      $1,440
-//   Depa Queen    $900      $1,080          —           —
-//   Depa Matrim $1,020      $1,020      $1,140      $1,260
+//   Suite       $2,500      $2,500      $2,500      $2,500      …    $2,500
+//
+// La Suite es el departamento COMPLETO: UN SOLO PRECIO de $2,500 sin importar
+// cuánta gente entre (hasta 6). Se expresa con `precios: []`, que hace que
+// `precioPorNoche` caiga a `tarifaBase` para cualquier ocupación.
 //
 // ⚠️ FALTA CONFIRMAR CON GERSAY antes de sembrar esto en producción:
 //   · cuántas habitaciones FÍSICAS hay de cada tipo (campo `units`)
-//   · si el departamento se puede rentar completo (6 personas) y a qué precio
 // Además, él avisó que la opción Matrimonial desaparece en ~1 semana y que en
 // 3–4 semanas habrá camas individuales en algunas King/Queen.
 // ============================================================
@@ -26,8 +29,7 @@ import {
   matrimonialFotos,
   kingFotos,
   dobleQueenFotos,
-  depaQueenFotos,
-  depaMatrimonialFotos,
+  suiteFotos,
   sencillaFotos,
 } from "../images";
 
@@ -91,28 +93,18 @@ export const roomTypeSeed: RoomTypeSeed[] = [
     units: [], // ⚠️ pendiente: cuántas hay
   },
   {
-    slug: "depa-queen",
-    nombre: "Departamento · habitación Queen",
+    slug: "suite",
+    nombre: "Suite · Departamento completo",
     descripcion:
-      "La habitación con cama Queen Size del departamento, para dos personas. Se renta por separado y comparte la comodidad y el espacio extra del departamento.",
-    capacidad: 2,
-    tarifaBase: 900,
-    precios: [900, 1080],
+      "El departamento completo para ustedes: dos recámaras con tres camas (dos matrimoniales y una Queen Size), hasta seis personas. La mejor opción para una familia grande o dos parejas que viajan juntas y quieren su propio espacio en el centro de Axtla.",
+    capacidad: 6,
+    // Precio único de $2,500 la noche, entren 1 o 6 personas: `precios` vacío
+    // hace que `precioPorNoche` use siempre `tarifaBase`.
+    tarifaBase: 2500,
+    precios: [],
     amenidades: AMENIDADES_BASE,
-    fotos: depaQueenFotos,
-    units: [], // ⚠️ pendiente: cuántas hay
-  },
-  {
-    slug: "depa-matrimonial",
-    nombre: "Departamento · habitación con 2 camas matrimoniales",
-    descripcion:
-      "La habitación con dos camas matrimoniales del departamento, para hasta cuatro personas. Ideal para dos parejas o una familia que quiere estar junta sin apretarse.",
-    capacidad: 4,
-    tarifaBase: 1020,
-    precios: [1020, 1020, 1140, 1260],
-    amenidades: AMENIDADES_BASE,
-    fotos: depaMatrimonialFotos,
-    units: [], // ⚠️ pendiente: cuántas hay
+    fotos: suiteFotos,
+    units: ["SUITE"], // el departamento es uno solo
   },
   {
     // CUARTO INTERNO DE PRUEBA — $10 MXN. Sirve para probar el cobro REAL de

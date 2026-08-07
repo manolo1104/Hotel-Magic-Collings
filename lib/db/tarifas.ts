@@ -1,7 +1,11 @@
 // ============================================================
 // APLICAR LA ESTRUCTURA Y TARIFAS REALES A UNA BASE YA EXISTENTE
 //
-//   npm run db:tarifas -- matrimonial=2 king-size=1 doble-queen=2 depa-queen=1 depa-matrimonial=1
+//   npm run db:tarifas -- matrimonial=2 king-size=1 doble-queen=2 suite=1
+//
+// También acepta tipos VIEJOS que ya no están en seed-data, para retirarlos:
+//   npm run db:tarifas -- sencilla=0 doble=0
+// (solo se les puede BAJAR el número de cuartos; su historial se conserva)
 //
 // El sembrado normal (`ensureDb`) solo corre con la base VACÍA, así que para
 // producción hace falta esto. El script:
@@ -32,14 +36,8 @@ function leerArgumentos(): Map<string, number> {
       console.error(`Argumento inválido: "${arg}". Formato: slug=cantidad`);
       process.exit(1);
     }
-    if (!roomTypeSeed.some((t) => t.slug === slug)) {
-      console.error(
-        `El tipo "${slug}" no existe en seed-data.ts. Tipos válidos: ${roomTypeSeed
-          .map((t) => t.slug)
-          .join(", ")}`,
-      );
-      process.exit(1);
-    }
+    // Los slugs se validan más adelante contra seed-data Y contra la base, para
+    // poder retirar tipos viejos que ya no están en seed-data.
     mapa.set(slug, n);
   }
   return mapa;
@@ -47,9 +45,10 @@ function leerArgumentos(): Map<string, number> {
 
 /**
  * Prefijo de numeración para cada tipo, garantizando que dos tipos NUNCA
- * compartan prefijo. "depa-queen" y "depa-matrimonial" empiezan igual, y sin
- * esto los dos generaban cuartos "DEP-01": el panel mostraría dos cuartos con
- * el mismo número y nadie sabría cuál es cuál.
+ * compartan prefijo. Con los tipos de hoy no hay choque (M, KS, DQ, S, P), pero
+ * los slugs que empiezan igual sí lo provocaban: "depa-queen" y
+ * "depa-matrimonial" generaban ambos cuartos "DEP-01" y el panel mostraría dos
+ * cuartos con el mismo número sin saber cuál es cuál.
  * Se prueban candidatos de más corto a más largo hasta encontrar uno libre.
  */
 function prefijosPorSlug(): Map<string, string> {
@@ -80,6 +79,60 @@ async function cuartosConHistorial(ids: string[]): Promise<Set<string>> {
   return new Set([...conReserva, ...conBloqueo].map((r) => r.roomId));
 }
 
+/**
+ * Deja EXACTAMENTE `objetivo` cuartos activos del tipo. Sube reactivando y
+ * creando; baja desactivando (nunca borra, para no perder el historial).
+ * `prefijo` solo se usa al crear cuartos nuevos.
+ */
+async function ajustarCuartos(
+  tipoId: string,
+  objetivo: number,
+  prefijo: string,
+): Promise<void> {
+  const actuales = await db.select().from(rooms).where(eq(rooms.roomTypeId, tipoId));
+  const activos = actuales.filter((r) => r.activa);
+
+  if (activos.length < objetivo) {
+    // Primero reactiva los que estén apagados, y solo crea los que falten.
+    const apagados = actuales.filter((r) => !r.activa).slice(0, objetivo - activos.length);
+    if (apagados.length > 0) {
+      await db
+        .update(rooms)
+        .set({ activa: true })
+        .where(inArray(rooms.id, apagados.map((r) => r.id)));
+      console.log(`      ↑ reactivados ${apagados.length} cuarto(s)`);
+    }
+    const faltan = objetivo - activos.length - apagados.length;
+    if (faltan > 0) {
+      // Numeración estable: prefijo propio del tipo + consecutivo. Se
+      // comprueba contra TODOS los cuartos del hotel, no solo los de este
+      // tipo, para que no haya dos cuartos con el mismo número.
+      const usados = new Set((await db.select({ n: rooms.numero }).from(rooms)).map((r) => r.n));
+      const nuevos: { roomTypeId: string; numero: string }[] = [];
+      for (let i = 1; nuevos.length < faltan; i++) {
+        const numero = `${prefijo}-${String(i).padStart(2, "0")}`;
+        if (!usados.has(numero)) nuevos.push({ roomTypeId: tipoId, numero });
+      }
+      await db.insert(rooms).values(nuevos);
+      console.log(`      + creados ${nuevos.map((n) => n.numero).join(", ")}`);
+    }
+  } else if (activos.length > objetivo) {
+    // Sobran: se apagan los más nuevos primero para conservar los históricos.
+    const sobran = activos.slice(objetivo);
+    const conHistorial = await cuartosConHistorial(sobran.map((r) => r.id));
+    await db
+      .update(rooms)
+      .set({ activa: false })
+      .where(inArray(rooms.id, sobran.map((r) => r.id)));
+    console.log(
+      `      ↓ desactivados ${sobran.map((r) => r.numero).join(", ")}` +
+        (conHistorial.size > 0
+          ? ` (${conHistorial.size} con reservas: se conservan, solo dejan de venderse)`
+          : ""),
+    );
+  }
+}
+
 async function main() {
   const unidades = leerArgumentos();
   const soloPrecios = unidades.size === 0;
@@ -88,6 +141,18 @@ async function main() {
   const existentes = await db.select().from(roomTypes);
   const porSlug = new Map(existentes.map((t) => [t.slug, t]));
   const prefijos = prefijosPorSlug();
+
+  // Un slug mal escrito no debe pasar en silencio: sembraría mal el inventario.
+  const enSemilla = new Set(roomTypeSeed.map((t) => t.slug));
+  for (const slug of unidades.keys()) {
+    if (enSemilla.has(slug) || porSlug.has(slug)) continue;
+    console.error(
+      `El tipo "${slug}" no existe ni en seed-data.ts ni en la base.\n` +
+        `  Tipos de seed-data: ${[...enSemilla].join(", ")}\n` +
+        `  Tipos en la base:   ${[...porSlug.keys()].join(", ")}`,
+    );
+    process.exit(1);
+  }
 
   console.log(soloPrecios ? "\nModo: solo precios y textos\n" : "\nModo: estructura + precios\n");
 
@@ -124,66 +189,49 @@ async function main() {
     // ── Cuartos físicos ─────────────────────────────────────
     const objetivo = unidades.get(semilla.slug);
     if (objetivo === undefined) continue;
-
-    const actuales = await db.select().from(rooms).where(eq(rooms.roomTypeId, tipoId));
-    const activos = actuales.filter((r) => r.activa);
-
-    if (activos.length < objetivo) {
-      // Primero reactiva los que estén apagados, y solo crea los que falten.
-      const apagados = actuales.filter((r) => !r.activa).slice(0, objetivo - activos.length);
-      if (apagados.length > 0) {
-        await db
-          .update(rooms)
-          .set({ activa: true })
-          .where(inArray(rooms.id, apagados.map((r) => r.id)));
-        console.log(`      ↑ reactivados ${apagados.length} cuarto(s)`);
-      }
-      const faltan = objetivo - activos.length - apagados.length;
-      if (faltan > 0) {
-        // Numeración estable: prefijo propio del tipo + consecutivo. Se
-        // comprueba contra TODOS los cuartos del hotel, no solo los de este
-        // tipo, para que no haya dos cuartos con el mismo número.
-        const prefijo = prefijos.get(semilla.slug) ?? semilla.slug.slice(0, 3).toUpperCase();
-        const usados = new Set((await db.select({ n: rooms.numero }).from(rooms)).map((r) => r.n));
-        const nuevos: { roomTypeId: string; numero: string }[] = [];
-        for (let i = 1; nuevos.length < faltan; i++) {
-          const numero = `${prefijo}-${String(i).padStart(2, "0")}`;
-          if (!usados.has(numero)) nuevos.push({ roomTypeId: tipoId, numero });
-        }
-        await db.insert(rooms).values(nuevos);
-        console.log(`      + creados ${nuevos.map((n) => n.numero).join(", ")}`);
-      }
-    } else if (activos.length > objetivo) {
-      // Sobran: se apagan los más nuevos primero para conservar los históricos.
-      const sobran = activos.slice(objetivo);
-      const conHistorial = await cuartosConHistorial(sobran.map((r) => r.id));
-      await db
-        .update(rooms)
-        .set({ activa: false })
-        .where(inArray(rooms.id, sobran.map((r) => r.id)));
-      console.log(
-        `      ↓ desactivados ${sobran.map((r) => r.numero).join(", ")}` +
-          (conHistorial.size > 0
-            ? ` (${conHistorial.size} con reservas: se conservan, solo dejan de venderse)`
-            : ""),
-      );
-    }
+    await ajustarCuartos(
+      tipoId,
+      objetivo,
+      prefijos.get(semilla.slug) ?? semilla.slug.slice(0, 3).toUpperCase(),
+    );
   }
 
   // ── Tipos viejos que ya no están en seed-data ─────────────
   const slugsNuevos = new Set(roomTypeSeed.map((t) => t.slug));
   const huerfanos = existentes.filter((t) => !slugsNuevos.has(t.slug));
   if (huerfanos.length > 0) {
-    console.log("\n⚠️  Tipos que ya no aparecen en seed-data (NO se tocaron):");
+    console.log("\n⚠️  Tipos que ya no aparecen en seed-data:");
+    const sinInstruccion: string[] = [];
     for (const h of huerfanos) {
       const suyos = await db.select().from(rooms).where(eq(rooms.roomTypeId, h.id));
       const activos = suyos.filter((r) => r.activa).length;
-      console.log(`   · ${h.nombre} (${h.slug}) — ${activos} cuarto(s) activo(s)`);
+      const objetivo = unidades.get(h.slug);
+
+      if (objetivo === undefined) {
+        console.log(`   · ${h.nombre} (${h.slug}) — ${activos} cuarto(s) activo(s), NO se tocó`);
+        if (activos > 0) sinInstruccion.push(h.slug);
+        continue;
+      }
+      // Un tipo retirado solo puede encoger: crecerlo sería revivir inventario
+      // que ya no se vende, y no hay datos suyos en seed-data para hacerlo bien.
+      if (objetivo > activos) {
+        console.error(
+          `\n❌ "${h.slug}" ya no está en seed-data: solo se le puede BAJAR el ` +
+            `número de cuartos (tiene ${activos} activos, pediste ${objetivo}).`,
+        );
+        process.exit(1);
+      }
+      console.log(`   · ${h.nombre} (${h.slug}) — de ${activos} a ${objetivo} cuarto(s)`);
+      await ajustarCuartos(h.id, objetivo, h.slug.slice(0, 3).toUpperCase());
     }
-    console.log(
-      "   Si ya no existen, apágalos con:  npm run db:tarifas -- <slug>=0\n" +
-        "   (solo funciona con slugs de seed-data; para estos hazlo a mano y con cuidado)",
-    );
+    if (sinInstruccion.length > 0) {
+      console.log(
+        `   Si ya no existen, retíralos con:  npm run db:tarifas -- ${sinInstruccion
+          .map((s) => `${s}=0`)
+          .join(" ")}\n` +
+          "   (desactiva sus cuartos y conserva el historial de reservas)",
+      );
+    }
   }
 
   // ── Resumen de lo que quedó a la venta ────────────────────
