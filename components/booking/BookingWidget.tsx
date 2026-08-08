@@ -179,7 +179,8 @@ export function BookingWidget({
             aria-label="Número de huéspedes"
             className={control}
           >
-            {[1, 2, 3, 4].map((n) => (
+            {/* Hasta 6: es la capacidad de la Suite (departamento completo). */}
+            {[1, 2, 3, 4, 5, 6].map((n) => (
               <option key={n} value={n}>
                 {n} {n === 1 ? "huésped" : "huéspedes"}
               </option>

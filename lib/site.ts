@@ -55,7 +55,13 @@ export const site = {
   priceRange: "$$", // para Schema LodgingBusiness
 
   // ── Políticas y confianza (datos confirmados por el hotel) ─
-  cancelacion: "Cancela hasta 72 horas antes con reembolso o cambio de fechas.",
+  // Política escalonada vigente desde el 7 ago 2026. Se mide en días entre la
+  // cancelación y la fecha de LLEGADA. Un solo texto para todo el sitio: antes
+  // vivía copiado en diez lugares y bastaba olvidar uno para publicar dos
+  // políticas distintas.
+  cancelacion:
+    "Cancela con 7 días o más de anticipación y te devolvemos el 100%. Entre 6 y 3 días, el 50%. Con menos de 3 días no hay reembolso, pero puedes cambiar tus fechas una vez.",
+  cancelacionCorta: "Reembolso del 100% cancelando con 7 días o más",
   pagos: ["Efectivo", "Tarjeta", "Transferencia", "Pago en OXXO"],
   mejorPrecio: "Mejor precio garantizado al reservar directo, sin comisiones.",
 
@@ -87,6 +93,29 @@ export const site = {
     { label: "Contacto", href: "/contacto" },
   ],
 } as const;
+
+// ── Tramos de cancelación ──────────────────────────────────────────
+// Los días se cuentan desde la cancelación hasta la fecha de LLEGADA.
+// Fuente única para /terminos, la FAQ y el schema.org; si cambia la política,
+// se cambia aquí y todo el sitio queda coherente.
+export const tramosCancelacion = [
+  {
+    plazo: "7 días o más antes de tu llegada",
+    resultado: "Reembolso del 100%",
+    detalle: "Te devolvemos todo lo que hayas pagado, sin penalización.",
+  },
+  {
+    plazo: "Entre 6 y 3 días antes",
+    resultado: "Reembolso del 50%",
+    detalle: "Te devolvemos la mitad de lo pagado.",
+  },
+  {
+    plazo: "Menos de 3 días antes",
+    resultado: "Sin reembolso, con derecho a un cambio de fechas",
+    detalle:
+      "No hay devolución, pero conservas lo pagado y puedes reprogramar tu estancia una vez, con fechas abiertas y sujeto a disponibilidad.",
+  },
+] as const;
 
 // Mensaje pre-rellenado para el botón de WhatsApp
 export function waLink(message?: string): string {
@@ -143,7 +172,7 @@ export const faqs = [
   },
   {
     q: "¿Cuál es la política de cancelación?",
-    a: "Puedes cancelar hasta 72 horas antes de tu llegada con reembolso o cambio de fechas. Solo avísanos por WhatsApp.",
+    a: "Si cancelas con 7 días o más de anticipación te devolvemos el 100%. Entre 6 y 3 días antes de tu llegada, el 50%. Con menos de 3 días no hay reembolso, pero conservas lo pagado y puedes cambiar tus fechas una vez, sujeto a disponibilidad. Solo avísanos por WhatsApp.",
   },
   {
     q: "¿Qué formas de pago aceptan?",
@@ -158,7 +187,7 @@ export const faqs = [
 // ── Señales de confianza (cerca del CTA) — todas verídicas ──────────
 export const confianza = [
   "Mejor precio garantizado al reservar directo",
-  "Cancela hasta 72 h antes",
+  "Reembolso del 100% cancelando con 7 días o más",
   "Confirmación por WhatsApp en menos de 24 h",
 ] as const;
 

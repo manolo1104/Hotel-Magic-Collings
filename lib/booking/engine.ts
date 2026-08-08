@@ -259,8 +259,20 @@ export async function createBooking(
   // Modalidad de pago: cuánto se cobra en línea ahora y el hold del cuarto.
   //  · sin modalidad → reserva por WhatsApp (sin pago en línea)
   //  · "total" → 100% ahora · "anticipo" → 50% ahora, resto en el hotel
+  //
+  // El anticipo SOLO existe con 2 noches o más: una noche suelta se paga
+  // completa. Se valida aquí y no solo en el formulario porque el cliente es
+  // manipulable — sin esta guarda, un POST a mano apartaría una noche pagando
+  // la mitad. No se "corrige" a 100% en silencio: cobrar el doble de lo que el
+  // huésped eligió sería peor que rechazar y que lo vuelva a intentar.
   const conPago =
     input.modalidadPago === "total" || input.modalidadPago === "anticipo";
+  if (input.modalidadPago === "anticipo" && noches < 2)
+    return {
+      ok: false,
+      error:
+        "Con una sola noche la reserva se paga completa. Elige pagar el total, o agrega otra noche para poder pagar el 50%.",
+    };
   const montoACobrar = !conPago
     ? null
     : input.modalidadPago === "anticipo"

@@ -119,7 +119,7 @@ export default function GaleriaPage() {
         </h2>
         <p className="mx-auto mt-2 max-w-xl leading-relaxed text-muted-foreground">
           Revisa la disponibilidad de tus fechas y reserva directo, sin
-          comisiones. Cancela hasta 72 horas antes.
+          comisiones. Reembolso del 100% si cancelas con 7 días o más.
         </p>
         <div className="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
           <Button className="h-11 px-6" render={<Link href="/buscar" />}>

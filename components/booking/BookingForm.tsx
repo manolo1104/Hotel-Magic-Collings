@@ -34,6 +34,8 @@ interface Props {
   totalLabel: string;
   pagoActivo: boolean;
   anticipoLabel: string;
+  /** Noches de la estancia: con una sola, el pago es del 100% (sin anticipo). */
+  noches: number;
   publicKey: string;
 }
 
@@ -50,8 +52,11 @@ export function BookingForm({
   totalLabel,
   pagoActivo,
   anticipoLabel,
+  noches,
   publicKey,
 }: Props) {
+  // El 50% solo se ofrece con 2 noches o más (el motor lo vuelve a validar).
+  const permiteAnticipo = noches >= 2;
   const [step, setStep] = useState<Step>("datos");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,7 +94,9 @@ export function BookingForm({
             checkout,
             huespedes,
             ...form,
-            modalidadPago: modalidad,
+            // Con una noche nunca se manda anticipo, aunque el estado se
+            // hubiera quedado en 50% por un cambio de fechas.
+            modalidadPago: permiteAnticipo ? modalidad : "total",
           }),
         });
         const data = await res.json();
@@ -371,7 +378,9 @@ export function BookingForm({
 
       {pagoActivo && (
         <fieldset className="mt-6">
-          <legend className="text-sm font-medium">¿Cuánto quieres pagar ahora?</legend>
+          <legend className="text-sm font-medium">
+            {permiteAnticipo ? "¿Cuánto quieres pagar ahora?" : "Pago de tu reserva"}
+          </legend>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <PagoOpcion
               activo={modalidad === "total"}
@@ -380,14 +389,22 @@ export function BookingForm({
               monto={totalLabel}
               detalle="Tu estancia queda 100% pagada"
             />
-            <PagoOpcion
-              activo={modalidad === "anticipo"}
-              onClick={() => setModalidad("anticipo")}
-              titulo="Pagar 50% ahora"
-              monto={anticipoLabel}
-              detalle="El resto se paga en el hotel"
-            />
+            {permiteAnticipo && (
+              <PagoOpcion
+                activo={modalidad === "anticipo"}
+                onClick={() => setModalidad("anticipo")}
+                titulo="Pagar 50% ahora"
+                monto={anticipoLabel}
+                detalle="El resto se paga al llegar al hotel"
+              />
+            )}
           </div>
+          {!permiteAnticipo && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              Las estancias de una noche se pagan completas. A partir de dos noches
+              puedes apartar con el 50% y liquidar al llegar.
+            </p>
+          )}
         </fieldset>
       )}
 
@@ -423,7 +440,8 @@ export function BookingForm({
 
       {pagoActivo && (
         <p className="mt-3 text-center text-xs text-muted-foreground">
-          Pago seguro con Mercado Pago, dentro de este sitio. Cancela hasta 72 h antes.
+          Pago seguro con Mercado Pago, dentro de este sitio.{" "}
+          {site.cancelacionCorta}.
         </p>
       )}
     </form>

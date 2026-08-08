@@ -5,7 +5,7 @@ import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 // Comparativa honesta: reservar directo vs. una OTA (Booking/Expedia).
 const comparativa = [
   { tema: "Tarifa", directo: "La más baja, sin comisión", ota: "Precio con comisión del intermediario" },
-  { tema: "Cancelación", directo: "Flexible, hasta 72 h antes", ota: "Sujeta a la política de la plataforma" },
+  { tema: "Cancelación", directo: "100% con 7+ días; 50% de 6 a 3 días", ota: "Sujeta a la política de la plataforma" },
   { tema: "Trato", directo: "Directo con el hotel por WhatsApp", ota: "A través de la plataforma" },
   { tema: "Peticiones especiales", directo: "Nos las dices directo", ota: "Se pueden perder en el camino" },
 ];

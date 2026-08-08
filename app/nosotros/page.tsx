@@ -141,8 +141,8 @@ export default function NosotrosPage() {
           Nos encantaría recibirte
         </h2>
         <p className="mx-auto mt-3 max-w-xl leading-relaxed text-muted-foreground">
-          Reserva directo con nosotros —sin comisiones y con cancelación
-          flexible hasta 72 horas antes— o escríbenos por WhatsApp si tienes
+          Reserva directo con nosotros —sin comisiones y con reembolso del 100%
+          si cancelas con 7 días o más— o escríbenos por WhatsApp si tienes
           cualquier duda.
         </p>
         <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">

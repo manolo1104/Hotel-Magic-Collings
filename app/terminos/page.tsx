@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { site, waLink } from "@/lib/site";
+import { site, waLink, tramosCancelacion } from "@/lib/site";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbJsonLd } from "@/lib/seo";
 
@@ -35,17 +35,39 @@ export default function TerminosPage() {
 
         <h2>Pago y anticipo</h2>
         <p>
-          Puedes pagar el total de tu estancia al reservar, o un{" "}
-          <strong>anticipo del 50%</strong> para apartar tu habitación; el resto
-          lo pagas al llegar al hotel. El pago en línea se procesa de forma
-          segura con <strong>Mercado Pago</strong> (nosotros nunca vemos tus
-          datos de tarjeta). En el hotel aceptamos{" "}
-          {site.pagos.join(", ").toLowerCase()}.
+          Cuánto pagas al reservar depende de cuántas noches te quedas:
+        </p>
+        <ul>
+          <li>
+            <strong>Una noche:</strong> se paga el <strong>100%</strong> al
+            reservar.
+          </li>
+          <li>
+            <strong>Dos noches o más:</strong> eliges tú. Puedes pagar el{" "}
+            <strong>100%</strong>, o apartar con un{" "}
+            <strong>anticipo del 50%</strong> y liquidar el resto al llegar al
+            hotel.
+          </li>
+        </ul>
+        <p>
+          El pago en línea se procesa de forma segura con{" "}
+          <strong>Mercado Pago</strong> (nosotros nunca vemos tus datos de
+          tarjeta). En el hotel aceptamos {site.pagos.join(", ").toLowerCase()}.
         </p>
 
         <h2>Cancelaciones y cambios</h2>
         <p>
-          {site.cancelacion} Solo avísanos por{" "}
+          Los días se cuentan desde que nos avisas hasta tu fecha de llegada:
+        </p>
+        <ul>
+          {tramosCancelacion.map((t) => (
+            <li key={t.plazo}>
+              <strong>{t.plazo}:</strong> {t.resultado}. {t.detalle}
+            </li>
+          ))}
+        </ul>
+        <p>
+          Para cancelar o cambiar fechas, avísanos por{" "}
           <a href={waLink()} target="_blank" rel="noopener noreferrer">
             WhatsApp
           </a>{" "}

@@ -13,8 +13,8 @@ const valores = [
   },
   {
     icon: CalendarClock,
-    title: "Cancela gratis hasta 72 h antes",
-    desc: "Con reembolso o cambio de fechas, sin complicaciones.",
+    title: "Reembolso del 100% con 7 días o más",
+    desc: "Cancelando entre 6 y 3 días antes te devolvemos el 50%.",
   },
   {
     icon: MessageCircle,

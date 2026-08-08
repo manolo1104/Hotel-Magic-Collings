@@ -191,6 +191,7 @@ export default async function ReservarPage({ searchParams }: { searchParams: SP 
             totalLabel={formatMXN(tipo.precioTotal)}
             pagoActivo={pagosActivos()}
             anticipoLabel={formatMXN(Math.round(tipo.precioTotal / 2))}
+            noches={tipo.noches}
             publicKey={mpPublicKey()}
           />
         </Reveal>
@@ -216,7 +217,9 @@ export default async function ReservarPage({ searchParams }: { searchParams: SP 
           </div>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             {pagosActivos()
-              ? "Paga en línea de forma segura con Mercado Pago: el total o un 50% de anticipo. Si eliges anticipo, el saldo se paga en el hotel."
+              ? tipo.noches >= 2
+                ? "Paga en línea de forma segura con Mercado Pago: el total, o un 50% de anticipo y el resto al llegar al hotel."
+                : "Paga en línea de forma segura con Mercado Pago. Las estancias de una noche se pagan completas."
               : "Aceptamos efectivo, tarjeta, transferencia y pago en OXXO. El pago se realiza en el hotel."}
           </p>
         </div>
