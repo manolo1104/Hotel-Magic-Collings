@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Plus, Printer, Mail, ArrowRightCircle, Pencil, Loader2 } from "lucide-react";
+import { Plus, Printer, Mail, ArrowRightCircle, Pencil, Trash2, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -130,6 +130,22 @@ export function CotizacionesClient({
     setAviso(res.ok && data.ok ? "Cotización convertida en reserva." : data.error ?? "No se pudo convertir.");
     if (res.ok && data.ok) router.refresh();
   }
+  async function eliminar(q: QuoteView) {
+    const extra = q.bookingId
+      ? "\n\nSu reserva NO se borra: sigue en el panel de Reservas."
+      : "";
+    if (
+      !confirm(
+        `¿Eliminar para siempre la cotización de ${q.cliente}?\n\nEsto NO se puede deshacer.${extra}`,
+      )
+    )
+      return;
+    setAviso(null);
+    const res = await fetch(`/api/admin/cotizaciones/${q.id}`, { method: "DELETE" });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.ok) router.refresh();
+    else setAviso(data.error ?? "No se pudo eliminar la cotización.");
+  }
   async function enviar(q: QuoteView) {
     setAviso(null);
     const res = await fetch(`/api/admin/cotizaciones/${q.id}/send-email`, { method: "POST" });
@@ -187,6 +203,7 @@ export function CotizacionesClient({
                   {!q.bookingId && (
                     <Act onClick={() => convertir(q)} icon={<ArrowRightCircle className="size-4 text-support" />} label="Convertir a reserva" />
                   )}
+                  <Act onClick={() => eliminar(q)} icon={<Trash2 className="size-4 text-destructive" />} label="Eliminar" />
                 </div>
               </article>
             );

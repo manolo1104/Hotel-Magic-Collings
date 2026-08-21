@@ -24,11 +24,18 @@ export interface GuestProfile {
   historial: GuestStay[];
 }
 
+/**
+ * @param ocultos  email → fecha ISO en que el panel escondió la ficha. Se
+ *   descarta al cliente salvo que haya reservado DESPUÉS de esa fecha: el
+ *   "eliminar" de /clientes es una limpieza de la lista, no un destierro.
+ */
 export function buildCRM(
   bookings: BookingView[],
   notas: Record<string, string>,
+  ocultos: Record<string, string> = {},
 ): GuestProfile[] {
   const map = new Map<string, GuestProfile>();
+  const revive = new Set<string>();
   for (const b of bookings) {
     if (!b.email) continue;
     const email = b.email.toLowerCase().trim();
@@ -54,6 +61,9 @@ export function buildCRM(
       if (b.checkin > p.ultimaEstancia) p.ultimaEstancia = b.checkin;
       if (!p.tiposFavoritos.includes(b.nombreTipo)) p.tiposFavoritos.push(b.nombreTipo);
     }
+    const desde = ocultos[email];
+    if (desde && new Date(b.createdAt).toISOString() > desde) revive.add(email);
+
     p.historial.push({
       ref: b.id.slice(0, 8).toUpperCase(),
       checkin: b.checkin,
@@ -65,5 +75,7 @@ export function buildCRM(
   }
   for (const p of map.values())
     p.historial.sort((a, b) => (a.checkin < b.checkin ? 1 : -1));
-  return Array.from(map.values()).sort((a, b) => b.totalGastado - a.totalGastado);
+  return Array.from(map.values())
+    .filter((p) => !ocultos[p.email] || revive.has(p.email))
+    .sort((a, b) => b.totalGastado - a.totalGastado);
 }

@@ -12,7 +12,7 @@ import {
   Printer,
   MessageCircle,
   Mail,
-  XCircle,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -93,11 +93,23 @@ export function ReservasClient({
   const pagadas = initial.filter((b) => b.estadoPago === "pagado").length;
   const ingreso = initial.reduce((s, b) => s + (b.montoPagado ?? 0), 0);
 
-  async function cancelar(b: BookingView) {
-    if (!confirm(`¿Cancelar la reserva de ${b.nombre}? El cuarto quedará libre.`)) return;
+  async function eliminar(b: BookingView) {
+    const pagado = b.montoPagado ?? 0;
+    const aviso =
+      pagado > 0
+        ? `\n\nOJO: esta reserva tiene ${mxn(pagado)} cobrados. Al borrarla ese dinero deja de aparecer en Ingresos.`
+        : "";
+    if (
+      !confirm(
+        `¿Eliminar para siempre la reserva de ${b.nombre} (${b.id.slice(0, 8).toUpperCase()})?\n\nSe borra de la base y el cuarto queda libre. Esto NO se puede deshacer.${aviso}`,
+      )
+    )
+      return;
+    setAviso(null);
     const res = await fetch(`/api/admin/reservas/${b.id}`, { method: "DELETE" });
-    if (res.ok) router.refresh();
-    else setAviso("No se pudo cancelar.");
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.ok) router.refresh();
+    else setAviso(data.error ?? "No se pudo eliminar la reserva.");
   }
   async function reenviar(b: BookingView) {
     setAviso(null);
@@ -223,9 +235,7 @@ export function ReservasClient({
                   {b.email && (
                     <IconBtn onClick={() => reenviar(b)} icon={<Mail className="size-4 text-brand" />} label="Correo" />
                   )}
-                  {b.estado !== "cancelada" && (
-                    <IconBtn onClick={() => cancelar(b)} icon={<XCircle className="size-4 text-destructive" />} label="Cancelar" />
-                  )}
+                  <IconBtn onClick={() => eliminar(b)} icon={<Trash2 className="size-4 text-destructive" />} label="Eliminar" />
                 </div>
               </article>
             );

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Search, Loader2, MessageCircle, Save } from "lucide-react";
+import { Search, Loader2, MessageCircle, Save, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { GuestProfile } from "@/lib/admin/crm";
@@ -59,10 +60,28 @@ export function ClientesClient({ perfiles }: { perfiles: GuestProfile[] }) {
 }
 
 function ClienteCard({ p, fmt }: { p: GuestProfile; fmt: (s: string) => string }) {
+  const router = useRouter();
   const [notas, setNotas] = useState(p.notas);
   const [saving, setSaving] = useState(false);
   const [ok, setOk] = useState(false);
+  const [borrando, setBorrando] = useState(false);
   const wa = p.telefono.replace(/[^0-9]/g, "");
+
+  async function eliminar() {
+    if (
+      !confirm(
+        `¿Eliminar la ficha de ${p.nombre}?\n\nSe borran sus notas privadas y desaparece de esta lista.\n\nSUS RESERVAS NO SE BORRAN: siguen en Reservas y su dinero sigue contando en Ingresos. Si vuelve a reservar, la ficha reaparece sola.`,
+      )
+    )
+      return;
+    setBorrando(true);
+    const res = await fetch(`/api/admin/clientes/${encodeURIComponent(p.email)}`, {
+      method: "DELETE",
+    });
+    setBorrando(false);
+    if (res.ok) router.refresh();
+    else alert("No se pudo eliminar la ficha.");
+  }
 
   async function guardar() {
     setSaving(true);
@@ -153,6 +172,14 @@ function ClienteCard({ p, fmt }: { p: GuestProfile; fmt: (s: string) => string }
           >
             <MessageCircle className="size-4 text-support" /> WhatsApp
           </a>
+          <button onClick={eliminar} disabled={borrando} className="k-chip">
+            {borrando ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Trash2 className="size-4 text-destructive" />
+            )}{" "}
+            Eliminar
+          </button>
         </div>
       </div>
     </article>

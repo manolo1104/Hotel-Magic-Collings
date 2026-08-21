@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { sesionActiva } from "@/lib/admin/auth";
-import { updateBooking, cancelBooking } from "@/lib/booking/engine";
+import { updateBooking, deleteBooking } from "@/lib/booking/engine";
 
 export const runtime = "nodejs";
 
@@ -23,6 +23,6 @@ export async function DELETE(
   if (!(await sesionActiva()))
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   const { id } = await params;
-  const result = await cancelBooking(id);
+  const result = await deleteBooking(id);
   return NextResponse.json(result, { status: result.ok ? 200 : 400 });
 }

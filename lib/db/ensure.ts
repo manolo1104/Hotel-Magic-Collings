@@ -98,6 +98,7 @@ const DDL = [
   `CREATE TABLE IF NOT EXISTS guest_notes (
     email text PRIMARY KEY,
     notas text NOT NULL DEFAULT '',
+    oculto_desde timestamp,
     updated_at timestamp NOT NULL DEFAULT now()
   )`,
   `CREATE TABLE IF NOT EXISTS cleaning_log (
@@ -171,6 +172,8 @@ const MIGRATIONS = [
   // Una reserva de Beds24 se importa UNA sola vez aunque lleguen el webhook y
   // la repesca a la vez: el índice único hace que la carrera falle en la BD.
   `CREATE UNIQUE INDEX IF NOT EXISTS bookings_beds24_id_uq ON bookings (beds24_booking_id) WHERE beds24_booking_id IS NOT NULL`,
+  // "Eliminar cliente" en el panel: esconde la ficha sin tocar sus reservas.
+  `ALTER TABLE guest_notes ADD COLUMN IF NOT EXISTS oculto_desde timestamp`,
 ];
 
 export async function seedRooms(): Promise<void> {

@@ -696,6 +696,34 @@ export async function cancelBooking(id: string): Promise<{ ok: boolean; error?: 
   return { ok: true };
 }
 
+/**
+ * BORRA una reserva de la base para siempre (no es cancelar: la fila desaparece
+ * y con ella el historial y el dinero que aportaba a Ingresos).
+ *
+ * Dos cosas hay que desatar antes de borrar, o el DELETE falla o deja basura:
+ *   · Una cotización convertida apunta a esta reserva (`quotes.booking_id`).
+ *     La llave foránea impediría el borrado, así que primero se suelta y la
+ *     cotización vuelve a "aceptada pero sin reserva".
+ *   · Si la reserva vive también en Beds24, su id se va con la fila. Sin la
+ *     lápida en la cola, la fecha se quedaría cerrada en Booking para siempre
+ *     — el mismo cuidado que ya tiene `unblock`.
+ */
+export async function deleteBooking(id: string): Promise<{ ok: boolean; error?: string }> {
+  if (!UUID_RE.test(id)) return { ok: false, error: "Reserva no encontrada." };
+  await ensureDb();
+
+  await db.update(quotes).set({ bookingId: null }).where(eq(quotes.bookingId, id));
+
+  const res = await db
+    .delete(bookings)
+    .where(eq(bookings.id, id))
+    .returning({ id: bookings.id, beds24BookingId: bookings.beds24BookingId });
+  if (res.length === 0) return { ok: false, error: "Reserva no encontrada." };
+
+  avisarBeds24((m) => m.encolarBaja(res[0].beds24BookingId));
+  return { ok: true };
+}
+
 // ── Calendario y bloqueos ───────────────────────────────────
 function pad2(n: number): string {
   return n < 10 ? `0${n}` : String(n);
@@ -1042,6 +1070,39 @@ export async function getGuestNotes(): Promise<Record<string, string>> {
   return map;
 }
 
+/**
+ * Fichas de cliente que el panel escondió, con la fecha en que se escondieron
+ * (ISO). El CRM las descarta salvo que el huésped haya reservado después.
+ */
+export async function getHiddenGuests(): Promise<Record<string, string>> {
+  await ensureDb();
+  const rows = await db.select().from(guestNotes);
+  const map: Record<string, string> = {};
+  for (const r of rows)
+    if (r.ocultoDesde) map[r.email] = r.ocultoDesde.toISOString();
+  return map;
+}
+
+/**
+ * "Elimina" la ficha de un cliente: borra sus notas privadas y la esconde de
+ * /clientes. NO toca sus reservas — el dinero cobrado sigue contando en
+ * Ingresos y el historial sigue en /reservas. Si vuelve a reservar, reaparece.
+ */
+export async function hideGuest(email: string): Promise<{ ok: boolean; error?: string }> {
+  const key = email.toLowerCase().trim();
+  if (!key) return { ok: false, error: "Falta el correo." };
+  await ensureDb();
+  const ahora = new Date();
+  await db
+    .insert(guestNotes)
+    .values({ email: key, notas: "", ocultoDesde: ahora, updatedAt: ahora })
+    .onConflictDoUpdate({
+      target: guestNotes.email,
+      set: { notas: "", ocultoDesde: ahora, updatedAt: ahora },
+    });
+  return { ok: true };
+}
+
 /** Guarda/actualiza las notas de un huésped (upsert por email). */
 export async function saveGuestNote(email: string, notas: string): Promise<void> {
   await ensureDb();
@@ -1052,7 +1113,9 @@ export async function saveGuestNote(email: string, notas: string): Promise<void>
     .values({ email: key, notas, updatedAt: new Date() })
     .onConflictDoUpdate({
       target: guestNotes.email,
-      set: { notas, updatedAt: new Date() },
+      // Escribir una nota es volver a trabajar con ese cliente: si la ficha
+      // estaba escondida, vuelve a la lista.
+      set: { notas, ocultoDesde: null, updatedAt: new Date() },
     });
 }
 
@@ -1167,6 +1230,20 @@ export async function updateQuote(
   if (changes.notas != null) set.notas = changes.notas.trim();
   if (changes.estado) set.estado = changes.estado;
   await db.update(quotes).set(set).where(eq(quotes.id, id));
+  return { ok: true };
+}
+
+/**
+ * BORRA una cotización de la base para siempre.
+ *
+ * Si ya se convirtió en reserva, la reserva NO se toca: solo desaparece el
+ * presupuesto. Borrar el papel no debe cancelarle el cuarto a nadie.
+ */
+export async function deleteQuote(id: string): Promise<{ ok: boolean; error?: string }> {
+  if (!UUID_RE.test(id)) return { ok: false, error: "Cotización no encontrada." };
+  await ensureDb();
+  const res = await db.delete(quotes).where(eq(quotes.id, id)).returning({ id: quotes.id });
+  if (res.length === 0) return { ok: false, error: "Cotización no encontrada." };
   return { ok: true };
 }
 

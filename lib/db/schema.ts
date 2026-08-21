@@ -176,6 +176,12 @@ export const appState = pgTable("app_state", {
 export const guestNotes = pgTable("guest_notes", {
   email: text("email").primaryKey(),
   notas: text("notas").notNull().default(""),
+  // Momento en que el panel "eliminó" la ficha del cliente. La ficha no es una
+  // fila: se arma sumando las reservas del mismo correo, así que borrarla de
+  // verdad exigiría borrar reservas (y con ellas el dinero cobrado). En vez de
+  // eso se apunta la fecha: la ficha se esconde, y vuelve a aparecer sola si el
+  // huésped reserva de nuevo (una reserva posterior a esta marca).
+  ocultoDesde: timestamp("oculto_desde"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
