@@ -62,20 +62,31 @@ export function CotizacionesClient({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
+  // Nombre del tipo de una cotización vieja cuya categoría ya no se ofrece
+  // (interna o retirada). Sin esto el desplegable enseñaría el primer tipo de
+  // la lista como si fuera el suyo.
+  const [tipoRetirado, setTipoRetirado] = useState<string | null>(null);
 
   function abrirNueva() {
     setEditId(null);
+    setTipoRetirado(null);
     setForm({ ...VACIO, slug: tipos[0]?.slug ?? "" });
     setError(null);
     setOpen(true);
   }
   function abrirEditar(q: QuoteView) {
     setEditId(q.id);
+    // `quotes.slug` guarda el NOMBRE del tipo, no su slug: para preseleccionar
+    // el desplegable hay que buscarlo por id (y caer al nombre si es antigua).
+    const actual =
+      tipos.find((t) => t.id === q.roomTypeId) ??
+      tipos.find((t) => t.nombre === q.nombreTipo);
+    setTipoRetirado(actual ? null : q.nombreTipo);
     setForm({
       cliente: q.cliente,
       telefono: q.telefono,
       email: q.email ?? "",
-      slug: "",
+      slug: actual?.slug ?? "",
       checkin: q.checkin,
       checkout: q.checkout,
       huespedes: String(q.huespedes),
@@ -106,7 +117,10 @@ export function CotizacionesClient({
       precioTotal: form.precioTotal === "" ? undefined : Number(form.precioTotal),
       notas: form.notas,
     };
-    const payload = editId ? { ...base, estado: form.estado } : { ...base, slug: form.slug };
+    // `slug` viaja también al editar: es el cambio de habitación.
+    const payload = editId
+      ? { ...base, estado: form.estado, slug: form.slug || undefined }
+      : { ...base, slug: form.slug };
     const res = await fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
@@ -235,16 +249,21 @@ export function CotizacionesClient({
                 <Input id="q-mail" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} />
               </div>
             </div>
-            {!editId && (
-              <div className="grid gap-1.5">
-                <Label htmlFor="q-tipo">Habitación</Label>
-                <select id="q-tipo" value={form.slug} onChange={(e) => set("slug", e.target.value)} className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm">
-                  {tipos.map((t) => (
-                    <option key={t.slug} value={t.slug}>{t.nombre} (hasta {t.capacidad})</option>
-                  ))}
-                </select>
-              </div>
-            )}
+            <div className="grid gap-1.5">
+              <Label htmlFor="q-tipo">Habitación</Label>
+              <select id="q-tipo" value={form.slug} onChange={(e) => set("slug", e.target.value)} className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm">
+                {tipoRetirado && <option value="">{tipoRetirado} · retirado</option>}
+                {tipos.map((t) => (
+                  <option key={t.slug} value={t.slug}>{t.nombre} (hasta {t.capacidad})</option>
+                ))}
+              </select>
+              {editId && (
+                <p className="text-[11px] text-muted-foreground">
+                  Si cambias de habitación y dejas el precio en blanco, se recalcula con
+                  la tarifa de la nueva.
+                </p>
+              )}
+            </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="grid gap-1.5">
                 <Label htmlFor="q-in">Llegada</Label>

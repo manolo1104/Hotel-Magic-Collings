@@ -10,7 +10,6 @@ import {
   FileText,
   TrendingUp,
   Users,
-  ClipboardCheck,
   ExternalLink,
   Menu,
   X,
@@ -25,7 +24,10 @@ const NAV = [
   { href: "/admin/cotizaciones", label: "Cotizaciones", icon: FileText, ready: true },
   { href: "/admin/ingresos", label: "Ingresos", icon: TrendingUp, ready: true },
   { href: "/admin/clientes", label: "Clientes", icon: Users, ready: true },
-  { href: "/admin/operaciones", label: "Operaciones", icon: ClipboardCheck, ready: true },
+  // "Operaciones" (limpieza del día + tareas de mantenimiento) se retiró el
+  // 24 ago 2026 a petición de Manolo: el hotel no lo usaba. A diferencia de
+  // "Canales", aquí se borró todo — página, API y librerías — así que volver a
+  // tenerlo sería reconstruirlo, no descomentar una línea.
   // "Canales" (channel manager Beds24 + calendarios iCal de OTAs) se retiró del
   // menú el 8 ago 2026: el hotel dejó de trabajar con Booking.com, así que el
   // sitio es el único canal de venta. El backend sigue completo y DORMIDO (sin

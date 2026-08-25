@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Loader2, Trash2, Lock } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Trash2, Lock, Unlock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,6 +35,10 @@ export function CalendarioClient({
   const [loading, setLoading] = useState(false);
   const [bloq, setBloq] = useState({ roomId: "", checkin: "", checkout: "", nota: "" });
   const [err, setErr] = useState<string | null>(null);
+  // Formulario espejo del anterior, pero para ABRIR un rango cerrado.
+  const [abrir, setAbrir] = useState({ roomId: "", checkin: "", checkout: "" });
+  const [errAbrir, setErrAbrir] = useState<string | null>(null);
+  const [okAbrir, setOkAbrir] = useState<string | null>(null);
   // Modal de reserva abierto desde una celda del calendario.
   const [modal, setModal] = useState<{
     reserva: BookingView | null;
@@ -112,6 +116,33 @@ export function CalendarioClient({
       setErr(data.error ?? "No se pudo bloquear.");
     }
   }
+  async function abrirRango(e: React.FormEvent) {
+    e.preventDefault();
+    setErrAbrir(null);
+    setOkAbrir(null);
+    const res = await fetch("/api/admin/bloqueos", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(abrir),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.ok) {
+      const cuartos = abrir.roomId
+        ? `el cuarto ${numeroDe(abrir.roomId)}`
+        : "todos los cuartos";
+      setOkAbrir(
+        `Listo: se abrieron ${data.abiertos} bloqueo(s) en ${cuartos}.` +
+          (data.ota
+            ? ` ${data.ota} quedaron cerrados porque los puso un canal (Booking/Expedia).`
+            : ""),
+      );
+      setAbrir({ roomId: "", checkin: "", checkout: "" });
+      cargar(cal.year, cal.month);
+    } else {
+      setErrAbrir(data.error ?? "No se pudieron abrir las fechas.");
+    }
+  }
+
   async function quitar(id: string) {
     const res = await fetch(`/api/admin/bloqueos/${id}`, { method: "DELETE" });
     if (res.ok) cargar(cal.year, cal.month);
@@ -239,7 +270,53 @@ export function CalendarioClient({
           </div>
         </form>
 
-        <div className="k-card p-5 sm:p-6">
+        {/* Abrir fechas: el reverso exacto del formulario de arriba. Sin esto
+            solo se podía reabrir día por día desde la cuadrícula, inservible
+            cuando se cerró una temporada entera. */}
+        <form onSubmit={abrirRango} className="k-card p-5 sm:p-6">
+          <h2 className="k-section-title">
+            <Unlock className="size-4 text-[var(--k-sage)]" /> Abrir fechas
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Quita los bloqueos de un rango y el cuarto vuelve a venderse. Si un bloqueo
+            sobresale del rango, solo se recorta la parte que abres.
+          </p>
+          <div className="mt-4 grid gap-3">
+            <div className="grid gap-1.5">
+              <Label htmlFor="a-room">Cuarto</Label>
+              <select
+                id="a-room"
+                value={abrir.roomId}
+                onChange={(e) => setAbrir((b) => ({ ...b, roomId: e.target.value }))}
+                className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+              >
+                <option value="">Todos los cuartos</option>
+                {cal.rooms.map((r) => (
+                  <option key={r.id} value={r.id}>{r.numero} · {r.tipo}</option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-1.5">
+                <Label htmlFor="a-in">Desde</Label>
+                <Input id="a-in" type="date" required value={abrir.checkin} onChange={(e) => setAbrir((b) => ({ ...b, checkin: e.target.value }))} />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="a-out">Hasta</Label>
+                <Input id="a-out" type="date" required value={abrir.checkout} onChange={(e) => setAbrir((b) => ({ ...b, checkout: e.target.value }))} />
+              </div>
+            </div>
+            {errAbrir && <p className="text-sm text-destructive">{errAbrir}</p>}
+            {okAbrir && (
+              <p className="rounded-lg bg-accent px-3 py-2 text-sm text-accent-foreground">
+                {okAbrir}
+              </p>
+            )}
+            <Button type="submit" variant="secondary" className="w-full">Abrir fechas</Button>
+          </div>
+        </form>
+
+        <div className="k-card p-5 sm:p-6 lg:col-span-2">
           <h2 className="k-section-title">Bloqueos del mes</h2>
           {cal.bloqueos.length === 0 ? (
             <p className="mt-3 text-sm text-muted-foreground">No hay bloqueos este mes.</p>
@@ -275,6 +352,7 @@ export function CalendarioClient({
         open={modal !== null}
         onClose={() => setModal(null)}
         tipos={tipos}
+        cuartos={cal.rooms}
         reserva={modal?.reserva ?? null}
         defaults={modal?.defaults ?? null}
         onSaved={() => {

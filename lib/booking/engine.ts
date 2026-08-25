@@ -117,6 +117,12 @@ export function validateRange(p: AvailabilityParams): string | null {
 export async function occupiedRoomIds(
   checkin: string,
   checkout: string,
+  /**
+   * Reserva que NO cuenta como ocupante. Se usa al EDITAR: una reserva siempre
+   * se ocupa a sí misma, así que sin esto cambiarle el cuarto o las fechas
+   * chocaría contra su propia fila y el panel diría "ya está ocupado".
+   */
+  excluirBookingId?: string,
 ): Promise<Set<string>> {
   const [bookingRows, blockRows] = await Promise.all([
     db
@@ -126,6 +132,9 @@ export async function occupiedRoomIds(
         and(
           ne(bookings.estado, "cancelada"),
           ne(bookings.estado, "expirada"),
+          excluirBookingId && UUID_RE.test(excluirBookingId)
+            ? ne(bookings.id, excluirBookingId)
+            : undefined,
           lt(bookings.checkin, checkout), // booking empieza antes del checkout buscado
           gt(bookings.checkout, checkin), // booking termina después del checkin buscado
           // No contar holds de pago vencidos:
@@ -492,16 +501,30 @@ export async function countActiveRooms(): Promise<number> {
   return rows.length;
 }
 
-/** Cuartos físicos activos con su tipo (para selects del panel). */
+/**
+ * Cuartos físicos activos con su tipo, para los desplegables del panel.
+ *
+ * Se quedan fuera los que cuelgan de un tipo interno o retirado
+ * (`HIDDEN_SLUGS`): el cuarto de prueba de $10 y las categorías viejas. Son
+ * cuartos que no se venden, y ofrecerlos en "cambiar de habitación" solo sirve
+ * para mudar a un huésped real a un cuarto que no existe.
+ */
 export async function listRooms(): Promise<{ id: string; numero: string; tipo: string }[]> {
   await ensureDb();
   const rows = await db
-    .select({ id: rooms.id, numero: rooms.numero, tipo: roomTypes.nombre })
+    .select({
+      id: rooms.id,
+      numero: rooms.numero,
+      tipo: roomTypes.nombre,
+      slug: roomTypes.slug,
+    })
     .from(rooms)
     .leftJoin(roomTypes, eq(rooms.roomTypeId, roomTypes.id))
     .where(eq(rooms.activa, true))
     .orderBy(asc(rooms.numero));
-  return rows.map((r) => ({ id: r.id, numero: r.numero, tipo: r.tipo ?? "—" }));
+  return rows
+    .filter((r) => !r.slug || !HIDDEN_SLUGS.has(r.slug))
+    .map((r) => ({ id: r.id, numero: r.numero, tipo: r.tipo ?? "—" }));
 }
 
 /** Lista de reservas (con cuarto y tipo) para el panel /admin. */
@@ -612,6 +635,15 @@ export async function createManualBooking(input: {
   return { ok: true, id: created.id, estado: "confirmada", total };
 }
 
+/** Estados de reserva que el panel acepta. */
+const ESTADOS_RESERVA = ["pendiente", "confirmada", "cancelada", "expirada"];
+/** Estados de pago que el panel acepta (los mismos que pinta el badge). */
+const ESTADOS_PAGO = ["no_iniciado", "iniciado", "parcial", "pagado", "rechazado"];
+/** Un estado que NO ocupa inventario: la reserva no le quita el cuarto a nadie. */
+function liberaCuarto(estado: string): boolean {
+  return estado === "cancelada" || estado === "expirada";
+}
+
 /** Actualiza los campos editables de una reserva desde el panel. */
 export async function updateBooking(
   id: string,
@@ -625,6 +657,9 @@ export async function updateBooking(
     total?: number;
     montoPagado?: number;
     estado?: string;
+    estadoPago?: string;
+    /** Cambio de habitación: id del cuarto físico al que se muda la reserva. */
+    roomId?: string;
     notas?: string;
     nosConociste?: string;
   },
@@ -633,51 +668,115 @@ export async function updateBooking(
   const [b] = await db.select().from(bookings).where(eq(bookings.id, id)).limit(1);
   if (!b) return { ok: false, error: "Reserva no encontrada." };
 
-  if (
-    changes.estado != null &&
-    !["pendiente", "confirmada", "cancelada", "expirada"].includes(changes.estado)
-  )
+  if (changes.estado != null && !ESTADOS_RESERVA.includes(changes.estado))
     return { ok: false, error: "Estado inválido." };
+  if (changes.estadoPago != null && !ESTADOS_PAGO.includes(changes.estadoPago))
+    return { ok: false, error: "Estado de pago inválido." };
 
   const checkin = changes.checkin ?? b.checkin;
   const checkout = changes.checkout ?? b.checkout;
   if ((changes.checkin || changes.checkout) && calcNights(checkin, checkout) < 1)
     return { ok: false, error: "La salida debe ser posterior a la llegada." };
 
+  const huespedes =
+    changes.huespedes != null ? Math.max(1, Math.floor(changes.huespedes)) : b.huespedes;
+  const estado = changes.estado ?? b.estado;
+
+  // ── Cambio de habitación / de fechas ──────────────────────
+  // Mover una reserva es lo mismo que crear una: hay que comprobar que el
+  // cuarto destino esté libre en el rango destino, o el panel abre la puerta a
+  // la sobreventa que el motor público sí cuida.
+  const roomIdDestino =
+    changes.roomId && changes.roomId !== b.roomId ? changes.roomId : b.roomId;
+  const cambiaCuarto = roomIdDestino !== b.roomId;
+  const cambianFechas = checkin !== b.checkin || checkout !== b.checkout;
+  const vuelveAOcupar = liberaCuarto(b.estado) && !liberaCuarto(estado);
+
+  if (cambiaCuarto && !UUID_RE.test(roomIdDestino))
+    return { ok: false, error: "Cuarto no válido." };
+
+  if (cambiaCuarto || cambianFechas || vuelveAOcupar) {
+    const [destino] = await db
+      .select({ room: rooms, tipo: roomTypes })
+      .from(rooms)
+      .leftJoin(roomTypes, eq(rooms.roomTypeId, roomTypes.id))
+      .where(eq(rooms.id, roomIdDestino))
+      .limit(1);
+    if (!destino?.room) return { ok: false, error: "Cuarto no encontrado." };
+    if (cambiaCuarto && !destino.room.activa)
+      return { ok: false, error: `El cuarto ${destino.room.numero} está desactivado.` };
+    if (destino.tipo && destino.tipo.capacidad < huespedes)
+      return {
+        ok: false,
+        error: `El cuarto ${destino.room.numero} (${destino.tipo.nombre}) admite hasta ${destino.tipo.capacidad} huéspedes.`,
+      };
+    // Una reserva cancelada no le quita el cuarto a nadie: solo se comprueba
+    // el choque si de verdad va a ocupar inventario.
+    if (!liberaCuarto(estado)) {
+      const ocupados = await occupiedRoomIds(checkin, checkout, id);
+      if (ocupados.has(roomIdDestino))
+        return {
+          ok: false,
+          error: `El cuarto ${destino.room.numero} ya está ocupado o bloqueado del ${checkin} al ${checkout}.`,
+        };
+    }
+  }
+
   const total =
     changes.total != null ? Math.max(0, Math.round(changes.total)) : b.total;
-  const montoPagado =
+  let montoPagado =
     changes.montoPagado != null
       ? Math.max(0, Math.round(changes.montoPagado))
       : b.montoPagado;
 
-  const set: Partial<typeof bookings.$inferInsert> = {
-    total,
-    montoPagado,
-    saldoPendiente: Math.max(0, total - montoPagado),
-  };
-  // Si cambia el pago de una reserva no-online, refresca el badge de pago.
-  if (changes.montoPagado != null && b.estadoPago !== "iniciado")
-    set.estadoPago =
+  // ── Estado del pago ───────────────────────────────────────
+  // El dueño manda: si marca la reserva como "Pagada", el dinero cobrado se
+  // pone al día solo (cobró en efectivo, por transferencia o en el mostrador,
+  // fuera de Mercado Pago). Antes esto era imposible en un caso muy común: una
+  // reserva con `estado_pago = 'iniciado'` (el huésped abrió el checkout y
+  // pagó por otro lado) se quedaba en "Esperando pago" para siempre, porque el
+  // recálculo se saltaba justo ese estado.
+  let estadoPago = b.estadoPago;
+  if (changes.estadoPago != null) {
+    estadoPago = changes.estadoPago;
+    if (estadoPago === "pagado" && changes.montoPagado == null) montoPagado = total;
+    if (estadoPago === "no_iniciado" && changes.montoPagado == null) montoPagado = 0;
+  } else if (changes.montoPagado != null || changes.total != null) {
+    estadoPago =
       montoPagado >= total && total > 0
         ? "pagado"
         : montoPagado > 0
           ? "parcial"
-          : "no_iniciado";
+          : // Un cobro en línea a medias sigue siendo "esperando pago";
+            // ponerlo en "sin pago" borraría que el huésped ya arrancó.
+            b.estadoPago === "iniciado"
+            ? "iniciado"
+            : "no_iniciado";
+  }
+
+  const set: Partial<typeof bookings.$inferInsert> = {
+    total,
+    montoPagado,
+    estadoPago,
+    saldoPendiente: Math.max(0, total - montoPagado),
+  };
+  // Cobrada del todo: ya no hay hold de pago que pueda expirar y soltar el cuarto.
+  if (estadoPago === "pagado") set.expiraEn = null;
+  if (cambiaCuarto) set.roomId = roomIdDestino;
   if (changes.nombre != null) set.nombre = changes.nombre.trim();
   if (changes.whatsapp != null) set.whatsapp = changes.whatsapp.trim();
   if (changes.email !== undefined)
     set.email = changes.email ? String(changes.email).trim() : null;
   if (changes.checkin) set.checkin = checkin;
   if (changes.checkout) set.checkout = checkout;
-  if (changes.huespedes != null) set.huespedes = Math.floor(changes.huespedes);
+  if (changes.huespedes != null) set.huespedes = huespedes;
   if (changes.estado) set.estado = changes.estado;
   if (changes.notas != null) set.notas = changes.notas.trim();
   if (changes.nosConociste != null)
     set.nosConociste = changes.nosConociste.trim().slice(0, 60);
 
   await db.update(bookings).set(set).where(eq(bookings.id, id));
-  // Las fechas o el estado pudieron cambiar → que Booking se entere.
+  // Las fechas, el cuarto o el estado pudieron cambiar → que Booking se entere.
   avisarBeds24((m) => m.reconciliarReserva(id));
   return { ok: true };
 }
@@ -1062,6 +1161,87 @@ export async function unblockDay(input: {
 
 // ── Notas CRM por huésped ───────────────────────────────────
 /** Mapa email → notas (para construir el CRM). */
+/**
+ * ABRE un rango completo de fechas: el reverso exacto de "Bloquear fechas".
+ *
+ * Quitar bloqueos día por día es inservible cuando se cerró un mes entero, así
+ * que aquí se recorta CUALQUIER bloqueo que toque `[checkin, checkout)`. Un
+ * bloqueo que sobresale del rango no se borra: se parte y sobreviven los trozos
+ * de fuera, igual que en `unblockDay`. Abrir de más sería una fuga hacia la
+ * sobreventa.
+ *
+ * `roomId` vacío = todos los cuartos del hotel.
+ *
+ * Los bloqueos de OTA no se tocan (los gobierna la sincronización del canal);
+ * si el rango solo tenía de esos, se avisa en vez de mentir con un "listo".
+ */
+export async function unblockRange(input: {
+  roomId?: string;
+  checkin: string;
+  checkout: string;
+}): Promise<{ ok: boolean; abiertos?: number; ota?: number; error?: string }> {
+  const roomId = input.roomId?.trim() || "";
+  if (roomId && !UUID_RE.test(roomId))
+    return { ok: false, error: "Elige un cuarto válido." };
+  if (
+    !isValidISODate(input.checkin) ||
+    !isValidISODate(input.checkout) ||
+    calcNights(input.checkin, input.checkout) < 1
+  )
+    return { ok: false, error: "Rango de fechas inválido." };
+
+  await ensureDb();
+  const solapan = await db
+    .select()
+    .from(blocks)
+    .where(
+      and(
+        roomId ? eq(blocks.roomId, roomId) : undefined,
+        lt(blocks.checkin, input.checkout),
+        gt(blocks.checkout, input.checkin),
+      ),
+    );
+
+  const ota = solapan.filter((b) => b.motivo === "ota").length;
+  const abribles = solapan.filter((b) => b.motivo !== "ota");
+  if (abribles.length === 0)
+    return {
+      ok: false,
+      error:
+        ota > 0
+          ? "En ese rango solo hay fechas cerradas por un canal (Booking/Expedia). Ábrelas en la extranet del canal, no aquí."
+          : "No hay fechas bloqueadas en ese rango.",
+    };
+
+  for (const bl of abribles) {
+    await db.delete(blocks).where(eq(blocks.id, bl.id));
+    avisarBeds24((m) => m.encolarBaja(bl.beds24BookingId));
+
+    // Lo que quedaba FUERA del rango sigue cerrado.
+    const trozos = [
+      { checkin: bl.checkin, checkout: input.checkin },
+      { checkin: input.checkout, checkout: bl.checkout },
+    ].filter((t) => t.checkin < t.checkout);
+
+    for (const t of trozos) {
+      const [creado] = await db
+        .insert(blocks)
+        .values({
+          roomId: bl.roomId,
+          checkin: t.checkin,
+          checkout: t.checkout,
+          motivo: bl.motivo,
+          origen: bl.origen,
+          nota: bl.nota,
+        })
+        .returning({ id: blocks.id });
+      avisarBeds24((m) => m.reconciliarBloqueo(creado.id));
+    }
+  }
+
+  return { ok: true, abiertos: abribles.length, ota };
+}
+
 export async function getGuestNotes(): Promise<Record<string, string>> {
   await ensureDb();
   const rows = await db.select().from(guestNotes);
@@ -1200,6 +1380,8 @@ export async function updateQuote(
     cliente?: string;
     telefono?: string;
     email?: string | null;
+    /** Cambio de habitación: slug del tipo al que se pasa la cotización. */
+    slug?: string;
     checkin?: string;
     checkout?: string;
     huespedes?: number;
@@ -1213,20 +1395,44 @@ export async function updateQuote(
   if (!q) return { ok: false, error: "Cotización no encontrada." };
   const checkin = changes.checkin ?? q.checkin;
   const checkout = changes.checkout ?? q.checkout;
+  const noches = calcNights(checkin, checkout);
+  const huespedes =
+    changes.huespedes != null ? Math.max(1, Math.floor(changes.huespedes)) : q.huespedes;
+
+  // Tipo destino: el nuevo si lo cambian, si no el que ya tenía (hace falta
+  // para validar la capacidad aunque solo cambien los huéspedes).
+  const [tipo] = changes.slug
+    ? await db.select().from(roomTypes).where(eq(roomTypes.slug, changes.slug)).limit(1)
+    : q.roomTypeId
+      ? await db.select().from(roomTypes).where(eq(roomTypes.id, q.roomTypeId)).limit(1)
+      : [];
+  if (changes.slug && !tipo)
+    return { ok: false, error: "Ese tipo de habitación no existe." };
+  if (tipo && tipo.capacidad < huespedes)
+    return { ok: false, error: "Ese tipo de habitación no admite tantos huéspedes." };
+
   const set: Partial<typeof quotes.$inferInsert> = {};
   if (changes.cliente != null) set.cliente = changes.cliente.trim();
   if (changes.telefono != null) set.telefono = changes.telefono.trim();
   if (changes.email !== undefined)
     set.email = changes.email ? String(changes.email).trim() : null;
   if (changes.checkin || changes.checkout) {
-    if (calcNights(checkin, checkout) < 1)
-      return { ok: false, error: "Las fechas no son válidas." };
+    if (noches < 1) return { ok: false, error: "Las fechas no son válidas." };
     set.checkin = checkin;
     set.checkout = checkout;
-    set.noches = calcNights(checkin, checkout);
+    set.noches = noches;
   }
-  if (changes.huespedes != null) set.huespedes = Math.floor(changes.huespedes);
+  if (changes.slug && tipo) {
+    set.roomTypeId = tipo.id;
+    // `quotes.slug` guarda el NOMBRE del tipo (es lo que se imprime en el PDF).
+    set.slug = tipo.nombre;
+  }
+  if (changes.huespedes != null) set.huespedes = huespedes;
   if (changes.precioTotal != null) set.precioTotal = Math.round(changes.precioTotal);
+  else if (changes.slug && tipo)
+    // Cambió de habitación sin tocar el precio: recalcular con la tarifa nueva,
+    // o la cotización saldría con el cuarto nuevo y el precio del viejo.
+    set.precioTotal = precioPorNoche(tipo, huespedes) * noches;
   if (changes.notas != null) set.notas = changes.notas.trim();
   if (changes.estado) set.estado = changes.estado;
   await db.update(quotes).set(set).where(eq(quotes.id, id));
@@ -1303,6 +1509,28 @@ export async function getRoomTypes(opts?: { includeHidden?: boolean }) {
   const activos = await db.select().from(rooms).where(eq(rooms.activa, true));
   const conInventario = new Set(activos.map((r) => r.roomTypeId));
   return rows.filter((t) => !HIDDEN_SLUGS.has(t.slug) && conInventario.has(t.id));
+}
+
+/**
+ * Tipos VENDIBLES, para los desplegables del panel.
+ *
+ * Fuera los internos y retirados (`HIDDEN_SLUGS`): el cuarto de prueba de $10 y
+ * las categorías viejas (Sencilla, Doble). `getRoomTypes` ordena por tarifa, así
+ * que el de prueba era el más barato y salía PRESELECCIONADO en "Nueva reserva":
+ * bastaba no tocar el desplegable para crear una reserva de $10.
+ *
+ * A diferencia de `getRoomTypes()` (sitio público), aquí NO se exige inventario:
+ * el panel sí debe poder cotizar una categoría real que hoy esté sin cuartos
+ * asignados, como la Matrimonial mientras Gersay reacomoda.
+ *
+ * El tipo de prueba sigue existiendo en la base y se sigue pudiendo reservar por
+ * link directo a `/reservar?tipo=prueba`, que es como se prueban cobros reales
+ * de Mercado Pago. Lo que se quitó es que aparezca en el catálogo del panel.
+ */
+export async function getRoomTypesPanel() {
+  await ensureDb();
+  const rows = await db.select().from(roomTypes).orderBy(roomTypes.tarifaBase);
+  return rows.filter((t) => !HIDDEN_SLUGS.has(t.slug));
 }
 
 export async function getRoomTypeBySlug(slug: string) {

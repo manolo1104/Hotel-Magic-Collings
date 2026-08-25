@@ -52,7 +52,7 @@ function doc(titulo: string, inner: string, forPrint?: boolean): string {
   @media print{.noprint{display:none}body{background:#fff;padding:0}.sheet{border:0}}
 </style></head><body>
 <div class="sheet">
-  <div class="hd"><img src="/correo/garza.png" alt="La garza de Magic Collinn"><div><h1>Hotel Magic Collinn</h1><p>Axtla &middot; Huasteca Potosina</p></div></div>
+  <div class="hd"><img src="${site.url}/correo/garza.png" alt="La garza de Magic Collinn"><div><h1>Hotel Magic Collinn</h1><p>Axtla &middot; Huasteca Potosina</p></div></div>
   <div class="bd">${inner}</div>
   <div class="ft">${site.address.street}, ${site.locality}, ${site.region} · WhatsApp ${site.phone} · ${site.email}<div class="mono">Reserva directa, sin intermediarios</div></div>
 </div>
@@ -61,11 +61,28 @@ ${printScript}
 </body></html>`;
 }
 
+/** Etiqueta del comprobante: nunca debe decir "confirmada" si está cancelada. */
+function tituloComprobante(b: BookingView): string {
+  if (b.estado === "cancelada") return "RESERVA CANCELADA";
+  if (b.estado === "expirada") return "RESERVA EXPIRADA";
+  if (b.estado === "pendiente") return "RESERVA PENDIENTE";
+  return "COMPROBANTE DE RESERVA";
+}
+
+function etiquetaPago(b: BookingView): string {
+  if (b.estadoPago === "pagado") return "Pagada por completo";
+  if (b.estadoPago === "parcial") return "Anticipo recibido";
+  if (b.estadoPago === "iniciado") return "Pago en proceso";
+  if (b.estadoPago === "rechazado") return "Pago rechazado";
+  return "Sin pago registrado";
+}
+
 export function bookingHtml(b: BookingView, opts?: { forPrint?: boolean }): string {
   const ref = b.id.slice(0, 8).toUpperCase();
   const saldo = b.saldoPendiente ?? Math.max(0, b.total - b.montoPagado);
+  const cancelada = b.estado === "cancelada" || b.estado === "expirada";
   const inner = `
-<div class="chip">COMPROBANTE DE RESERVA</div>
+<div class="chip"${cancelada ? ' style="background:#F7E2E2;color:#8C2D2D"' : ""}>${tituloComprobante(b)}</div>
 <h2 style="margin:14px 0 2px;font-size:22px">${b.nombre}</h2>
 <p style="margin:0;color:#6b6b63;font-size:13px">Reserva ${ref} · ${b.nombreTipo} · Cuarto ${b.numeroCuarto}</p>
 <table>
@@ -74,12 +91,16 @@ export function bookingHtml(b: BookingView, opts?: { forPrint?: boolean }): stri
   <tr><td class="k">Huéspedes</td><td class="v">${b.huespedes}</td></tr>
   <tr><td class="k">Contacto</td><td class="v">${b.whatsapp}${b.email ? " · " + b.email : ""}</td></tr>
   ${b.nosConociste ? `<tr><td class="k">Nos conoció por</td><td class="v">${b.nosConociste}</td></tr>` : ""}
-  <tr><td class="k">Pagado</td><td class="v">${mxn(b.montoPagado)}</td></tr>
-  <tr><td class="k">Saldo en el hotel</td><td class="v">${mxn(saldo)}</td></tr>
+  <tr><td class="k">Pagado</td><td class="v">${mxn(b.montoPagado)} · ${etiquetaPago(b)}</td></tr>
+  ${cancelada ? "" : `<tr><td class="k">Saldo en el hotel</td><td class="v">${mxn(saldo)}</td></tr>`}
   <tr class="tot"><td>Total de la estancia</td><td class="v">${mxn(b.total)}</td></tr>
 </table>
 ${b.notas ? `<p style="font-size:13px;color:#6b6b63;margin-top:8px"><strong>Notas:</strong> ${b.notas}</p>` : ""}
-<p style="font-size:13px;color:#6b6b63;margin-top:14px">${site.cancelacion}</p>`;
+<p style="font-size:13px;color:#6b6b63;margin-top:14px">${
+    cancelada
+      ? "Esta reserva ya no está vigente: el cuarto quedó libre. Si fue un error, escríbenos por WhatsApp."
+      : site.cancelacion
+  }</p>`;
   return doc(`Reserva ${ref}`, inner, opts?.forPrint);
 }
 

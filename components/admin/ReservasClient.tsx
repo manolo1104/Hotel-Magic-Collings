@@ -16,7 +16,11 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ReservationModal, type TipoOpcion } from "./ReservationModal";
+import {
+  ReservationModal,
+  type TipoOpcion,
+  type CuartoOpcion,
+} from "./ReservationModal";
 import type { BookingView } from "@/lib/booking/engine";
 
 function mxn(n: number | null) {
@@ -61,10 +65,12 @@ function badgePago(b: BookingView) {
 export function ReservasClient({
   initial,
   tipos,
+  cuartos,
   today,
 }: {
   initial: BookingView[];
   tipos: TipoOpcion[];
+  cuartos: CuartoOpcion[];
   today: string;
 }) {
   const router = useRouter();
@@ -247,6 +253,7 @@ export function ReservasClient({
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         tipos={tipos}
+        cuartos={cuartos}
         reserva={editando}
         onSaved={() => router.refresh()}
       />

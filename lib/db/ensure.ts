@@ -101,6 +101,9 @@ const DDL = [
     oculto_desde timestamp,
     updated_at timestamp NOT NULL DEFAULT now()
   )`,
+  // HUÉRFANAS desde el 24 ago 2026: la sección /admin/operaciones se retiró y
+  // ninguna consulta las lee. Se dejan creadas a propósito — en producción
+  // guardan el historial de limpieza y mantenimiento, y dropearlas lo borraría.
   `CREATE TABLE IF NOT EXISTS cleaning_log (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     room_id uuid NOT NULL REFERENCES rooms(id),

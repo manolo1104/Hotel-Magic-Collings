@@ -122,20 +122,41 @@ ${fila("Saldo a pagar en el hotel", mxn(datos.saldoPendiente))}
 `);
 }
 
+/**
+ * Cómo va el dinero de una reserva. El panel puede reenviar este mismo correo
+ * para una reserva creada a mano (sin un peso cobrado en línea), así que el
+ * texto NO puede dar por hecho que está pagada: decirle "pagaste un anticipo"
+ * a quien no ha pagado nada es peor que no mandar el correo.
+ */
+function estadoDinero(d: DatosCorreo): "pagada" | "anticipo" | "sin_pago" {
+  if (d.montoPagado > 0 && d.saldoPendiente <= 0) return "pagada";
+  if (d.montoPagado > 0) return "anticipo";
+  return "sin_pago";
+}
+
 /** Correo de confirmación para el HUÉSPED. */
 export function correoHuesped(datos: DatosCorreo): string {
+  const dinero = estadoDinero(datos);
+  const encabezado =
+    dinero === "pagada"
+      ? "está <strong>confirmada y pagada</strong>"
+      : dinero === "anticipo"
+        ? "está <strong>confirmada</strong> con anticipo"
+        : "está <strong>confirmada</strong>";
+  const detallePago =
+    dinero === "pagada"
+      ? "Tu estancia quedó pagada por completo. No tienes que pagar nada más al llegar."
+      : dinero === "anticipo"
+        ? `Pagaste un anticipo. El saldo de <strong>${mxn(datos.saldoPendiente)}</strong> se cubre directamente en el hotel al llegar (efectivo, tarjeta, transferencia u OXXO).`
+        : `El total de <strong>${mxn(datos.total)}</strong> se paga en el hotel al llegar (efectivo, tarjeta, transferencia u OXXO).`;
   const inner = `
 ${chip("Reserva confirmada")}
 <h1 style="font-family:${SERIF};font-size:26px;font-weight:600;margin:18px 0 6px;color:${TINTA};">¡Gracias, ${datos.nombre}!</h1>
 <p style="font-size:15px;line-height:1.65;color:#4a4d40;margin:0 0 4px;">
-Tu reserva en el Hotel Magic Collinn está <strong>confirmada y pagada</strong>. Tu número de reserva es
+Tu reserva en el Hotel Magic Collinn ${encabezado}. Tu número de reserva es
 <strong style="color:${TERRA};">${datos.ref}</strong>.</p>
 ${filaResumen(datos)}
-<p style="font-size:14px;line-height:1.65;color:#4a4d40;margin:0 0 18px;">
-${datos.saldoPendiente > 0
-  ? `Pagaste un anticipo. El saldo de <strong>${mxn(datos.saldoPendiente)}</strong> se cubre directamente en el hotel al llegar (efectivo, tarjeta, transferencia u OXXO).`
-  : `Tu estancia quedó pagada por completo. No tienes que pagar nada más al llegar.`}
-</p>
+<p style="font-size:14px;line-height:1.65;color:#4a4d40;margin:0 0 18px;">${detallePago}</p>
 <p style="font-size:14px;line-height:1.65;color:#4a4d40;margin:0 0 6px;">
 <strong>Cancelación:</strong> ${site.cancelacion}</p>
 <div style="margin-top:16px;">${ctaBoton(`https://wa.me/${site.whatsapp}`, "Escríbenos por WhatsApp")}</div>
@@ -146,12 +167,21 @@ ${datos.saldoPendiente > 0
   );
 }
 
-/** Aviso de nueva reserva pagada para el DUEÑO. */
+/** Aviso de nueva reserva para el DUEÑO. */
 export function correoDueno(datos: DatosCorreo): string {
+  const dinero = estadoDinero(datos);
+  // `modalidad` solo la llena el checkout en línea; en las reservas hechas a
+  // mano viene vacía y hay que leer el dinero real.
   const modalidadTxt =
-    datos.modalidad === "anticipo" ? "Anticipo 50%" : "Pago total";
+    dinero === "sin_pago"
+      ? "Sin pago en línea"
+      : dinero === "anticipo" || datos.modalidad === "anticipo"
+        ? `Anticipo de ${mxn(datos.montoPagado)}`
+        : "Pago total";
+  const titulo =
+    dinero === "sin_pago" ? "Reserva sin pago en línea" : "Nueva reserva pagada";
   const inner = `
-${chip("Nueva reserva pagada", "terra")}
+${chip(titulo, "terra")}
 <h1 style="font-family:${SERIF};font-size:23px;font-weight:600;margin:18px 0 6px;color:${TINTA};">${datos.nombre} · ${datos.nombreTipo}</h1>
 <p style="font-size:14px;line-height:1.6;color:#4a4d40;margin:0;">Reserva <strong>${datos.ref}</strong> · Cuarto asignado <strong>${datos.numeroCuarto}</strong> · ${modalidadTxt}</p>
 ${filaResumen(datos)}
@@ -161,4 +191,53 @@ ${fila("Correo", datos.email ?? "—")}
 ${datos.nosConociste ? fila("Nos conoció por", datos.nosConociste) : ""}
 </table>`;
   return layout(`Nueva reserva pagada: ${datos.nombre} (${datos.ref})`, inner);
+}
+
+/**
+ * Cotización para el CLIENTE.
+ *
+ * Antes se le mandaba el mismo HTML del comprobante imprimible
+ * (`quoteHtml`), que está pensado para el navegador: encabezado en flexbox,
+ * `@media print`, un botón "Imprimir" con `onclick` y la garza en ruta
+ * relativa. En un cliente de correo eso llega con el logo roto y un botón que
+ * no hace nada. Esta plantilla usa el mismo layout de tablas que el resto de
+ * los correos del hotel.
+ */
+export function correoCotizacion(datos: {
+  ref: string;
+  cliente: string;
+  nombreTipo: string;
+  checkin: string;
+  checkout: string;
+  noches: number;
+  huespedes: number;
+  precioTotal: number;
+  notas: string | null;
+}): string {
+  const inner = `
+${chip("Cotización", "rio")}
+<h1 style="font-family:${SERIF};font-size:26px;font-weight:600;margin:18px 0 6px;color:${TINTA};">Hola, ${datos.cliente}</h1>
+<p style="font-size:15px;line-height:1.65;color:#4a4d40;margin:0 0 4px;">
+Esta es la cotización que preparamos para tu estancia en el Hotel Magic Collinn. Tu folio es
+<strong style="color:${TERRA};">${datos.ref}</strong>.</p>
+${tablaResumen(`
+${fila("Habitación", datos.nombreTipo)}
+${fila("Llegada", fmtFecha(datos.checkin) + ` · desde ${site.checkIn} h`)}
+${fila("Salida", fmtFecha(datos.checkout) + ` · antes de ${site.checkOut} h`)}
+${fila("Noches", String(datos.noches))}
+${fila("Huéspedes", String(datos.huespedes))}
+${fila("Precio total", mxn(datos.precioTotal), true)}
+`)}
+${
+  datos.notas
+    ? `<p style="font-size:14px;line-height:1.65;color:#4a4d40;margin:0 0 18px;">${datos.notas}</p>`
+    : ""
+}
+<p style="font-size:14px;line-height:1.65;color:#4a4d40;margin:0 0 18px;">
+Esta cotización no aparta el cuarto: la disponibilidad se confirma al reservar. Escríbenos y lo dejamos listo.</p>
+<p style="font-size:14px;line-height:1.65;color:#4a4d40;margin:0 0 6px;">
+<strong>Cancelación:</strong> ${site.cancelacion}</p>
+<div style="margin-top:16px;">${ctaBoton(`https://wa.me/${site.whatsapp}`, "Reservar por WhatsApp")}</div>
+<p style="font-family:${SERIF};font-style:italic;font-size:14px;line-height:1.6;color:${MUTED};margin:24px 0 0;">Te esperamos en el corazón de Axtla de Terrazas.</p>`;
+  return layout(`Tu cotización ${datos.ref} en Magic Collinn`, inner);
 }

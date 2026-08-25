@@ -52,6 +52,10 @@ export async function enviarCorreosReserva(b: Booking): Promise<void> {
     { filename: "reserva-magic-collinn.ics", content: Buffer.from(ics, "utf-8") },
   ];
 
+  // El panel puede reenviar esto para una reserva hecha a mano y sin cobrar:
+  // el asunto tampoco debe prometer un pago que no existe.
+  const pagada = datos.montoPagado > 0;
+
   // Correo al huésped (solo si dejó correo)
   if (b.email) {
     await enviarEmail({
@@ -70,7 +74,7 @@ export async function enviarCorreosReserva(b: Booking): Promise<void> {
     .filter(Boolean);
   await enviarEmail({
     to: duenos,
-    subject: `Nueva reserva pagada — ${b.nombre} (REF ${ref})`,
+    subject: `${pagada ? "Nueva reserva pagada" : "Nueva reserva sin pago en línea"} — ${b.nombre} (REF ${ref})`,
     html: correoDueno(datos),
     attachments,
   });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import {
   Dialog,
@@ -11,19 +11,28 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { NOS_CONOCISTE_OPCIONES } from "@/lib/booking/types";
 import type { BookingView } from "@/lib/booking/engine";
 
 export interface TipoOpcion {
+  id: string;
   slug: string;
   nombre: string;
   capacidad: number;
+}
+
+/** Cuarto físico del hotel, para el selector de cambio de habitación. */
+export interface CuartoOpcion {
+  id: string;
+  numero: string;
+  tipo: string;
 }
 
 interface Props {
   open: boolean;
   onClose: () => void;
   tipos: TipoOpcion[];
+  /** Cuartos físicos activos: sin esto no se puede cambiar de habitación. */
+  cuartos?: CuartoOpcion[];
   reserva?: BookingView | null;
   onSaved: () => void;
   /** Precarga al crear desde el calendario: día clicado y cuarto de esa fila. */
@@ -48,12 +57,12 @@ const VACIO = {
   total: "",
   montoPagado: "",
   notas: "",
-  origen: "manual",
-  nosConociste: "",
   estado: "confirmada",
+  estadoPago: "no_iniciado",
+  roomId: "",
 };
 
-export function ReservationModal({ open, onClose, tipos, reserva, onSaved, defaults }: Props) {
+export function ReservationModal({ open, onClose, tipos, cuartos = [], reserva, onSaved, defaults }: Props) {
   const [form, setForm] = useState({ ...VACIO });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,9 +83,9 @@ export function ReservationModal({ open, onClose, tipos, reserva, onSaved, defau
         total: String(reserva.total),
         montoPagado: String(reserva.montoPagado ?? 0),
         notas: reserva.notas ?? "",
-        origen: reserva.origen ?? "manual",
-        nosConociste: reserva.nosConociste ?? "",
         estado: reserva.estado,
+        estadoPago: reserva.estadoPago ?? "no_iniciado",
+        roomId: reserva.roomId,
       });
     } else {
       setForm({
@@ -91,6 +100,26 @@ export function ReservationModal({ open, onClose, tipos, reserva, onSaved, defau
   function set(k: keyof typeof form, v: string) {
     setForm((f) => ({ ...f, [k]: v }));
   }
+
+  /**
+   * Cuartos que ofrece el desplegable al editar.
+   *
+   * `cuartos` ya no trae los internos ni los de categorías retiradas. Si la
+   * reserva que se está editando vive justo en uno de esos, hay que añadirlo o
+   * el desplegable enseñaría el PRIMER cuarto de la lista como si fuera el suyo
+   * — y el dueño creería que el huésped está en un cuarto donde no está.
+   */
+  const opcionesCuartos = useMemo(() => {
+    if (!reserva || cuartos.some((c) => c.id === reserva.roomId)) return cuartos;
+    return [
+      {
+        id: reserva.roomId,
+        numero: reserva.numeroCuarto,
+        tipo: `${reserva.nombreTipo} · retirado`,
+      },
+      ...cuartos,
+    ];
+  }, [cuartos, reserva]);
 
   async function guardar(e: React.FormEvent) {
     e.preventDefault();
@@ -111,14 +140,20 @@ export function ReservationModal({ open, onClose, tipos, reserva, onSaved, defau
         total: form.total === "" ? undefined : Number(form.total),
         montoPagado: form.montoPagado === "" ? undefined : Number(form.montoPagado),
         notas: form.notas,
-        nosConociste: form.nosConociste,
       };
       const payload = reserva
-        ? { ...base, estado: form.estado }
+        ? {
+            ...base,
+            estado: form.estado,
+            estadoPago: form.estadoPago,
+            // Cambio de habitación: el motor comprueba que el cuarto destino
+            // esté libre en esas fechas antes de mover la reserva.
+            roomId: form.roomId,
+          }
         : {
             ...base,
             slug: form.slug,
-            origen: form.origen,
+            origen: "manual",
             // Solo vale si el tipo elegido sigue siendo el del cuarto clicado;
             // si el dueño lo cambió, el motor lo ignora y busca uno libre.
             ...(defaults?.roomId && form.slug === defaults.slug
@@ -179,38 +214,44 @@ export function ReservationModal({ open, onClose, tipos, reserva, onSaved, defau
             </div>
           </div>
 
-          {!editando && (
-            <div className="grid grid-cols-2 gap-3">
+          {!editando ? (
+            <div className="grid gap-1.5">
+              <Label htmlFor="m-tipo">Habitación</Label>
+              <select
+                id="m-tipo"
+                value={form.slug}
+                onChange={(e) => set("slug", e.target.value)}
+                className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+              >
+                {tipos.map((t) => (
+                  <option key={t.slug} value={t.slug}>
+                    {t.nombre} (hasta {t.capacidad})
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            opcionesCuartos.length > 0 && (
               <div className="grid gap-1.5">
-                <Label htmlFor="m-tipo">Habitación</Label>
+                <Label htmlFor="m-cuarto">Habitación</Label>
                 <select
-                  id="m-tipo"
-                  value={form.slug}
-                  onChange={(e) => set("slug", e.target.value)}
+                  id="m-cuarto"
+                  value={form.roomId}
+                  onChange={(e) => set("roomId", e.target.value)}
                   className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
                 >
-                  {tipos.map((t) => (
-                    <option key={t.slug} value={t.slug}>
-                      {t.nombre} (hasta {t.capacidad})
+                  {opcionesCuartos.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.numero} · {c.tipo}
                     </option>
                   ))}
                 </select>
+                <p className="text-[11px] text-muted-foreground">
+                  Cambia de cuarto al huésped. Solo se guarda si el cuarto está libre en
+                  esas fechas; el precio no se recalcula solo.
+                </p>
               </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="m-origen">Origen</Label>
-                <select
-                  id="m-origen"
-                  value={form.origen}
-                  onChange={(e) => set("origen", e.target.value)}
-                  className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
-                >
-                  <option value="manual">Manual</option>
-                  <option value="whatsapp">WhatsApp</option>
-                  <option value="booking">Booking</option>
-                  <option value="expedia">Expedia</option>
-                </select>
-              </div>
-            </div>
+            )
           )}
 
           <div className="grid grid-cols-3 gap-3">
@@ -240,37 +281,43 @@ export function ReservationModal({ open, onClose, tipos, reserva, onSaved, defau
           </div>
 
           {editando && (
-            <div className="grid gap-1.5">
-              <Label htmlFor="m-estado">Estado</Label>
-              <select
-                id="m-estado"
-                value={form.estado}
-                onChange={(e) => set("estado", e.target.value)}
-                className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
-              >
-                <option value="confirmada">Confirmada</option>
-                <option value="pendiente">Pendiente</option>
-                <option value="cancelada">Cancelada</option>
-              </select>
-            </div>
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="grid gap-1.5">
+                  <Label htmlFor="m-estado">Estado de la reserva</Label>
+                  <select
+                    id="m-estado"
+                    value={form.estado}
+                    onChange={(e) => set("estado", e.target.value)}
+                    className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+                  >
+                    <option value="confirmada">Confirmada</option>
+                    <option value="pendiente">Pendiente</option>
+                    <option value="cancelada">Cancelada</option>
+                  </select>
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="m-pago">Estado del pago</Label>
+                  <select
+                    id="m-pago"
+                    value={form.estadoPago}
+                    onChange={(e) => set("estadoPago", e.target.value)}
+                    className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+                  >
+                    <option value="no_iniciado">Sin pago</option>
+                    <option value="iniciado">Esperando pago en línea</option>
+                    <option value="parcial">Anticipo pagado</option>
+                    <option value="pagado">Pagada</option>
+                    <option value="rechazado">Pago rechazado</option>
+                  </select>
+                </div>
+              </div>
+              <p className="-mt-2 text-[11px] text-muted-foreground">
+                Si marcas <strong>Pagada</strong> sin tocar el monto, se registra el total
+                como cobrado. Al <strong>cancelar</strong>, el cuarto queda libre de inmediato.
+              </p>
+            </>
           )}
-
-          <div className="grid gap-1.5">
-            <Label htmlFor="m-conociste">¿De dónde nos conoció?</Label>
-            <select
-              id="m-conociste"
-              value={form.nosConociste}
-              onChange={(e) => set("nosConociste", e.target.value)}
-              className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
-            >
-              <option value="">Sin dato</option>
-              {NOS_CONOCISTE_OPCIONES.map((op) => (
-                <option key={op} value={op}>
-                  {op}
-                </option>
-              ))}
-            </select>
-          </div>
 
           <div className="grid gap-1.5">
             <Label htmlFor="m-notas">Notas internas</Label>
