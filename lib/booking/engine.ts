@@ -587,6 +587,14 @@ export async function createManualBooking(input: {
     .select()
     .from(rooms)
     .where(and(eq(rooms.roomTypeId, tipo.id), eq(rooms.activa, true)));
+  // Sin cuartos asignados NUNCA va a haber uno libre, y decir "no hay libres en
+  // esas fechas" manda al dueño a buscar un choque que no existe. Le pasa a la
+  // Matrimonial (categoría real, todavía sin cuartos) y a las retiradas.
+  if (typeRooms.length === 0)
+    return {
+      ok: false,
+      error: `"${tipo.nombre}" no tiene ningún cuarto activo asignado, así que no se puede reservar en ninguna fecha. Asígnale cuartos o elige otra categoría.`,
+    };
   const occupied = await occupiedRoomIds(input.checkin, input.checkout);
   const preferido =
     input.roomId && typeRooms.find((r) => r.id === input.roomId && !occupied.has(r.id));
