@@ -4,7 +4,7 @@
 // inventario a Kora sustituyendo solo la fuente de datos (no la UI).
 // Patrón de lógica inspirado en mi-hotel/lib/booking.ts (referencia).
 // ============================================================
-import { and, eq, gt, lt, lte, ne, or, isNull, sql, desc, asc } from "drizzle-orm";
+import { and, eq, gt, gte, lt, lte, ne, or, isNull, sql, desc, asc } from "drizzle-orm";
 import { db } from "../db";
 import { ensureDb } from "../db/ensure";
 import { roomTypes, rooms, bookings, blocks, guestNotes, quotes } from "../db/schema";
@@ -878,13 +878,14 @@ export async function getCalendarMonth(
   const days: string[] = [];
   for (let d = 1; d <= lastDay; d++) days.push(`${year}-${pad2(month)}-${pad2(d)}`);
 
-  const [roomsRows, bookingRows, blockRows] = await Promise.all([
+  const [roomsTodos, bookingRows, blockRows] = await Promise.all([
     db
       .select({
         id: rooms.id,
         numero: rooms.numero,
         tipo: roomTypes.nombre,
         tarifa: roomTypes.tarifaBase,
+        slug: roomTypes.slug,
       })
       .from(rooms)
       .leftJoin(roomTypes, eq(rooms.roomTypeId, roomTypes.id))
@@ -921,6 +922,10 @@ export async function getCalendarMonth(
       .from(blocks)
       .where(and(lt(blocks.checkin, afterLast), gt(blocks.checkout, first))),
   ]);
+
+  // Fuera los cuartos internos o de categorías retiradas: la rejilla es la
+  // vista de lo que se VENDE, y su desplegable alimenta "Bloquear fechas".
+  const roomsRows = roomsTodos.filter((r) => !r.slug || !HIDDEN_SLUGS.has(r.slug));
 
   const grid: CalendarData["grid"] = {};
   for (const r of roomsRows) {
@@ -1029,7 +1034,7 @@ export async function blockDates(input: {
   checkout: string;
   motivo?: string;
   nota?: string;
-}): Promise<{ ok: boolean; error?: string }> {
+}): Promise<{ ok: boolean; yaEstaba?: boolean; error?: string }> {
   if (!UUID_RE.test(input.roomId))
     return { ok: false, error: "Elige un cuarto válido." };
   await ensureDb();
@@ -1045,6 +1050,23 @@ export async function blockDates(input: {
     .where(eq(rooms.id, input.roomId))
     .limit(1);
   if (!room) return { ok: false, error: "Cuarto no encontrado." };
+
+  // ¿Ya estaba cerrado ese rango completo? Sin esto, repetir el formulario
+  // creaba filas idénticas: pasó de verdad, cuatro veces seguidas, porque el
+  // panel no daba ninguna señal de que el bloqueo hubiera entrado.
+  const yaCubren = await db
+    .select({ id: blocks.id })
+    .from(blocks)
+    .where(
+      and(
+        eq(blocks.roomId, input.roomId),
+        lte(blocks.checkin, input.checkin),
+        gte(blocks.checkout, input.checkout),
+      ),
+    )
+    .limit(1);
+  if (yaCubren.length > 0) return { ok: true, yaEstaba: true };
+
   const [creado] = await db
     .insert(blocks)
     .values({

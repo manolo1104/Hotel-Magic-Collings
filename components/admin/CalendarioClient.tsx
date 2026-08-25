@@ -15,6 +15,33 @@ const MESES = [
   "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
 ];
 
+function restarDia(iso: string): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d - 1));
+  return dt.toISOString().slice(0, 10);
+}
+function bonita(iso: string): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  return `${d} de ${MESES[m - 1].toLowerCase()} ${y}`;
+}
+function noches(desde: string, hasta: string): number {
+  return Math.round(
+    (Date.parse(`${hasta}T00:00:00Z`) - Date.parse(`${desde}T00:00:00Z`)) / 86400000,
+  );
+}
+/**
+ * Qué noches se cierran de verdad. Los rangos son `[desde, hasta)`, igual que un
+ * check-in/check-out: la fecha de "Hasta" NO se cierra. Un dueño lee "hasta el
+ * 31 de diciembre" como diciembre incluido, así que hay que decírselo antes de
+ * que le dé al botón, no después.
+ */
+function resumenRango(desde: string, hasta: string): string | null {
+  if (!desde || !hasta) return null;
+  const n = noches(desde, hasta);
+  if (n < 1) return null;
+  return `${n} ${n === 1 ? "noche" : "noches"}: del ${bonita(desde)} al ${bonita(restarDia(hasta))}. El ${bonita(hasta)} queda libre.`;
+}
+
 export function CalendarioClient({
   initialCalendar,
   initialGantt,
@@ -35,6 +62,7 @@ export function CalendarioClient({
   const [loading, setLoading] = useState(false);
   const [bloq, setBloq] = useState({ roomId: "", checkin: "", checkout: "", nota: "" });
   const [err, setErr] = useState<string | null>(null);
+  const [okBloq, setOkBloq] = useState<string | null>(null);
   // Formulario espejo del anterior, pero para ABRIR un rango cerrado.
   const [abrir, setAbrir] = useState({ roomId: "", checkin: "", checkout: "" });
   const [errAbrir, setErrAbrir] = useState<string | null>(null);
@@ -103,6 +131,7 @@ export function CalendarioClient({
   async function crearBloqueo(e: React.FormEvent) {
     e.preventDefault();
     setErr(null);
+    setOkBloq(null);
     const res = await fetch("/api/admin/bloqueos", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -110,8 +139,20 @@ export function CalendarioClient({
     });
     const data = await res.json();
     if (res.ok && data.ok) {
+      const cuarto = numeroDe(bloq.roomId);
+      const detalle = resumenRango(bloq.checkin, bloq.checkout);
+      setOkBloq(
+        data.yaEstaba
+          ? `El cuarto ${cuarto} YA estaba cerrado en esas fechas. No se creó otro bloqueo.`
+          : `Listo: el cuarto ${cuarto} queda cerrado. ${detalle ?? ""}`,
+      );
+      // Saltar al mes donde EMPIEZA el bloqueo. Sin esto el calendario se
+      // quedaba en el mes de hoy y, si el bloqueo era a futuro, no se veía
+      // nada: parecía que el botón no había hecho nada.
+      const [y, m] = bloq.checkin.split("-").map(Number);
       setBloq({ roomId: "", checkin: "", checkout: "", nota: "" });
-      cargar(cal.year, cal.month);
+      if (y && m) cargar(y, m);
+      else cargar(cal.year, cal.month);
     } else {
       setErr(data.error ?? "No se pudo bloquear.");
     }
@@ -136,8 +177,10 @@ export function CalendarioClient({
             ? ` ${data.ota} quedaron cerrados porque los puso un canal (Booking/Expedia).`
             : ""),
       );
+      const [y, m] = abrir.checkin.split("-").map(Number);
       setAbrir({ roomId: "", checkin: "", checkout: "" });
-      cargar(cal.year, cal.month);
+      if (y && m) cargar(y, m);
+      else cargar(cal.year, cal.month);
     } else {
       setErrAbrir(data.error ?? "No se pudieron abrir las fechas.");
     }
@@ -264,8 +307,18 @@ export function CalendarioClient({
                 <Input id="b-out" type="date" required value={bloq.checkout} onChange={(e) => setBloq((b) => ({ ...b, checkout: e.target.value }))} />
               </div>
             </div>
+            {resumenRango(bloq.checkin, bloq.checkout) && (
+              <p className="rounded-lg bg-secondary px-3 py-2 text-xs text-muted-foreground">
+                Se cerrarán {resumenRango(bloq.checkin, bloq.checkout)}
+              </p>
+            )}
             <Input placeholder="Nota (opcional)" value={bloq.nota} onChange={(e) => setBloq((b) => ({ ...b, nota: e.target.value }))} />
             {err && <p className="text-sm text-destructive">{err}</p>}
+            {okBloq && (
+              <p className="rounded-lg bg-accent px-3 py-2 text-sm text-accent-foreground">
+                {okBloq}
+              </p>
+            )}
             <Button type="submit" className="w-full">Bloquear</Button>
           </div>
         </form>
@@ -306,6 +359,11 @@ export function CalendarioClient({
                 <Input id="a-out" type="date" required value={abrir.checkout} onChange={(e) => setAbrir((b) => ({ ...b, checkout: e.target.value }))} />
               </div>
             </div>
+            {resumenRango(abrir.checkin, abrir.checkout) && (
+              <p className="rounded-lg bg-secondary px-3 py-2 text-xs text-muted-foreground">
+                Se abrirán {resumenRango(abrir.checkin, abrir.checkout)}
+              </p>
+            )}
             {errAbrir && <p className="text-sm text-destructive">{errAbrir}</p>}
             {okAbrir && (
               <p className="rounded-lg bg-accent px-3 py-2 text-sm text-accent-foreground">
@@ -317,9 +375,17 @@ export function CalendarioClient({
         </form>
 
         <div className="k-card p-5 sm:p-6 lg:col-span-2">
-          <h2 className="k-section-title">Bloqueos del mes</h2>
+          <h2 className="k-section-title">
+            Bloqueos de {MESES[cal.month - 1]} {cal.year}
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Solo los que tocan este mes. Un bloqueo que empieza más adelante se ve
+            cambiando de mes con las flechas de arriba.
+          </p>
           {cal.bloqueos.length === 0 ? (
-            <p className="mt-3 text-sm text-muted-foreground">No hay bloqueos este mes.</p>
+            <p className="mt-3 text-sm text-muted-foreground">
+              No hay bloqueos en {MESES[cal.month - 1]}.
+            </p>
           ) : (
             <ul className="mt-3 space-y-2">
               {cal.bloqueos.map((b) => (
