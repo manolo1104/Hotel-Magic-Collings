@@ -3,6 +3,7 @@
 // Foco: qué pasa HOY + pronóstico de ocupación de la semana.
 // ============================================================
 import { isReservaActiva, type BookingView } from "@/lib/booking/engine";
+import { site } from "@/lib/site";
 
 export interface MovimientoHoy {
   nombre: string;
@@ -27,8 +28,9 @@ export interface InsightsData {
 
 const DOW = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
 
+/** Fecha EN EL HOTEL. Ver `todayISO` en el motor: el servidor está en UTC. */
 function dISO(d: Date): string {
-  return d.toLocaleDateString("en-CA");
+  return d.toLocaleDateString("en-CA", { timeZone: site.timeZone });
 }
 function addDays(base: Date, n: number): Date {
   const d = new Date(base);

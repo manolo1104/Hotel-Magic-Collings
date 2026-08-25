@@ -8,18 +8,21 @@ import { EASE_OUT } from "@/components/motion/easing";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { track } from "@/lib/track";
+import { site } from "@/lib/site";
 
 const STORAGE_KEY = "mc_busqueda";
 
 function todayISO(): string {
   // yyyy-mm-dd en zona local
-  return new Date().toLocaleDateString("en-CA");
+  // Zona del HOTEL, no la del visitante: alguien en España a las 3 a.m. veía
+  // el día siguiente como mínimo y no podía pedir la noche de hoy en Xilitla.
+  return new Date().toLocaleDateString("en-CA", { timeZone: site.timeZone });
 }
 
 function addDaysISO(iso: string, days: number): string {
   const d = new Date(`${iso}T12:00:00`);
   d.setDate(d.getDate() + days);
-  return d.toLocaleDateString("en-CA");
+  return d.toLocaleDateString("en-CA", { timeZone: site.timeZone });
 }
 
 function nightsBetween(checkin: string, checkout: string): number {

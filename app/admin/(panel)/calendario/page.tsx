@@ -7,6 +7,7 @@ import {
   todayISO,
 } from "@/lib/booking/engine";
 import { CalendarioClient } from "@/components/admin/CalendarioClient";
+import { site } from "@/lib/site";
 
 export const metadata: Metadata = { title: "Calendario", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -14,7 +15,7 @@ export const dynamic = "force-dynamic";
 export default async function CalendarioPage() {
   // Mes/año por defecto en la zona del hotel (no la del servidor/UTC en Vercel).
   const [year, month] = new Date()
-    .toLocaleDateString("en-CA", { timeZone: "America/Mexico_City" })
+    .toLocaleDateString("en-CA", { timeZone: site.timeZone })
     .split("-")
     .map(Number);
   const calendar = await getCalendarMonth(year, month);

@@ -5,6 +5,7 @@
 // Patrón de lógica inspirado en mi-hotel/lib/booking.ts (referencia).
 // ============================================================
 import { and, eq, gt, gte, lt, lte, ne, or, isNull, sql, desc, asc } from "drizzle-orm";
+import { site } from "../site";
 import { db } from "../db";
 import { ensureDb } from "../db/ensure";
 import { roomTypes, rooms, bookings, blocks, guestNotes, quotes } from "../db/schema";
@@ -58,9 +59,16 @@ export function isValidISODate(s: string): boolean {
   return !Number.isNaN(d.getTime());
 }
 
+/**
+ * "Hoy" EN EL HOTEL, no en el servidor.
+ *
+ * Railway corre en UTC, seis horas adelante de Xilitla: sin `timeZone`, a partir
+ * de las 18:00 el sitio ya creía que era mañana. Eso rechazaba una reserva para
+ * esa misma noche con "la fecha de llegada no puede estar en el pasado", y en el
+ * panel corría un día las etiquetas de "Llega hoy" y "Sale hoy".
+ */
 export function todayISO(): string {
-  // yyyy-mm-dd en zona local del servidor
-  return new Date().toLocaleDateString("en-CA");
+  return new Date().toLocaleDateString("en-CA", { timeZone: site.timeZone });
 }
 
 export function calcNights(checkin: string, checkout: string): number {

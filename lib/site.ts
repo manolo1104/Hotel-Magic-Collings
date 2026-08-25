@@ -44,6 +44,10 @@ export const site = {
     "https://www.google.com/maps?q=Hotel+Magic+Collinn,+Axtla+de+Terrazas&z=16&hl=es&output=embed",
 
   // ── Operación ─────────────────────────────────────────────
+  // Zona horaria del HOTEL. Sin esto el servidor usa la suya: en Railway es UTC,
+  // seis horas adelante, así que a partir de las 18:00 de Xilitla el sitio ya
+  // cree que es mañana. Nunca calcular "hoy" sin pasar por aquí.
+  timeZone: "America/Mexico_City",
   checkIn: "13:00", // Confirmado por Gersay (31 jul 2026)
   checkOut: "11:00", // Confirmado por Gersay (31 jul 2026)
   petsAllowed: false as boolean | null, // Confirmado: no se reciben mascotas
