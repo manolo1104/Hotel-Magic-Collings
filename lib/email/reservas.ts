@@ -45,6 +45,7 @@ export async function enviarCorreosReserva(b: Booking): Promise<void> {
     whatsapp: b.whatsapp,
     email: b.email,
     nosConociste: b.nosConociste || null,
+    formaPago: b.formaPago || null,
   };
 
   const ics = bookingIcs({ ref, checkin: b.checkin, checkout: b.checkout });

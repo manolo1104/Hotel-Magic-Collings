@@ -65,6 +65,9 @@ export const bookings = pgTable("bookings", {
   // pagado | rechazado | reembolsado | expirado
   estadoPago: text("estado_pago").notNull().default("no_iniciado"),
   modalidadPago: text("modalidad_pago"), // total | anticipo
+  // CÓMO pagó, no cuánto: efectivo, transferencia, tarjeta… Lo llena el panel
+  // cuando el cobro ocurre fuera de línea; el checkout web pone "mercado_pago".
+  formaPago: text("forma_pago").notNull().default(""),
   montoACobrar: integer("monto_a_cobrar"), // MXN a cobrar en línea
   montoPagado: integer("monto_pagado").notNull().default(0), // MXN acreditados
   saldoPendiente: integer("saldo_pendiente"), // MXN a pagar en el hotel

@@ -21,6 +21,7 @@ import {
   type TipoOpcion,
   type CuartoOpcion,
 } from "./ReservationModal";
+import { etiquetaFormaPago } from "@/lib/booking/types";
 import type { BookingView } from "@/lib/booking/engine";
 
 function mxn(n: number | null) {
@@ -215,7 +216,7 @@ export function ReservasClient({
                       {badgePago(b)}
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {b.nombreTipo} · {b.numeroCuarto} · {fmt(b.checkin)} → {fmt(b.checkout)} · {b.huespedes} huésp. · {b.id.slice(0, 8).toUpperCase()}{b.nosConociste ? ` · vía ${b.nosConociste}` : ""}
+                      {b.nombreTipo} · {b.numeroCuarto} · {fmt(b.checkin)} → {fmt(b.checkout)} · {b.huespedes} huésp. · {b.id.slice(0, 8).toUpperCase()}{b.nosConociste ? ` · vía ${b.nosConociste}` : ""}{etiquetaFormaPago(b.formaPago) ? ` · pagó por ${etiquetaFormaPago(b.formaPago)}` : ""}
                     </p>
                   </div>
                   <div className="text-right">

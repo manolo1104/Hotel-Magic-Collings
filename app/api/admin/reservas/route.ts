@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
     notas: body.notas ? String(body.notas) : undefined,
     origen: body.origen ? String(body.origen) : undefined,
     nosConociste: body.nosConociste ? String(body.nosConociste) : undefined,
+    formaPago: body.formaPago ? String(body.formaPago) : undefined,
     // Lo manda el calendario al crear desde un día concreto de un cuarto.
     roomId: body.roomId ? String(body.roomId) : undefined,
   });

@@ -9,6 +9,7 @@ import { db } from "../db";
 import { ensureDb } from "../db/ensure";
 import { roomTypes, rooms, bookings, blocks, guestNotes, quotes } from "../db/schema";
 import type { Booking, Quote } from "../db/schema";
+import { FORMAS_PAGO } from "./types";
 import type {
   AvailabilityParams,
   AvailabilityResult,
@@ -434,6 +435,9 @@ export async function confirmarPago(args: {
       montoPagado: args.montoPagado,
       saldoPendiente: Math.max(0, prev.total - args.montoPagado),
       pagadoEn: new Date(),
+      // El cobro en línea deja constancia de su vía, igual que el panel
+      // apunta "efectivo" o "transferencia" cuando cobra fuera del sitio.
+      formaPago: "mercado_pago",
     })
     .where(and(eq(bookings.id, args.bookingId), ne(bookings.estadoPago, "pagado")))
     .returning({ id: bookings.id });
@@ -557,6 +561,7 @@ export async function createManualBooking(input: {
   notas?: string;
   origen?: string; // manual (default) | whatsapp | booking | expedia
   nosConociste?: string;
+  formaPago?: string;
   // Cuarto preferido. Lo manda el calendario: si el dueño hizo clic en el 102,
   // la reserva debe caer en el 102 y no en el primer libre de ese tipo. Si está
   // ocupado o no es de ese tipo, se ignora y se elige normal.
@@ -635,12 +640,20 @@ export async function createManualBooking(input: {
       origen: input.origen?.trim() || "manual",
       notas: input.notas?.trim() || "",
       nosConociste: input.nosConociste?.trim() || "",
+      // Solo tiene sentido apuntar la vía si de verdad entró dinero.
+      formaPago: montoPagado > 0 ? formaPagoValida(input.formaPago) : "",
     })
     .returning({ id: bookings.id });
 
   avisarBeds24((m) => m.reconciliarReserva(created.id));
 
   return { ok: true, id: created.id, estado: "confirmada", total };
+}
+
+/** Normaliza la forma de pago: fuera del catálogo, se guarda vacía. */
+function formaPagoValida(v: string | null | undefined): string {
+  const limpio = (v ?? "").trim();
+  return FORMAS_PAGO.some((f) => f.valor === limpio) ? limpio : "";
 }
 
 /** Estados de reserva que el panel acepta. */
@@ -668,6 +681,7 @@ export async function updateBooking(
     estadoPago?: string;
     /** Cambio de habitación: id del cuarto físico al que se muda la reserva. */
     roomId?: string;
+    formaPago?: string;
     notas?: string;
     nosConociste?: string;
   },
@@ -782,6 +796,9 @@ export async function updateBooking(
   if (changes.notas != null) set.notas = changes.notas.trim();
   if (changes.nosConociste != null)
     set.nosConociste = changes.nosConociste.trim().slice(0, 60);
+  if (changes.formaPago != null) set.formaPago = formaPagoValida(changes.formaPago);
+  // Sin dinero cobrado no hay vía que apuntar.
+  if (montoPagado === 0) set.formaPago = "";
 
   await db.update(bookings).set(set).where(eq(bookings.id, id));
   // Las fechas, el cuarto o el estado pudieron cambiar → que Booking se entere.

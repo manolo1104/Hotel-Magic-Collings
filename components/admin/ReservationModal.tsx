@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FORMAS_PAGO } from "@/lib/booking/types";
 import type { BookingView } from "@/lib/booking/engine";
 
 export interface TipoOpcion {
@@ -59,6 +60,7 @@ const VACIO = {
   notas: "",
   estado: "confirmada",
   estadoPago: "no_iniciado",
+  formaPago: "",
   roomId: "",
 };
 
@@ -85,6 +87,7 @@ export function ReservationModal({ open, onClose, tipos, cuartos = [], reserva, 
         notas: reserva.notas ?? "",
         estado: reserva.estado,
         estadoPago: reserva.estadoPago ?? "no_iniciado",
+        formaPago: reserva.formaPago ?? "",
         roomId: reserva.roomId,
       });
     } else {
@@ -140,6 +143,7 @@ export function ReservationModal({ open, onClose, tipos, cuartos = [], reserva, 
         total: form.total === "" ? undefined : Number(form.total),
         montoPagado: form.montoPagado === "" ? undefined : Number(form.montoPagado),
         notas: form.notas,
+        formaPago: form.formaPago,
       };
       const payload = reserva
         ? {
@@ -279,6 +283,27 @@ export function ReservationModal({ open, onClose, tipos, cuartos = [], reserva, 
               <Input id="m-pag" type="number" min={0} value={form.montoPagado} onChange={(e) => set("montoPagado", e.target.value)} />
             </div>
           </div>
+
+          {/* Solo se pregunta si hay dinero cobrado: apuntar "efectivo" en una
+              reserva con $0 no significa nada y ensucia el reporte. */}
+          {Number(form.montoPagado) > 0 && (
+            <div className="grid gap-1.5">
+              <Label htmlFor="m-forma">Forma de pago</Label>
+              <select
+                id="m-forma"
+                value={form.formaPago}
+                onChange={(e) => set("formaPago", e.target.value)}
+                className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+              >
+                <option value="">Sin especificar</option>
+                {FORMAS_PAGO.map((f) => (
+                  <option key={f.valor} value={f.valor}>
+                    {f.etiqueta}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {editando && (
             <>

@@ -75,3 +75,25 @@ export interface CreateBookingResult {
   saldoPendiente?: number; // MXN a pagar en el hotel
   nombreTipo?: string; // nombre del tipo de habitación (para el cobro)
 }
+
+/**
+ * Cómo entró el dinero. Es distinto de `estadoPago` (cuánto se cobró) y de
+ * `modalidadPago` (total o anticipo): esto es por qué vía.
+ *
+ * `mercado_pago` lo pone solo el checkout en línea; el resto los elige el dueño
+ * en el panel cuando cobra fuera del sitio.
+ */
+export const FORMAS_PAGO = [
+  { valor: "efectivo", etiqueta: "Efectivo" },
+  { valor: "transferencia", etiqueta: "Transferencia" },
+  { valor: "tarjeta", etiqueta: "Tarjeta (terminal)" },
+  { valor: "deposito", etiqueta: "Depósito bancario" },
+  { valor: "oxxo", etiqueta: "OXXO" },
+  { valor: "mercado_pago", etiqueta: "Mercado Pago (en línea)" },
+] as const;
+
+export type FormaPago = (typeof FORMAS_PAGO)[number]["valor"];
+
+export function etiquetaFormaPago(valor: string | null | undefined): string {
+  return FORMAS_PAGO.find((f) => f.valor === valor)?.etiqueta ?? "";
+}

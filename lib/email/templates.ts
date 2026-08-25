@@ -8,6 +8,7 @@
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { site } from "@/lib/site";
+import { etiquetaFormaPago } from "@/lib/booking/types";
 
 export interface DatosCorreo {
   ref: string;
@@ -24,6 +25,7 @@ export interface DatosCorreo {
   whatsapp: string;
   email: string | null;
   nosConociste: string | null;
+  formaPago?: string | null;
 }
 
 export function mxn(n: number): string {
@@ -188,6 +190,7 @@ ${filaResumen(datos)}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:4px;">
 ${fila("WhatsApp del huésped", `<a href="https://wa.me/${datos.whatsapp.replace(/[^0-9]/g, "")}" style="color:${TERRA};">${datos.whatsapp}</a>`)}
 ${fila("Correo", datos.email ?? "—")}
+${etiquetaFormaPago(datos.formaPago) ? fila("Forma de pago", etiquetaFormaPago(datos.formaPago)) : ""}
 ${datos.nosConociste ? fila("Nos conoció por", datos.nosConociste) : ""}
 </table>`;
   return layout(`Nueva reserva pagada: ${datos.nombre} (${datos.ref})`, inner);

@@ -5,6 +5,7 @@
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { site } from "@/lib/site";
+import { etiquetaFormaPago } from "@/lib/booking/types";
 import type { BookingView, QuoteView } from "@/lib/booking/engine";
 
 function mxn(n: number): string {
@@ -91,7 +92,9 @@ export function bookingHtml(b: BookingView, opts?: { forPrint?: boolean }): stri
   <tr><td class="k">Huéspedes</td><td class="v">${b.huespedes}</td></tr>
   <tr><td class="k">Contacto</td><td class="v">${b.whatsapp}${b.email ? " · " + b.email : ""}</td></tr>
   ${b.nosConociste ? `<tr><td class="k">Nos conoció por</td><td class="v">${b.nosConociste}</td></tr>` : ""}
-  <tr><td class="k">Pagado</td><td class="v">${mxn(b.montoPagado)} · ${etiquetaPago(b)}</td></tr>
+  <tr><td class="k">Pagado</td><td class="v">${mxn(b.montoPagado)} · ${etiquetaPago(b)}${
+    etiquetaFormaPago(b.formaPago) ? ` · ${etiquetaFormaPago(b.formaPago)}` : ""
+  }</td></tr>
   ${cancelada ? "" : `<tr><td class="k">Saldo en el hotel</td><td class="v">${mxn(saldo)}</td></tr>`}
   <tr class="tot"><td>Total de la estancia</td><td class="v">${mxn(b.total)}</td></tr>
 </table>

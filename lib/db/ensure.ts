@@ -162,6 +162,8 @@ const MIGRATIONS = [
   `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS origen text NOT NULL DEFAULT 'web'`,
   `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS notas text NOT NULL DEFAULT ''`,
   `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS nos_conociste text NOT NULL DEFAULT ''`,
+  // Forma de pago (efectivo, transferencia, tarjeta…). Vacío = sin registrar.
+  `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS forma_pago text NOT NULL DEFAULT ''`,
   // Precio por ocupación (el hotel cobra distinto según cuánta gente entra)
   `ALTER TABLE room_types ADD COLUMN IF NOT EXISTS precios integer[] NOT NULL DEFAULT '{}'`,
   // Channel manager (Beds24 ↔ Booking.com)
