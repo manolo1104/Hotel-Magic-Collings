@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "test:temporadas": "tsx lib/booking/temporadas.prueba.ts",
     "db:seed": "tsx lib/db/seed.ts",
     "db:tarifas": "tsx lib/db/tarifas.ts",
     "beds24:conectar": "tsx lib/beds24/conectar.ts",

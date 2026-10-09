@@ -128,6 +128,17 @@ const DDL = [
     responsable text NOT NULL DEFAULT '',
     created_at timestamp NOT NULL DEFAULT now()
   )`,
+  `CREATE TABLE IF NOT EXISTS seasons (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    nombre text NOT NULL,
+    desde date NOT NULL,
+    hasta date NOT NULL,
+    room_type_id uuid REFERENCES room_types(id),
+    tipo_ajuste text NOT NULL DEFAULT 'porcentaje',
+    valor integer NOT NULL,
+    activa boolean NOT NULL DEFAULT true,
+    created_at timestamp NOT NULL DEFAULT now()
+  )`,
   `CREATE TABLE IF NOT EXISTS beds24_cola (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     beds24_booking_id integer NOT NULL,

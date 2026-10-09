@@ -20,9 +20,19 @@ export interface AvailableRoomType {
   fotos: string[];
   disponibles: number; // unidades libres en el rango
   noches: number;
-  /** Precio de una noche para el número de huéspedes buscado. */
+  /**
+   * Precio de una noche para el número de huéspedes buscado. Con una temporada
+   * que no cubre toda la estancia, las noches no cuestan lo mismo: aquí va el
+   * PROMEDIO, y `precioMixto` avisa para poder etiquetarlo como tal.
+   */
   precioNoche: number;
   precioTotal: number;
+  /** Lo que costaría la noche sin temporadas (tarifa de lista). */
+  precioBase: number;
+  /** Nombres de las temporadas que tocan la estancia. Vacío = tarifa normal. */
+  temporadas: string[];
+  /** true cuando no todas las noches de la estancia cuestan lo mismo. */
+  precioMixto: boolean;
 }
 
 export interface AvailabilityResult {

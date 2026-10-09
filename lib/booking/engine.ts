@@ -11,6 +11,7 @@ import { ensureDb } from "../db/ensure";
 import { roomTypes, rooms, bookings, blocks, guestNotes, quotes } from "../db/schema";
 import type { Booking, Quote } from "../db/schema";
 import { FORMAS_PAGO } from "./types";
+import { desglosarEstancia, temporadasVigentes } from "./temporadas";
 import type {
   AvailabilityParams,
   AvailabilityResult,
@@ -102,6 +103,31 @@ export function precioPorNoche(
   return precios[Math.min(n, precios.length) - 1];
 }
 
+/**
+ * Lo que cuesta la estancia COMPLETA, ya con las temporadas aplicadas noche
+ * por noche (lib/booking/temporadas.ts). Sin temporadas vigentes es
+ * exactamente `precioPorNoche × noches`, que es lo que se cobraba antes.
+ *
+ * Se consulta la base, así que es `async`: todo lo que cotiza un precio real
+ * —el buscador, la reserva y las cotizaciones— pasa por aquí para que el
+ * huésped pague lo mismo que vio.
+ */
+export async function totalEstancia(
+  tipo: { id: string; tarifaBase: number; precios?: number[] | null },
+  huespedes: number,
+  checkin: string,
+  checkout: string,
+): Promise<number> {
+  const temporadas = await temporadasVigentes();
+  return desglosarEstancia(
+    precioPorNoche(tipo, huespedes),
+    tipo.id,
+    checkin,
+    checkout,
+    temporadas,
+  ).total;
+}
+
 /** Valida un rango de fechas + huéspedes. Devuelve mensaje de error o null. */
 export function validateRange(p: AvailabilityParams): string | null {
   if (!isValidISODate(p.checkin) || !isValidISODate(p.checkout))
@@ -182,10 +208,13 @@ export async function getAvailability(
 
   await ensureDb();
 
-  const [types, allRooms, occupied] = await Promise.all([
+  const [types, allRooms, occupied, temporadas] = await Promise.all([
     db.select().from(roomTypes),
     db.select().from(rooms),
     occupiedRoomIds(params.checkin, params.checkout),
+    // Se cargan UNA vez para todas las categorías: cotizar tipo por tipo
+    // dispararía una consulta por habitación.
+    temporadasVigentes(),
   ]);
 
   const noches = calcNights(params.checkin, params.checkout);
@@ -195,7 +224,13 @@ export async function getAvailability(
       const typeRooms = allRooms.filter((r) => r.roomTypeId === t.id && r.activa);
       const ocupadas = typeRooms.filter((r) => occupied.has(r.id)).length;
       const disponibles = typeRooms.length - ocupadas;
-      const precioNoche = precioPorNoche(t, huespedes);
+      const cotizacion = desglosarEstancia(
+        precioPorNoche(t, huespedes),
+        t.id,
+        params.checkin,
+        params.checkout,
+        temporadas,
+      );
       return {
         id: t.id,
         slug: t.slug,
@@ -207,8 +242,11 @@ export async function getAvailability(
         fotos: t.fotos,
         disponibles,
         noches,
-        precioNoche,
-        precioTotal: precioNoche * noches,
+        precioNoche: cotizacion.precioNoche,
+        precioTotal: cotizacion.total,
+        precioBase: cotizacion.precioBase,
+        temporadas: cotizacion.temporadas,
+        precioMixto: cotizacion.mixto,
       };
     })
     .filter(
@@ -271,8 +309,9 @@ export async function createBooking(
     };
 
   const noches = calcNights(input.checkin, input.checkout);
-  // El precio depende de cuánta gente entra, no solo del tipo de habitación.
-  const total = precioPorNoche(tipo, huespedes) * noches;
+  // El precio depende de cuánta gente entra y de la temporada de cada noche,
+  // no solo del tipo de habitación.
+  const total = await totalEstancia(tipo, huespedes, input.checkin, input.checkout);
 
   // Modalidad de pago: cuánto se cobra en línea ahora y el hold del cuarto.
   //  · sin modalidad → reserva por WhatsApp (sin pago en línea)
@@ -615,11 +654,10 @@ export async function createManualBooking(input: {
   if (!free)
     return { ok: false, error: "No hay cuartos libres de ese tipo en esas fechas." };
 
-  const noches = calcNights(input.checkin, input.checkout);
   const total =
     input.total != null && input.total >= 0
       ? Math.round(input.total)
-      : precioPorNoche(tipo, huespedes) * noches;
+      : await totalEstancia(tipo, huespedes, input.checkin, input.checkout);
   const montoPagado =
     input.montoPagado != null && input.montoPagado > 0
       ? Math.round(input.montoPagado)
@@ -1407,7 +1445,7 @@ export async function createQuote(input: {
     input.precioTotal != null && input.precioTotal >= 0
       ? Math.round(input.precioTotal)
       : tipo
-        ? precioPorNoche(tipo, huespedes) * noches
+        ? await totalEstancia(tipo, huespedes, input.checkin, input.checkout)
         : 0;
   const [created] = await db
     .insert(quotes)
@@ -1487,7 +1525,7 @@ export async function updateQuote(
   else if (changes.slug && tipo)
     // Cambió de habitación sin tocar el precio: recalcular con la tarifa nueva,
     // o la cotización saldría con el cuarto nuevo y el precio del viejo.
-    set.precioTotal = precioPorNoche(tipo, huespedes) * noches;
+    set.precioTotal = await totalEstancia(tipo, huespedes, checkin, checkout);
   if (changes.notas != null) set.notas = changes.notas.trim();
   if (changes.estado) set.estado = changes.estado;
   await db.update(quotes).set(set).where(eq(quotes.id, id));

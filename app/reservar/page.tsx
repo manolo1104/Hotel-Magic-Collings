@@ -129,12 +129,31 @@ export default async function ReservarPage({ searchParams }: { searchParams: SP 
               </div>
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">
-                  {/* precio de la ocupación buscada, no el "desde" */}
-                  {tipo.noches} {tipo.noches === 1 ? "noche" : "noches"} ×{" "}
-                  {formatMXN(tipo.precioNoche)}
+                  {/* Precio de la ocupación buscada, no el "desde". Con noches a
+                      distinto precio por una temporada, la multiplicación NO
+                      daría el total: en ese caso se enseña el desglose aparte. */}
+                  {tipo.precioMixto ? (
+                    <>
+                      {tipo.noches} {tipo.noches === 1 ? "noche" : "noches"} (precios
+                      de temporada)
+                    </>
+                  ) : (
+                    <>
+                      {tipo.noches} {tipo.noches === 1 ? "noche" : "noches"} ×{" "}
+                      {formatMXN(tipo.precioNoche)}
+                    </>
+                  )}
                 </dt>
                 <dd className="font-medium">{formatMXN(tipo.precioTotal)}</dd>
               </div>
+              {tipo.temporadas.length > 0 && (
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">Temporada</dt>
+                  <dd className="font-medium text-amber-700">
+                    {tipo.temporadas.join(" · ")}
+                  </dd>
+                </div>
+              )}
             </dl>
             <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
               <span className="font-medium">Total</span>

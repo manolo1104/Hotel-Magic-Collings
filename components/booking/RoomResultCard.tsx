@@ -76,10 +76,17 @@ export function RoomResultCard({
             </p>
             <p className="text-xs text-muted-foreground">
               {/* precioNoche, no tarifaBase: el hotel cobra según cuánta
-                  gente entra, y aquí ya sabemos cuántos son. */}
+                  gente entra, y aquí ya sabemos cuántos son. Con una temporada
+                  que no cubre toda la estancia es un PROMEDIO, y se dice. */}
               {tipo.noches} {tipo.noches === 1 ? "noche" : "noches"} ·{" "}
               {formatMXN(tipo.precioNoche)} / noche
+              {tipo.precioMixto && " (promedio)"}
             </p>
+            {tipo.temporadas.length > 0 && (
+              <p className="mt-1 text-xs font-medium text-amber-700">
+                {tipo.temporadas.join(" · ")}
+              </p>
+            )}
           </div>
           <div className="flex flex-col items-end gap-1.5">
             {/* Urgencia honesta: ámbar solo cuando el inventario real es bajo */}

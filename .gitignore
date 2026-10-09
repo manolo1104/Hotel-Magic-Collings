@@ -45,3 +45,4 @@ next-env.d.ts
 /.pglite
 # migraciones generadas por drizzle-kit (opcional)
 /drizzle
+.env*.local

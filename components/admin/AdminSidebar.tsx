@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   BookOpen,
   Calendar,
+  CalendarRange,
   FileText,
   TrendingUp,
   Users,
@@ -22,6 +23,7 @@ const NAV = [
   { href: "/admin", label: "Reservas", icon: BookOpen, ready: true },
   { href: "/admin/calendario", label: "Calendario", icon: Calendar, ready: true },
   { href: "/admin/cotizaciones", label: "Cotizaciones", icon: FileText, ready: true },
+  { href: "/admin/temporadas", label: "Temporadas", icon: CalendarRange, ready: true },
   { href: "/admin/ingresos", label: "Ingresos", icon: TrendingUp, ready: true },
   { href: "/admin/clientes", label: "Clientes", icon: Users, ready: true },
   // "Operaciones" (limpieza del día + tareas de mantenimiento) se retiró el

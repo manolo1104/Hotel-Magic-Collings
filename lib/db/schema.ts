@@ -159,6 +159,31 @@ export const blocks = pgTable("blocks", {
 // Cola de bajas pendientes en Beds24. Cuando el panel BORRA un bloqueo, la fila
 // desaparece y con ella el id de Beds24; sin esta lápida, la fecha se quedaría
 // cerrada en Booking para siempre. El reloj vacía la cola.
+// ── TEMPORADAS (precios por rango de fechas) ────────────────
+// Sube o baja la tarifa de ciertas noches sin tocar el precio de lista:
+// Xantolo, Semana Santa, un puente, o una promoción de temporada baja.
+//
+// `desde`/`hasta` son NOCHES, las dos inclusive: una temporada del 31 oct al
+// 2 nov encarece las noches del 31, el 1 y el 2. Se eligió así porque el hotel
+// piensa en "del 31 al 2", no en fechas de salida.
+//
+// `roomTypeId` nulo = aplica a TODAS las categorías. Una temporada con
+// categoría le gana a una general en la misma noche, y entre dos iguales gana
+// la más reciente: NUNCA se encima un ajuste sobre otro.
+export const seasons = pgTable("seasons", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  nombre: text("nombre").notNull(), // "Xantolo 2026", "Temporada baja"
+  desde: date("desde", { mode: "string" }).notNull(),
+  hasta: date("hasta", { mode: "string" }).notNull(),
+  roomTypeId: uuid("room_type_id").references(() => roomTypes.id),
+  // "porcentaje" → `valor` es % sobre la tarifa (+20 sube, -15 baja)
+  // "precio"     → `valor` es el precio FIJO de la noche en MXN
+  tipoAjuste: text("tipo_ajuste").notNull().default("porcentaje"),
+  valor: integer("valor").notNull(),
+  activa: boolean("activa").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const beds24Cola = pgTable("beds24_cola", {
   id: uuid("id").primaryKey().defaultRandom(),
   beds24BookingId: integer("beds24_booking_id").notNull(),
