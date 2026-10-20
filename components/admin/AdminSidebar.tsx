@@ -13,6 +13,7 @@ import {
   Users,
   ExternalLink,
   Menu,
+  MessageCircle,
   X,
 } from "lucide-react";
 import { LogoutButton } from "./LogoutButton";
@@ -23,6 +24,8 @@ const NAV = [
   { href: "/admin", label: "Reservas", icon: BookOpen, ready: true },
   { href: "/admin/calendario", label: "Calendario", icon: Calendar, ready: true },
   { href: "/admin/cotizaciones", label: "Cotizaciones", icon: FileText, ready: true },
+  // Bot de WhatsApp (lib/bot): pagos por confirmar, apartados y pláticas.
+  { href: "/admin/whatsapp", label: "WhatsApp", icon: MessageCircle, ready: true },
   { href: "/admin/temporadas", label: "Temporadas", icon: CalendarRange, ready: true },
   { href: "/admin/ingresos", label: "Ingresos", icon: TrendingUp, ready: true },
   { href: "/admin/clientes", label: "Clientes", icon: Users, ready: true },

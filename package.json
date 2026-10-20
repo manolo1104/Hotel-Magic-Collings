@@ -13,9 +13,13 @@
     "db:tarifas": "tsx lib/db/tarifas.ts",
     "beds24:conectar": "tsx lib/beds24/conectar.ts",
     "db:generate": "drizzle-kit generate",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "test:bot": "tsx lib/bot/bot.prueba.ts",
+    "bot:simular": "tsx lib/bot/simulador.ts",
+    "test:bot-db": "tsx lib/bot/bot-db.prueba.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.135.0",
     "@base-ui/react": "^1.5.0",
     "@electric-sql/pglite": "^0.5.1",
     "@mercadopago/sdk-react": "^1.0.7",

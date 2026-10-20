@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // El puente de WhatsApp es un servicio aparte (Railway), con su propio package.json.
+    "bot-whatsapp/**",
   ]),
 ]);
 

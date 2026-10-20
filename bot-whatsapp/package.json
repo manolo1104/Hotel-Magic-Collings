@@ -1,0 +1,19 @@
+{
+  "name": "magic-collinn-bot-whatsapp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Puente de WhatsApp (QR) del Hotel Magic Collinn: lleva los mensajes a /api/bot/* del sitio",
+  "type": "module",
+  "main": "index.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "node --test pruebas/*.test.js"
+  },
+  "dependencies": {
+    "qrcode": "1.5.4",
+    "whatsapp-web.js": "1.34.7"
+  }
+}

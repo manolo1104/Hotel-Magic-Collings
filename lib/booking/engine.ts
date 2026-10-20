@@ -336,8 +336,12 @@ export async function createBooking(
       ? Math.round(total / 2)
       : total;
   const saldoPendiente = montoACobrar === null ? null : total - montoACobrar;
-  // Hold de 30 min mientras el huésped completa el pago en Mercado Pago.
-  const HOLD_MIN = 30;
+  // Hold mientras el huésped paga: 30 min en Mercado Pago (la web); el bot de
+  // WhatsApp pide más porque la transferencia se hace desde el banco.
+  const HOLD_MIN =
+    input.holdMinutos != null && input.holdMinutos > 0
+      ? Math.min(Math.round(input.holdMinutos), 48 * 60)
+      : 30;
   const expiraEn = conPago ? new Date(Date.now() + HOLD_MIN * 60_000) : null;
 
   const [created] = await db
@@ -358,6 +362,8 @@ export async function createBooking(
       montoACobrar,
       saldoPendiente,
       expiraEn,
+      origen: input.origen === "whatsapp" ? "whatsapp" : "web",
+      notas: input.notas?.trim().slice(0, 500) || "",
     })
     .returning({ id: bookings.id, estado: bookings.estado });
 

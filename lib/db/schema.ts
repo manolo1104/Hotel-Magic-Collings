@@ -11,6 +11,8 @@ import {
   boolean,
   date,
   timestamp,
+  jsonb,
+  serial,
 } from "drizzle-orm/pg-core";
 
 // 2 registros: "sencilla", "doble"
@@ -243,6 +245,77 @@ export const maintenanceTasks = pgTable("maintenance_tasks", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// ============================================================
+// BOT DE WHATSAPP — el puente (bot-whatsapp/, Railway) manda los mensajes a
+// /api/bot/*; aquí vive la memoria de cada plática y lo que el bot cotizó.
+// ============================================================
+
+// Una fila por chat de WhatsApp. `chatId` es el id que da WhatsApp (…@c.us o
+// …@lid): con @lid el teléfono real no siempre se ve, por eso va aparte.
+export const botChats = pgTable("bot_chats", {
+  chatId: text("chat_id").primaryKey(),
+  telefono: text("telefono").notNull().default(""), // 12 dígitos (52…) si se conoce
+  nombre: text("nombre").notNull().default(""), // nombre del perfil de WhatsApp
+  // Sesión vigente. Tras 24 h sin mensajes se abre otra: el historial nunca se
+  // recorta (Haiku 5.5 rechaza historiales editados), se empieza uno nuevo.
+  sesion: integer("sesion").notNull().default(1),
+  // Mientras sea futuro el bot no contesta en este chat (lo atiende una persona).
+  pausadoHasta: timestamp("pausado_hasta"),
+  ultimoMensajeEn: timestamp("ultimo_mensaje_en").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Historial SOLO-AGREGAR: cada mensaje tal cual se mandó/recibió de la API
+// (incluidos bloques de razonamiento y de herramientas). `orden` fija el orden
+// aunque dos filas caigan en el mismo milisegundo.
+export const botMensajes = pgTable("bot_mensajes", {
+  orden: serial("orden").primaryKey(),
+  chatId: text("chat_id").notNull(),
+  sesion: integer("sesion").notNull(),
+  rol: text("rol").notNull(), // user | assistant
+  contenido: jsonb("contenido").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Cotización hecha por el bot. Aparta una reserva por cuarto (origen
+// 'whatsapp', hold con `expira_en`) y guarda aquí el folio que ve el huésped.
+export const botCotizaciones = pgTable("bot_cotizaciones", {
+  folio: text("folio").primaryKey(), // MC-XXXX
+  chatId: text("chat_id").notNull(),
+  telefono: text("telefono").notNull().default(""),
+  nombre: text("nombre").notNull(),
+  email: text("email"),
+  checkin: date("checkin", { mode: "string" }).notNull(),
+  checkout: date("checkout", { mode: "string" }).notNull(),
+  noches: integer("noches").notNull(),
+  huespedes: integer("huespedes").notNull(),
+  // [{ slug, nombre, huespedes, total, bookingId }]
+  habitaciones: jsonb("habitaciones").notNull(),
+  total: integer("total").notNull(),
+  anticipo: integer("anticipo").notNull(),
+  saldo: integer("saldo").notNull(),
+  // vigente | comprobante | confirmada | reemplazada | vencida | cancelada
+  estado: text("estado").notNull().default("vigente"),
+  apartadoHasta: timestamp("apartado_hasta").notNull(),
+  comprobanteEn: timestamp("comprobante_en"),
+  comprobanteNota: text("comprobante_nota").notNull().default(""),
+  recordatorioEn: timestamp("recordatorio_en"),
+  confirmadaEn: timestamp("confirmada_en"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Mensajes que el sitio quiere mandar por WhatsApp sin que el huésped haya
+// escrito (confirmación desde el panel, recordatorios). El puente los recoge.
+export const botSalida = pgTable("bot_salida", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  chatId: text("chat_id").notNull(),
+  texto: text("texto").notNull(),
+  motivo: text("motivo").notNull().default(""),
+  enviarDespues: timestamp("enviar_despues").notNull().defaultNow(),
+  enviadoEn: timestamp("enviado_en"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export type RoomType = typeof roomTypes.$inferSelect;
 export type Room = typeof rooms.$inferSelect;
 export type Booking = typeof bookings.$inferSelect;
@@ -255,3 +328,5 @@ export type Beds24Pendiente = typeof beds24Cola.$inferSelect;
 export type GuestNote = typeof guestNotes.$inferSelect;
 export type CleaningLog = typeof cleaningLog.$inferSelect;
 export type MaintenanceTask = typeof maintenanceTasks.$inferSelect;
+export type BotChat = typeof botChats.$inferSelect;
+export type BotCotizacion = typeof botCotizaciones.$inferSelect;

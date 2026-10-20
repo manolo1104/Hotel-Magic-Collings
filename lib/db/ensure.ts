@@ -151,6 +151,57 @@ const DDL = [
     valor text NOT NULL DEFAULT '',
     updated_at timestamp NOT NULL DEFAULT now()
   )`,
+  // ── Bot de WhatsApp (lib/bot) ─────────────────────────────
+  `CREATE TABLE IF NOT EXISTS bot_chats (
+    chat_id text PRIMARY KEY,
+    telefono text NOT NULL DEFAULT '',
+    nombre text NOT NULL DEFAULT '',
+    sesion integer NOT NULL DEFAULT 1,
+    pausado_hasta timestamp,
+    ultimo_mensaje_en timestamp NOT NULL DEFAULT now(),
+    created_at timestamp NOT NULL DEFAULT now()
+  )`,
+  `CREATE TABLE IF NOT EXISTS bot_mensajes (
+    orden serial PRIMARY KEY,
+    chat_id text NOT NULL,
+    sesion integer NOT NULL,
+    rol text NOT NULL,
+    contenido jsonb NOT NULL,
+    created_at timestamp NOT NULL DEFAULT now()
+  )`,
+  `CREATE INDEX IF NOT EXISTS bot_mensajes_chat_idx ON bot_mensajes (chat_id, sesion, orden)`,
+  `CREATE TABLE IF NOT EXISTS bot_cotizaciones (
+    folio text PRIMARY KEY,
+    chat_id text NOT NULL,
+    telefono text NOT NULL DEFAULT '',
+    nombre text NOT NULL,
+    email text,
+    checkin date NOT NULL,
+    checkout date NOT NULL,
+    noches integer NOT NULL,
+    huespedes integer NOT NULL,
+    habitaciones jsonb NOT NULL,
+    total integer NOT NULL,
+    anticipo integer NOT NULL,
+    saldo integer NOT NULL,
+    estado text NOT NULL DEFAULT 'vigente',
+    apartado_hasta timestamp NOT NULL,
+    comprobante_en timestamp,
+    comprobante_nota text NOT NULL DEFAULT '',
+    recordatorio_en timestamp,
+    confirmada_en timestamp,
+    created_at timestamp NOT NULL DEFAULT now()
+  )`,
+  `CREATE INDEX IF NOT EXISTS bot_cotizaciones_chat_idx ON bot_cotizaciones (chat_id, created_at)`,
+  `CREATE TABLE IF NOT EXISTS bot_salida (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    chat_id text NOT NULL,
+    texto text NOT NULL,
+    motivo text NOT NULL DEFAULT '',
+    enviar_despues timestamp NOT NULL DEFAULT now(),
+    enviado_en timestamp,
+    created_at timestamp NOT NULL DEFAULT now()
+  )`,
 ];
 
 // Migraciones idempotentes para BASES DE DATOS YA EXISTENTES (PGlite local o

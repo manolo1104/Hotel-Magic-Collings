@@ -71,6 +71,14 @@ export interface CreateBookingInput {
   email?: string;
   nosConociste?: string;
   modalidadPago?: ModalidadPago;
+  /**
+   * Minutos que se aparta el cuarto mientras llega el pago (solo con
+   * `modalidadPago`). La web usa 30 (Mercado Pago); el bot de WhatsApp aparta
+   * más tiempo porque el huésped tiene que ir a su banco a transferir.
+   */
+  holdMinutos?: number;
+  origen?: "web" | "whatsapp"; // por omisión "web"
+  notas?: string; // notas internas (p. ej. el folio del bot)
 }
 
 export interface CreateBookingResult {
