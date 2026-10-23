@@ -8,7 +8,6 @@ import { heroImage, galeria } from "./images";
 const HOTEL_ID = `${site.url}/#hotel`;
 const WEBSITE_ID = `${site.url}/#website`;
 const OG_IMAGE = `${site.url}/opengraph-image`;
-const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${site.geo.lat},${site.geo.lng}`;
 
 const postalAddress = {
   "@type": "PostalAddress",
@@ -41,7 +40,7 @@ export function hotelEntity(): Record<string, unknown> {
       latitude: site.geo.lat,
       longitude: site.geo.lng,
     },
-    hasMap: mapsUrl,
+    hasMap: site.googleMapsUrl,
     numberOfRooms: site.rooms,
     checkinTime: site.checkIn,
     checkoutTime: site.checkOut,
@@ -57,9 +56,11 @@ export function hotelEntity(): Record<string, unknown> {
       "@type": "Place",
       name: `${site.locality}, ${site.region}, Huasteca Potosina`,
     },
-    // Perfil de Google + redes sociales (las vacías se omiten solas)
+    // Ficha de Google, Tripadvisor y redes (las vacías se omiten solas)
     sameAs: [
+      site.googleMapsUrl,
       site.googleReviewsUrl,
+      site.tripadvisorUrl,
       ...Object.values(site.socials).filter(Boolean),
     ],
     // Calificación agregada (reseñas reales de Google), respaldada por las

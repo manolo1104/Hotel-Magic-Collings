@@ -49,12 +49,14 @@ const panel = Plus_Jakarta_Sans({
   preload: false,
 });
 
-const description = `Hotel de ${site.rooms} habitaciones en el centro de ${site.locality}, ${site.region}: limpio, tranquilo y a precio justo. Aire acondicionado, estacionamiento y reserva directa sin comisión.`;
+// Título y descripción del home: "Hotel en Axtla de Terrazas" va PRIMERO porque
+// es lo que se busca («hoteles en Axtla»); la marca va al final.
+const description = `Hotel en el centro de ${site.locality}, ${site.regionCode}: ${site.rooms} habitaciones con aire acondicionado y estacionamiento gratis. ${site.reviewsRating} ★ en Google. Reserva directo.`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: `${site.legalName} · Hotel en el centro de ${site.locality}, ${site.regionCode}`,
+    default: `Hotel en ${site.locality}, ${site.regionCode} · ${site.name}`,
     template: `%s · ${site.name}`,
   },
   description,
@@ -68,13 +70,13 @@ export const metadata: Metadata = {
     locale: "es_MX",
     url: site.url,
     siteName: site.legalName,
-    title: `${site.legalName} · Hotel en el centro de ${site.locality}`,
+    title: `Hotel en el centro de ${site.locality} · ${site.legalName}`,
     description,
     // La imagen OG la genera app/opengraph-image.tsx (marca, 1200×630).
   },
   twitter: {
     card: "summary_large_image",
-    title: `${site.legalName} · Hotel en el centro de ${site.locality}`,
+    title: `Hotel en el centro de ${site.locality} · ${site.legalName}`,
     description,
     // twitter:image también lo provee app/opengraph-image.tsx.
   },

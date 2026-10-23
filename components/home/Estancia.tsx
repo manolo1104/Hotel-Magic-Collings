@@ -23,7 +23,7 @@ const puntos = [
   },
   {
     icon: MapPin,
-    title: "En el corazón de Axtla",
+    title: "En el centro de Axtla de Terrazas",
     body: "A pasos de la plaza, los restaurantes y la salida hacia las cascadas de la Huasteca.",
   },
 ];

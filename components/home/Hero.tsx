@@ -4,13 +4,14 @@ import { GarzaMark } from "@/components/brand/GarzaMark";
 import { Photo } from "@/components/Photo";
 import { BookingWidget } from "@/components/booking/BookingWidget";
 import { heroImage } from "@/lib/images";
-import { confianza } from "@/lib/site";
+import { confianza, site } from "@/lib/site";
 import { Parallax } from "@/components/motion/Parallax";
 import { RatingBadge } from "@/components/RatingBadge";
 
 // El titular es el elemento LCP: se anima por CSS (no por JS) para que aparezca
 // en el primer pintado incluso en móvil lento. El resto del sitio usa motion.
-const titulo = "Tu casa en Axtla, a un paso de las cascadas".split(" ");
+// Lleva "hotel en Axtla" a propósito: es lo que la gente escribe en Google.
+const titulo = "Tu hotel en Axtla, a un paso de las cascadas".split(" ");
 
 export function Hero() {
   return (
@@ -61,8 +62,9 @@ export function Hero() {
             className="anim-in mt-6 max-w-xl text-lg leading-relaxed text-white/90 sm:text-xl"
             style={{ animationDelay: "0.7s" }}
           >
-            Hotel de 6 habitaciones en el centro de Axtla de Terrazas: limpio,
-            tranquilo y a precio justo. Reserva directo, sin intermediarios.
+            Hotel de {site.rooms} habitaciones en el centro de {site.locality}:
+            limpio, tranquilo y a precio justo. Reserva directo, sin
+            intermediarios.
           </p>
         </div>
 

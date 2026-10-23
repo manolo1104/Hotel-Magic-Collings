@@ -37,8 +37,11 @@ export const site = {
     postalCode: "79932", // Confirmado por Google
     country: "MX",
   },
-  // Coordenadas sobre la calle José María Morelos, Zona Centro (geocodificado)
-  geo: { lat: 21.4381, lng: -98.8676 },
+  // Coordenadas del PIN de la ficha de Google (23 oct 2026). Las de antes eran
+  // geocodificadas y caían a 913 m del hotel: Google cruza estas con su ficha.
+  geo: { lat: 21.4353887, lng: -98.8759175 },
+  // Enlace permanente a la ficha de Google Maps (por su CID, no cambia nunca).
+  googleMapsUrl: "https://maps.google.com/?cid=13169597576677523636",
   // Embed de Google Maps por nombre del negocio (Google centra el pin en el hotel real)
   mapEmbedSrc:
     "https://www.google.com/maps?q=Hotel+Magic+Collinn,+Axtla+de+Terrazas&z=16&hl=es&output=embed",
@@ -71,13 +74,17 @@ export const site = {
 
   // ── Reseñas reales (Google) ───────────────────────────────
   googleReviewsUrl: "https://share.google/YkEaMJQmjkAdUKOqq",
-  reviewsRating: "4.5", // Calificación real de Google (jun 2026)
-  reviewsTotal: 122, // Total real de opiniones en Google
+  reviewsRating: "4.5", // Calificación real de Google (revisada 23 oct 2026)
+  reviewsTotal: 127, // Total real de opiniones en Google (23 oct 2026)
+  // Ficha de Tripadvisor. Solo va al Schema (sameAs), no al footer.
+  // ⚠️ Tripadvisor la tiene en «Terrazas», no en «Axtla de Terrazas».
+  tripadvisorUrl:
+    "https://www.tripadvisor.com.mx/Hotel_Review-g3226108-d14726214-Reviews-Hotel_Magic_Collinn-Terrazas_Central_Mexico_and_Gulf_Coast.html",
 
   // ── Redes sociales ────────────────────────────────────────
   // Al llenar una URL se agrega sola al Schema (sameAs). Vacío = se omite.
   socials: {
-    facebook: "", // TODO: URL de la página de Facebook del hotel
+    facebook: "https://www.facebook.com/p/Hotel-Magic-Collinn-100069169954900/",
     instagram: "", // TODO: URL del Instagram del hotel
   },
 
@@ -155,8 +162,18 @@ export const amenities = [
 // ── FAQ (Inicio) ────────────────────────────────────────────
 export const faqs = [
   {
+    q: "¿Dónde hospedarse en Axtla de Terrazas?",
+    a: `En el centro del pueblo, para llegar caminando a la plaza, el mercado y los restaurantes, y salir en coche a las cascadas y pozas de la Huasteca Potosina. El ${site.legalName} está a una calle de la plaza principal: ${site.rooms} habitaciones con aire acondicionado, estacionamiento sin costo y ${site.reviewsRating} estrellas en Google con ${site.reviewsTotal} reseñas.`,
+  },
+  {
     q: "¿Dónde está el Hotel Magic Collinn?",
     a: `Estamos en ${site.address.street}, ${site.address.locality}, ${site.address.region} (C.P. ${site.address.postalCode}), a una calle de la plaza principal, en pleno centro del pueblo.`,
+  },
+  {
+    // Mismas tarifas que `tarifaBase`/`precios` de lib/db/seed-data.ts: si
+    // Gersay las cambia, cambiar también esta respuesta.
+    q: "¿Cuánto cuesta un hotel en Axtla de Terrazas?",
+    a: "En el Hotel Magic Collinn la King Size cuesta $900 la noche para una persona y $1,080 para dos. La Doble Queen va de $1,200 a $1,440 según cuántos sean (hasta 4), y la Suite, un departamento completo para hasta 6, cuesta $2,500. Reservando directo en este sitio no pagas comisión; el precio exacto de tus fechas aparece al buscar disponibilidad.",
   },
   {
     q: "¿Sirve como base para visitar la Huasteca Potosina?",
