@@ -16,7 +16,9 @@ export default async function HabitacionesPage() {
   const habitaciones = tipos.map((t) => ({
     id: t.id,
     nombre: t.nombre,
+    descripcion: t.descripcion,
     fotos: t.fotos,
+    camas: t.camas,
     precios: Array.from({ length: t.capacidad }, (_, i) => precioPorNoche(t, i + 1)),
   }));
 
@@ -26,8 +28,8 @@ export default async function HabitacionesPage() {
         <p className="k-eyebrow">Panel</p>
         <h1 className="k-title">Habitaciones</h1>
         <p className="k-subtitle">
-          Cambia las fotos y el precio de cada habitación. Lo que guardes aquí es lo que
-          ve el huésped en el sitio
+          Cambia las fotos, el precio, las camas y la descripción de cada habitación. Lo
+          que guardes aquí es lo que ve el huésped en el sitio
         </p>
       </header>
       <HabitacionesClient habitaciones={habitaciones} />

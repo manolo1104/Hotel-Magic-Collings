@@ -6,6 +6,7 @@ import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { Precio } from "@/components/Precio";
 import { Button } from "@/components/ui/button";
+import { ChipCamas } from "@/components/booking/ChipCamas";
 
 export async function VistazoHabitaciones() {
   const tipos = await getRoomTypes();
@@ -46,6 +47,7 @@ export async function VistazoHabitaciones() {
                       {t.capacidad}
                     </span>
                   </div>
+                  <ChipCamas camas={t.camas} className="mt-2 self-start" />
                   <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
                     {t.descripcion}
                   </p>

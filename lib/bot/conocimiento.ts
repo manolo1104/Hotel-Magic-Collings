@@ -13,14 +13,15 @@ import { getRoomTypes } from "../booking/engine";
 import { site, amenities, tramosCancelacion } from "../site";
 import { CIERRE, cierreVigente } from "./config";
 import { fechaLarga } from "./fechas";
+import { camasLargo } from "../camas";
 
-type TipoPrompt = { slug: string; nombre: string; capacidad: number; descripcion: string; amenidades: string[] };
+type TipoPrompt = { slug: string; nombre: string; capacidad: number; descripcion: string; amenidades: string[]; camas?: string[] };
 
 export function armarPromptFijo(tipos: TipoPrompt[], hoyISO: string): string {
   const cuartos = tipos
     .map(
       (t) =>
-        `- ${t.nombre} (slug: ${t.slug}) — hasta ${t.capacidad} ${t.capacidad === 1 ? "persona" : "personas"}. ${t.descripcion}`,
+        `- ${t.nombre} (slug: ${t.slug}) — hasta ${t.capacidad} ${t.capacidad === 1 ? "persona" : "personas"}.${t.camas?.length ? ` Camas: ${camasLargo(t.camas)}.` : ""} ${t.descripcion}`,
     )
     .join("\n");
   const amenidadesCuarto = tipos[0]?.amenidades.join(", ") ?? "";
@@ -101,6 +102,7 @@ export async function promptFijo(hoyISO: string): Promise<string> {
         capacidad: t.capacidad,
         descripcion: t.descripcion,
         amenidades: t.amenidades,
+        camas: t.camas,
       })),
     };
   }

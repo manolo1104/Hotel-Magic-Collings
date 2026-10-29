@@ -3,6 +3,7 @@ import { Users, Check, ArrowRight } from "lucide-react";
 import { Photo } from "@/components/Photo";
 import { formatMXN } from "@/lib/booking/engine";
 import { Button } from "@/components/ui/button";
+import { ChipCamas } from "./ChipCamas";
 
 interface Props {
   slug: string;
@@ -12,6 +13,7 @@ interface Props {
   tarifaBase: number;
   amenidades: string[];
   fotos: string[];
+  camas: string[];
 }
 
 // Tarjeta de catálogo (sin fechas): muestra la habitación e invita a elegir
@@ -24,6 +26,7 @@ export function RoomCatalogCard({
   tarifaBase,
   amenidades,
   fotos,
+  camas,
 }: Props) {
   return (
     <article className="group grid overflow-hidden rounded-2xl border border-border bg-card transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] hover-hover:-translate-y-1 hover-hover:shadow-lg hover-hover:shadow-brand/5 md:grid-cols-[300px_1fr]">
@@ -44,6 +47,7 @@ export function RoomCatalogCard({
             <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
               <Users className="size-3.5" aria-hidden /> Hasta {capacidad}
             </span>
+            <ChipCamas camas={camas} />
           </div>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             {descripcion}

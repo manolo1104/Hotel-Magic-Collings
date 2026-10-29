@@ -7,11 +7,12 @@
 import { site, faqsConPrecios, amenities } from "@/lib/site";
 import { getRoomTypes } from "@/lib/booking/engine";
 import { getAllPosts } from "@/lib/content";
+import { camasLargo } from "@/lib/camas";
 
 export const revalidate = 3600;
 
 export async function GET(): Promise<Response> {
-  // Nombres, capacidad y precios salen de la base: Gersay los cambia en el panel.
+  // Nombres, capacidad, camas y precios salen de la base: Gersay los cambia en el panel.
   const tipos = await getRoomTypes();
   const base = site.url;
 
@@ -42,7 +43,7 @@ ${site.name} es un hotel pequeño y de atención personalizada, ubicado a una ca
 ## Datos clave
 - Dirección: ${site.address.street}, ${site.address.locality}, ${site.address.region}, C.P. ${site.address.postalCode}, México.
 - Teléfono y WhatsApp: ${site.phone}.
-- Habitaciones: ${site.rooms} en total, en ${tipos.length} categorías (${tipos.map((t) => `${t.nombre}, hasta ${t.capacidad} personas`).join("; ")}).
+- Habitaciones: ${site.rooms} en total, en ${tipos.length} categorías (${tipos.map((t) => `${t.nombre}, hasta ${t.capacidad} personas${t.camas.length > 0 ? `, con ${camasLargo(t.camas)}` : ""}`).join("; ")}).
 - Amenidades: ${amenities.map((a) => a.title.toLowerCase()).join(", ")}.
 - Check-in: a partir de las ${site.checkIn} h · Check-out: hasta las ${site.checkOut} h.
 - Cómo reservar: directo en ${base}. Se eligen fechas y huéspedes, se confirma la disponibilidad y la reserva se confirma por WhatsApp en menos de 24 horas.

@@ -32,6 +32,7 @@ import {
   suiteFotos,
   sencillaFotos,
 } from "../images";
+import type { TipoCama } from "../camas";
 
 export interface RoomTypeSeed {
   slug: string;
@@ -42,6 +43,7 @@ export interface RoomTypeSeed {
   precios: number[]; // MXN por noche según ocupación (índice 0 = 1 persona)
   amenidades: string[];
   fotos: string[];
+  camas: TipoCama[]; // una entrada por cama (lib/camas.ts)
   units: string[]; // números de cuarto físicos
 }
 
@@ -66,13 +68,14 @@ export const roomTypeSeed: RoomTypeSeed[] = [
     precios: [720, 840],
     amenidades: AMENIDADES_BASE,
     fotos: matrimonialFotos,
+    camas: ["matrimonial"],
     units: [], // ⚠️ pendiente: cuántas hay
   },
   {
     slug: "king-size",
     // 29 oct 2026: Gersay le puso literas → Junior King Triple, hasta 4.
-    // Escribió «$1,1500» para 3 personas: se leyó $1,500 (+$360 por persona,
-    // igual que de 3 a 4). 1 persona = mismo precio que 2 (él puso «x 1 cama King»).
+    // Escribió «$1,1500» para 3 personas: son $1,500 (Manolo lo confirmó el
+    // 29 oct). 1 persona = mismo precio que 2 (él puso «x 1 cama King»).
     nombre: "Habitación Junior King Triple",
     descripcion:
       "Una cama King Size y dos camas individuales en litera, para hasta cuatro personas. Aire acondicionado, agua caliente y pantalla con IPTV: ideal para una pareja o una familia pequeña que recorre la Huasteca.",
@@ -81,6 +84,7 @@ export const roomTypeSeed: RoomTypeSeed[] = [
     precios: [1140, 1140, 1500, 1860],
     amenidades: AMENIDADES_BASE,
     fotos: kingFotos,
+    camas: ["king", "litera", "litera"],
     units: [], // ⚠️ pendiente: cuántas hay
   },
   {
@@ -95,6 +99,7 @@ export const roomTypeSeed: RoomTypeSeed[] = [
     precios: [1320, 1320, 1440, 1560, 1920, 2280],
     amenidades: AMENIDADES_BASE,
     fotos: dobleQueenFotos,
+    camas: ["queen", "queen", "litera", "litera"],
     units: [], // ⚠️ pendiente: cuántas hay
   },
   {
@@ -109,6 +114,7 @@ export const roomTypeSeed: RoomTypeSeed[] = [
     precios: [],
     amenidades: AMENIDADES_BASE,
     fotos: suiteFotos,
+    camas: ["matrimonial", "matrimonial", "queen"],
     units: ["SUITE"], // el departamento es uno solo
   },
   {
@@ -125,6 +131,7 @@ export const roomTypeSeed: RoomTypeSeed[] = [
     precios: [10, 10],
     amenidades: ["Uso interno"],
     fotos: sencillaFotos,
+    camas: ["matrimonial"],
     units: ["T01"],
   },
 ];

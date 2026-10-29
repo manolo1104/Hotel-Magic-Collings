@@ -240,6 +240,7 @@ export async function getAvailability(
         tarifaBase: t.tarifaBase,
         amenidades: t.amenidades,
         fotos: t.fotos,
+        camas: t.camas,
         disponibles,
         noches,
         precioNoche: cotizacion.precioNoche,

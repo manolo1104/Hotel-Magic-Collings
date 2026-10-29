@@ -10,6 +10,7 @@ import { ClipReveal } from "@/components/motion/ClipReveal";
 import { Gallery, GalleryTile } from "@/components/gallery/Lightbox";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { Precio } from "@/components/Precio";
+import { ChipCamas } from "@/components/booking/ChipCamas";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbJsonLd, roomsJsonLd } from "@/lib/seo";
 import { fotosExtraPorSlug } from "@/lib/images";
@@ -121,6 +122,7 @@ export default async function HabitacionesPage() {
                     <Users className="size-3.5" aria-hidden /> Hasta {t.capacidad}{" "}
                     personas
                   </span>
+                  <ChipCamas camas={t.camas} />
                 </StaggerItem>
 
                 <StaggerItem className="mt-4">

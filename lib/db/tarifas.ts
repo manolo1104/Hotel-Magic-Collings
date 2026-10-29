@@ -19,12 +19,14 @@
 // Sin argumentos solo actualiza precios y textos, sin tocar la estructura.
 //
 //   npm run db:tarifas -- --ensayo
-// Muestra qué cambiaría (precios, capacidad, nombre) SIN escribir nada.
+// Muestra qué cambiaría (precios, capacidad, nombre, descripción) SIN escribir nada.
 //
-// ⚠️ Desde el 29 oct 2026 Gersay cambia precios y fotos en /admin/habitaciones.
-// Este script PISA los precios, nombres y capacidad del panel con los de
-// seed-data.ts: correr primero con --ensayo. Las FOTOS de un tipo que ya existe
-// no se tocan nunca (son del panel); solo se siembran al crear un tipo nuevo.
+// ⚠️ Desde el 29 oct 2026 Gersay cambia precios, fotos, camas y descripción en
+// /admin/habitaciones.
+// Este script PISA los precios, nombres, descripción y capacidad del panel con
+// los de seed-data.ts: correr primero con --ensayo. Las FOTOS y las CAMAS de un
+// tipo que ya existe no se tocan nunca (son del panel); solo se siembran al
+// crear un tipo nuevo.
 //
 // ⚠️ Usa la DATABASE_URL del entorno. `.env.local` apunta a PRODUCCIÓN.
 // ============================================================
@@ -178,7 +180,7 @@ async function main() {
 
   for (const semilla of roomTypeSeed) {
     const previo = porSlug.get(semilla.slug);
-    // Sin `fotos`: las de un tipo que ya existe las maneja el panel.
+    // Sin `fotos` ni `camas`: las de un tipo que ya existe las maneja el panel.
     const campos = {
       nombre: semilla.nombre,
       descripcion: semilla.descripcion,
@@ -190,8 +192,8 @@ async function main() {
 
     let tipoId: string;
     if (previo && ensayo) {
-      const antes = JSON.stringify({ nombre: previo.nombre, capacidad: previo.capacidad, tarifaBase: previo.tarifaBase, precios: previo.precios });
-      const despues = JSON.stringify({ nombre: campos.nombre, capacidad: campos.capacidad, tarifaBase: campos.tarifaBase, precios: campos.precios });
+      const antes = JSON.stringify({ nombre: previo.nombre, descripcion: previo.descripcion, capacidad: previo.capacidad, tarifaBase: previo.tarifaBase, precios: previo.precios });
+      const despues = JSON.stringify({ nombre: campos.nombre, descripcion: campos.descripcion, capacidad: campos.capacidad, tarifaBase: campos.tarifaBase, precios: campos.precios });
       console.log(antes === despues ? `  = ${semilla.slug} — sin cambios` : `  ~ ${semilla.slug}\n      antes:   ${antes}\n      después: ${despues}`);
       continue;
     }
@@ -206,7 +208,7 @@ async function main() {
       }
       const [creado] = await db
         .insert(roomTypes)
-        .values({ slug: semilla.slug, ...campos, fotos: [...semilla.fotos] })
+        .values({ slug: semilla.slug, ...campos, fotos: [...semilla.fotos], camas: [...semilla.camas] })
         .returning({ id: roomTypes.id });
       tipoId = creado.id;
       console.log(`  + ${semilla.nombre} — CREADO, precios ${JSON.stringify(semilla.precios)}`);

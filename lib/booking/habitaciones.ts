@@ -1,8 +1,9 @@
 // ============================================================
-// HABITACIONES DESDE EL PANEL — fotos y precios por persona
+// HABITACIONES DESDE EL PANEL — fotos, precios por persona, camas y descripción
 //
 // Gersay cambia aquí lo que antes solo se cambiaba con `npm run db:tarifas`:
-// el precio de la noche según cuánta gente entra y las fotos de cada tipo.
+// el precio de la noche según cuánta gente entra, las fotos, las camas y el
+// texto de cada tipo.
 //
 //   · Los precios van por persona (posición 0 = 1 persona), igual que
 //     `room_types.precios`. Cuántos precios hay = cuánta gente cabe, así que
@@ -10,18 +11,24 @@
 //     /habitaciones) pasa a ser el más barato de la lista.
 //   · Las fotos subidas viven en la tabla `fotos_subidas` y se sirven en
 //     `/fotos/<id>.jpg`. Las de siempre (`/imagenes/…`) siguen en public/.
+//   · Las camas van una por entrada (["king", "litera", "litera"]); los tipos
+//     y cómo se escriben están en lib/camas.ts.
 //   · Lo ya reservado no cambia: el total se congela en `bookings.total`.
 // ============================================================
 import { eq, inArray, lt, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { ensureDb } from "@/lib/db/ensure";
 import { fotosSubidas, roomTypes } from "@/lib/db/schema";
+import { esTipoCama, type TipoCama } from "@/lib/camas";
 import { HIDDEN_SLUGS } from "./engine";
 
 export const MAX_FOTOS = 12;
 export const MAX_PERSONAS = 10;
 const PRECIO_MIN = 100;
 const PRECIO_MAX = 50_000;
+const MAX_CAMAS = 12;
+const DESCRIPCION_MIN = 20;
+const DESCRIPCION_MAX = 600;
 // El navegador ya reduce la foto a ~300 KB antes de subirla; esto solo frena
 // una subida sin reducir (Vercel corta las peticiones de más de 4.5 MB).
 const MAX_BYTES = 3 * 1024 * 1024;
@@ -151,9 +158,22 @@ async function validarFotos(fotos: unknown, actuales: string[]): Promise<string[
   return lista;
 }
 
+function validarCamas(camas: unknown): TipoCama[] | string {
+  if (!Array.isArray(camas) || camas.length === 0) return "Pon al menos una cama.";
+  if (camas.length > MAX_CAMAS) return `Máximo ${MAX_CAMAS} camas por habitación.`;
+  if (!camas.every(esTipoCama))
+    return "Uno de los tipos de cama no es válido. Recarga la página e inténtalo de nuevo.";
+  return camas;
+}
+
+/** El texto se muestra en un párrafo: los saltos de línea no se verían. */
+function limpiarDescripcion(texto: unknown): string {
+  return typeof texto === "string" ? texto.replace(/\s+/g, " ").trim() : "";
+}
+
 export async function actualizarHabitacion(
   id: string,
-  input: { precios: unknown; fotos: unknown },
+  input: { precios: unknown; fotos: unknown; camas: unknown; descripcion: unknown },
 ): Promise<Resultado> {
   await ensureDb();
   const [actual] = await db.select().from(roomTypes).where(eq(roomTypes.id, id)).limit(1);
@@ -165,6 +185,14 @@ export async function actualizarHabitacion(
   if (typeof precios === "string") return { ok: false, error: precios };
   const fotos = await validarFotos(input.fotos, actual.fotos);
   if (typeof fotos === "string") return { ok: false, error: fotos };
+  const camas = validarCamas(input.camas);
+  if (typeof camas === "string") return { ok: false, error: camas };
+  const descripcion = limpiarDescripcion(input.descripcion);
+  if (descripcion.length < DESCRIPCION_MIN || descripcion.length > DESCRIPCION_MAX)
+    return {
+      ok: false,
+      error: `La descripción debe tener entre ${DESCRIPCION_MIN} y ${DESCRIPCION_MAX} letras (lleva ${descripcion.length}).`,
+    };
 
   await db
     .update(roomTypes)
@@ -173,6 +201,8 @@ export async function actualizarHabitacion(
       capacidad: precios.length,
       tarifaBase: Math.min(...precios),
       fotos,
+      camas,
+      descripcion,
     })
     .where(eq(roomTypes.id, id));
 

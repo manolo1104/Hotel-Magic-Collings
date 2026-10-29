@@ -18,6 +18,7 @@ export interface AvailableRoomType {
   tarifaBase: number;
   amenidades: string[];
   fotos: string[];
+  camas: string[]; // una entrada por cama (lib/camas.ts)
   disponibles: number; // unidades libres en el rango
   noches: number;
   /**

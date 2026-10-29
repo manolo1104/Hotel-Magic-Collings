@@ -107,6 +107,7 @@ export default async function BuscarPage({ searchParams }: { searchParams: SP })
                     tarifaBase={t.tarifaBase}
                     amenidades={t.amenidades}
                     fotos={t.fotos}
+                    camas={t.camas}
                   />
                 </StaggerItem>
               ))}

@@ -4,7 +4,7 @@
 // Se ejecuta una sola vez por proceso (cacheado en globalThis).
 // Hace que el sitio funcione en localhost sin ningún paso manual.
 // ============================================================
-import { sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "./index";
 import { roomTypes, rooms } from "./schema";
 import { roomTypeSeed } from "./seed-data";
@@ -249,6 +249,8 @@ const MIGRATIONS = [
   `CREATE UNIQUE INDEX IF NOT EXISTS bookings_beds24_id_uq ON bookings (beds24_booking_id) WHERE beds24_booking_id IS NOT NULL`,
   // "Eliminar cliente" en el panel: esconde la ficha sin tocar sus reservas.
   `ALTER TABLE guest_notes ADD COLUMN IF NOT EXISTS oculto_desde timestamp`,
+  // Camas de cada tipo (lib/camas.ts). Se llenan en `llenarCamas`.
+  `ALTER TABLE room_types ADD COLUMN IF NOT EXISTS camas text[] NOT NULL DEFAULT '{}'`,
 ];
 
 export async function seedRooms(): Promise<void> {
@@ -264,6 +266,7 @@ export async function seedRooms(): Promise<void> {
         precios: [...t.precios],
         amenidades: [...t.amenidades],
         fotos: [...t.fotos],
+        camas: [...t.camas],
       })
       .returning({ id: roomTypes.id });
 
@@ -272,6 +275,20 @@ export async function seedRooms(): Promise<void> {
         .insert(rooms)
         .values(t.units.map((numero) => ({ roomTypeId: rt.id, numero })));
     }
+  }
+}
+
+/**
+ * Pone las camas de seed-data a los tipos que todavía no tienen ninguna (la
+ * columna llegó el 29 oct 2026 con la base de producción ya sembrada). El
+ * panel exige al menos una cama, así que nunca pisa lo que Gersay guardó.
+ */
+async function llenarCamas(): Promise<void> {
+  for (const t of roomTypeSeed) {
+    await db
+      .update(roomTypes)
+      .set({ camas: [...t.camas] })
+      .where(and(eq(roomTypes.slug, t.slug), sql`cardinality(${roomTypes.camas}) = 0`));
   }
 }
 
@@ -288,6 +305,8 @@ async function init(): Promise<void> {
     .limit(1);
   if (existing.length === 0) {
     await seedRooms();
+  } else {
+    await llenarCamas();
   }
 }
 

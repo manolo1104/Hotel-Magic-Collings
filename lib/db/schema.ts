@@ -31,6 +31,9 @@ export const roomTypes = pgTable("room_types", {
   precios: integer("precios").array().notNull().default([]),
   amenidades: text("amenidades").array().notNull().default([]),
   fotos: text("fotos").array().notNull().default([]),
+  // Una entrada por cama: ["king", "litera", "litera"]. Tipos y textos en
+  // lib/camas.ts; Gersay las cambia en /admin/habitaciones.
+  camas: text("camas").array().notNull().default([]),
   // Id de la "habitación" equivalente en Beds24 (el channel manager). Beds24
   // trabaja por TIPO con un número de unidades (qty), igual que nosotros, así
   // que el emparejamiento va aquí y no en cada cuarto físico. null = sin conectar.

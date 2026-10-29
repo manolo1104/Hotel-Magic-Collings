@@ -4,6 +4,7 @@
 // ============================================================
 import { site, amenities, faqs, testimonios, type Pregunta } from "./site";
 import { heroImage, galeria } from "./images";
+import { agruparCamas, TIPOS_CAMA } from "./camas";
 
 const HOTEL_ID = `${site.url}/#hotel`;
 const WEBSITE_ID = `${site.url}/#website`;
@@ -126,6 +127,7 @@ export interface RoomSeoInput {
   tarifaBase: number;
   amenidades: string[];
   fotos: string[];
+  camas: string[];
 }
 
 /** Habitaciones como HotelRoom + Offer (precio/moneda) para /habitaciones. */
@@ -144,6 +146,15 @@ export function roomsJsonLd(rooms: RoomSeoInput[]): Record<string, unknown> {
         maxValue: r.capacidad,
         unitText: "persona",
       },
+      ...(r.camas.length > 0
+        ? {
+            bed: agruparCamas(r.camas).map((g) => ({
+              "@type": "BedDetails",
+              numberOfBeds: g.cantidad,
+              typeOfBed: TIPOS_CAMA[g.tipo].opcion,
+            })),
+          }
+        : {}),
       amenityFeature: r.amenidades.map((a) => ({
         "@type": "LocationFeatureSpecification",
         name: a,

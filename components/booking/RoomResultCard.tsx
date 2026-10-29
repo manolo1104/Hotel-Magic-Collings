@@ -5,6 +5,7 @@ import type { AvailableRoomType } from "@/lib/booking/types";
 import { formatMXN } from "@/lib/booking/engine";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ChipCamas } from "./ChipCamas";
 
 interface Props {
   tipo: AvailableRoomType;
@@ -52,6 +53,7 @@ export function RoomResultCard({
             <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
               <Users className="size-3.5" aria-hidden /> Hasta {tipo.capacidad}
             </span>
+            <ChipCamas camas={tipo.camas} />
           </div>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             {tipo.descripcion}
