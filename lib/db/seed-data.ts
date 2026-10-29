@@ -70,24 +70,29 @@ export const roomTypeSeed: RoomTypeSeed[] = [
   },
   {
     slug: "king-size",
-    nombre: "Habitación King Size",
+    // 29 oct 2026: Gersay le puso literas → Junior King Triple, hasta 4.
+    // Escribió «$1,1500» para 3 personas: se leyó $1,500 (+$360 por persona,
+    // igual que de 3 a 4). 1 persona = mismo precio que 2 (él puso «x 1 cama King»).
+    nombre: "Habitación Junior King Triple",
     descripcion:
-      "Cama King Size para dos personas, con aire acondicionado, agua caliente y pantalla con IPTV. Espacio de sobra para descansar de verdad después de un día en la Huasteca.",
-    capacidad: 2,
-    tarifaBase: 900,
-    precios: [900, 1080],
+      "Una cama King Size y dos camas individuales en litera, para hasta cuatro personas. Aire acondicionado, agua caliente y pantalla con IPTV: ideal para una pareja o una familia pequeña que recorre la Huasteca.",
+    capacidad: 4,
+    tarifaBase: 1140,
+    precios: [1140, 1140, 1500, 1860],
     amenidades: AMENIDADES_BASE,
     fotos: kingFotos,
     units: [], // ⚠️ pendiente: cuántas hay
   },
   {
     slug: "doble-queen",
-    nombre: "Habitación Doble Queen",
+    // 29 oct 2026: con literas → Master Queen Cuádruple, hasta 6. Gersay no dio
+    // precio para 1 persona: se usa el de 2.
+    nombre: "Habitación Master Queen Cuádruple",
     descripcion:
-      "Dos camas Queen Size para hasta cuatro personas. La favorita de familias y grupos de amigos que recorren cascadas todo el día y quieren volver a dormir cómodos y céntricos.",
-    capacidad: 4,
-    tarifaBase: 1200,
-    precios: [1200, 1200, 1320, 1440],
+      "Dos camas Queen Size y dos camas individuales en litera, para hasta seis personas. La favorita de familias y grupos de amigos que recorren cascadas todo el día y quieren volver a dormir cómodos y céntricos.",
+    capacidad: 6,
+    tarifaBase: 1320,
+    precios: [1320, 1320, 1440, 1560, 1920, 2280],
     amenidades: AMENIDADES_BASE,
     fotos: dobleQueenFotos,
     units: [], // ⚠️ pendiente: cuántas hay
@@ -96,11 +101,11 @@ export const roomTypeSeed: RoomTypeSeed[] = [
     slug: "suite",
     nombre: "Suite · Departamento completo",
     descripcion:
-      "El departamento completo para ustedes: dos recámaras con tres camas (dos matrimoniales y una Queen Size), hasta seis personas. La mejor opción para una familia grande o dos parejas que viajan juntas y quieren su propio espacio en el centro de Axtla.",
+      "El departamento completo para ustedes: dos recámaras con tres camas (dos matrimoniales y una Queen Size), sala y cocineta, hasta seis personas. La mejor opción para una familia grande o dos parejas que viajan juntas y quieren su propio espacio en el centro de Axtla.",
     capacidad: 6,
-    // Precio único de $2,500 la noche, entren 1 o 6 personas: `precios` vacío
-    // hace que `precioPorNoche` use siempre `tarifaBase`.
-    tarifaBase: 2500,
+    // Precio único de $3,000 la noche (29 oct 2026), entren 1 o 6 personas:
+    // `precios` vacío hace que `precioPorNoche` use siempre `tarifaBase`.
+    tarifaBase: 3000,
     precios: [],
     amenidades: AMENIDADES_BASE,
     fotos: suiteFotos,

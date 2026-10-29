@@ -202,6 +202,14 @@ const DDL = [
     enviado_en timestamp,
     created_at timestamp NOT NULL DEFAULT now()
   )`,
+  // Fotos de habitación subidas desde el panel (ver `fotosSubidas` en schema.ts)
+  `CREATE TABLE IF NOT EXISTS fotos_subidas (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tipo text NOT NULL,
+    datos text NOT NULL,
+    bytes integer NOT NULL,
+    created_at timestamp NOT NULL DEFAULT now()
+  )`,
 ];
 
 // Migraciones idempotentes para BASES DE DATOS YA EXISTENTES (PGlite local o

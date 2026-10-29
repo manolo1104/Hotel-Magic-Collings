@@ -2,7 +2,7 @@
 // Helpers de Schema.org (JSON-LD) — grafo conectado por @id
 // Google y los LLMs entienden mejor un @graph con entidades enlazadas.
 // ============================================================
-import { site, amenities, faqs, testimonios } from "./site";
+import { site, amenities, faqs, testimonios, type Pregunta } from "./site";
 import { heroImage, galeria } from "./images";
 
 const HOTEL_ID = `${site.url}/#hotel`;
@@ -97,12 +97,12 @@ export function websiteEntity(): Record<string, unknown> {
   };
 }
 
-/** Nodo FAQPage a partir de las preguntas frecuentes. */
-export function faqPageNode(): Record<string, unknown> {
+/** Nodo FAQPage a partir de las preguntas frecuentes (las MISMAS que se ven). */
+export function faqPageNode(preguntas: readonly Pregunta[] = faqs): Record<string, unknown> {
   return {
     "@type": "FAQPage",
     "@id": `${site.url}/#faq`,
-    mainEntity: faqs.map((f) => ({
+    mainEntity: preguntas.map((f) => ({
       "@type": "Question",
       name: f.q,
       acceptedAnswer: { "@type": "Answer", text: f.a },
@@ -111,10 +111,10 @@ export function faqPageNode(): Record<string, unknown> {
 }
 
 /** Grafo de la página de Inicio: Hotel + WebSite + FAQPage. */
-export function homeGraphJsonLd(): Record<string, unknown> {
+export function homeGraphJsonLd(preguntas: readonly Pregunta[] = faqs): Record<string, unknown> {
   return {
     "@context": "https://schema.org",
-    "@graph": [hotelEntity(), websiteEntity(), faqPageNode()],
+    "@graph": [hotelEntity(), websiteEntity(), faqPageNode(preguntas)],
   };
 }
 

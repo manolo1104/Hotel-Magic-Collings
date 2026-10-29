@@ -12,7 +12,7 @@ import { Gallery, GalleryTile } from "@/components/gallery/Lightbox";
 
 export const metadata: Metadata = {
   title: "Galería de fotos",
-  description: `Fotos reales del ${site.legalName} en ${site.locality}: fachada, corredor de arcos, habitaciones King Size y Doble Queen, y la Suite. Así se ve el hotel que vas a reservar.`,
+  description: `Fotos reales del ${site.legalName} en ${site.locality}: fachada, corredor de arcos, habitaciones Junior King y Master Queen, y la Suite. Así se ve el hotel que vas a reservar.`,
   alternates: { canonical: "/galeria" },
 };
 
@@ -38,22 +38,22 @@ const tiles: {
   { src: "/imagenes/corredor-habitaciones.jpg", alt: "Corredor con acceso a las habitaciones y sillones de descanso", from: "bottom" },
   { src: "/imagenes/patio-empedrado.jpg", alt: "Patio empedrado del hotel con setos recortados", wide: true, from: "right" },
   { src: "/imagenes/fachada-calle.jpg", alt: "Entrada del Hotel Magic Collinn desde la calle", from: "bottom" },
-  // Habitación King Size
-  { src: "/imagenes/king-2.jpg", alt: "Habitación King Size con salita, pantalla y salida al balcón", wide: true, from: "left" },
-  { src: "/imagenes/king-1.jpg", alt: "Cama King Size con cabecera de ratán en la habitación King", from: "bottom" },
-  { src: "/imagenes/king-3.jpg", alt: "Habitación King Size con clóset y tocador", from: "bottom" },
+  // Habitación Junior King
+  { src: "/imagenes/king-2.jpg", alt: "Habitación Junior King con salita, pantalla y salida al balcón", wide: true, from: "left" },
+  { src: "/imagenes/king-1.jpg", alt: "Cama King Size con cabecera de ratán en la habitación Junior King", from: "bottom" },
+  { src: "/imagenes/king-3.jpg", alt: "Habitación Junior King con clóset y tocador", from: "bottom" },
   // Habitación Matrimonial
   { src: "/imagenes/matrimonial-1.jpg", alt: "Habitación Matrimonial con tocador y espejo", from: "bottom" },
   { src: "/imagenes/matrimonial-2.jpg", alt: "Habitación Matrimonial con pantalla y salida al balcón", from: "bottom" },
   { src: "/imagenes/matrimonial-3.jpg", alt: "Detalle de la habitación Matrimonial con clóset", from: "bottom" },
-  // Habitación Doble Queen
-  { src: "/imagenes/doble-queen-2.jpg", alt: "Habitación Doble Queen con dos camas Queen Size y tocador", wide: true, from: "right" },
-  { src: "/imagenes/doble-queen-1.jpg", alt: "Habitación Doble Queen con dos camas y pantalla", from: "bottom" },
-  { src: "/imagenes/doble-queen-3.jpg", alt: "Habitación Doble Queen con salita y salida al corredor", from: "bottom" },
-  { src: "/imagenes/doble-queen-4.jpg", alt: "Habitación Doble Queen amplia con sofá", from: "bottom" },
-  { src: "/imagenes/doble-queen-5.jpg", alt: "Habitación Doble Queen con dos camas y tocador", from: "bottom" },
-  { src: "/imagenes/doble-queen-7.jpg", alt: "Habitación Doble Queen, vista general", from: "bottom" },
-  { src: "/imagenes/doble-queen-8.jpg", alt: "Habitación Doble Queen con sala de estar", from: "bottom" },
+  // Habitación Master Queen
+  { src: "/imagenes/doble-queen-2.jpg", alt: "Habitación Master Queen con dos camas Queen Size y tocador", wide: true, from: "right" },
+  { src: "/imagenes/doble-queen-1.jpg", alt: "Habitación Master Queen con dos camas y pantalla", from: "bottom" },
+  { src: "/imagenes/doble-queen-3.jpg", alt: "Habitación Master Queen con salita y salida al corredor", from: "bottom" },
+  { src: "/imagenes/doble-queen-4.jpg", alt: "Habitación Master Queen amplia con sofá", from: "bottom" },
+  { src: "/imagenes/doble-queen-5.jpg", alt: "Habitación Master Queen con dos camas y tocador", from: "bottom" },
+  { src: "/imagenes/doble-queen-7.jpg", alt: "Habitación Master Queen, vista general", from: "bottom" },
+  { src: "/imagenes/doble-queen-8.jpg", alt: "Habitación Master Queen con sala de estar", from: "bottom" },
   // Departamento
   { src: "/imagenes/depa-matrimonial-2.jpg", alt: "Recámara de la Suite con dos camas matrimoniales", wide: true, from: "left" },
   { src: "/imagenes/depa-queen-1.jpg", alt: "Recámara de la Suite con cama Queen Size", wide: true, wideMobile: true, from: "right" },
@@ -81,7 +81,7 @@ export default function GaleriaPage() {
         <Reveal delay={0.3} className="mt-4">
           <p className="leading-relaxed text-muted-foreground">
             Fotos reales de {site.name}: la fachada, el corredor de arcos,
-            nuestras habitaciones King Size y Doble Queen, y la Suite. Lo que
+            nuestras habitaciones Junior King y Master Queen, y la Suite. Lo que
             ves es lo que te recibe. Toca cualquier foto para verla en grande.
           </p>
         </Reveal>

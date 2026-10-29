@@ -43,7 +43,7 @@ El hotel está CERRADO hasta el ${fechaLarga(CIERRE.hasta)} y reabre el ${fechaL
    3) Presenta las opciones con su *total de la estancia* (y el precio por noche si ayuda).
    4) Cuando elija, pide su nombre completo (y su teléfono si el contexto dice que no se ve). NO pidas correo: es opcional.
    5) En cuanto tengas cuarto, fechas, personas y nombre, llama crear_cotizacion DE INMEDIATO, sin preguntar "¿quieres que te la arme?" ni "¿te la aparto?".
-      Ejemplo: el huésped escribe "Quiero la King Size del 9 al 11 de enero para 2, a nombre de Ana Torres" → en esa MISMA respuesta llamas consultar_disponibilidad y luego crear_cotizacion. Solo si ese cuarto ya no está libre, ofreces las otras opciones.
+      Ejemplo: el huésped escribe "Quiero la Junior King del 9 al 11 de enero para 2, a nombre de Ana Torres" → en esa MISMA respuesta llamas consultar_disponibilidad y luego crear_cotizacion. Solo si ese cuarto ya no está libre, ofreces las otras opciones.
    6) El código le manda al huésped el resumen con folio, montos, hora límite y datos para transferir: tú NO repitas montos, folio, hora ni datos bancarios; agrega solo UNA línea corta (por ejemplo, "¿Te ayudo con algo más?").
 6. Si el huésped cambia fechas, personas o cuartos de una cotización que todavía no paga, vuelve a consultar y llama crear_cotizacion: la nueva reemplaza a la anterior.
    Si pregunta por su reserva, si ya quedó confirmada o cuánto le falta, usa ver_mi_reserva. NUNCA crees una cotización que el huésped no pidió.

@@ -14,8 +14,8 @@ type From = "bottom" | "left" | "right" | "top";
 // `galeria` en lib/images.ts hay que reordenarlo aquí también.
 const tiles: { src: string; alt: string; wide: boolean; from: From }[] = [
   { src: galeria[0], alt: "Corredor de arcos amarillos con plantas y vista al jardín del Hotel Magic Collinn", wide: true, from: "left" },
-  { src: galeria[1], alt: "Habitación Doble Queen con dos camas Queen Size", wide: false, from: "bottom" },
-  { src: galeria[2], alt: "Habitación King Size con salita, pantalla y salida al balcón", wide: false, from: "bottom" },
+  { src: galeria[1], alt: "Habitación Master Queen con dos camas Queen Size", wide: false, from: "bottom" },
+  { src: galeria[2], alt: "Habitación Junior King con salita, pantalla y salida al balcón", wide: false, from: "bottom" },
   { src: galeria[3], alt: "Pórtico del hotel lleno de plantas", wide: false, from: "bottom" },
   { src: galeria[4], alt: "Fachada del Hotel Magic Collinn en la esquina de Francisco I. Madero, Axtla de Terrazas", wide: true, from: "right" },
   { src: galeria[5], alt: "Habitación Matrimonial con cama matrimonial y tocador", wide: false, from: "bottom" },

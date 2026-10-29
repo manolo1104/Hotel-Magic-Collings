@@ -1,11 +1,13 @@
 import { ChevronDown } from "lucide-react";
-import { faqs, waLink } from "@/lib/site";
+import { faqs, waLink, type Pregunta } from "@/lib/site";
 import { Reveal } from "@/components/motion/Reveal";
 
 // FAQ con <details>/<summary> nativos: accesible por teclado sin JS, con el
 // contenido SIEMPRE presente en el HTML servido (bien para SEO + coherente con
 // el schema FAQPage). Reemplaza al acordeón anterior.
-export function Faq() {
+// `preguntas` trae la de precios contestada con las tarifas de la base
+// (`faqsConPrecios`); sin ella sale la respuesta de respaldo, sin cifras.
+export function Faq({ preguntas = faqs }: { preguntas?: readonly Pregunta[] }) {
   return (
     <section className="bg-secondary/40">
       <div className="mx-auto max-w-3xl px-4 py-20 sm:px-6 md:py-28">
@@ -29,7 +31,7 @@ export function Faq() {
 
         <Reveal className="mt-8">
           <div className="overflow-hidden rounded-2xl border border-border bg-card">
-            {faqs.map((f, i) => (
+            {preguntas.map((f, i) => (
               <details
                 key={i}
                 className="group border-border not-last:border-b [&_summary::-webkit-details-marker]:hidden"

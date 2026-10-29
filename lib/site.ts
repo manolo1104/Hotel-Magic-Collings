@@ -54,7 +54,8 @@ export const site = {
   checkIn: "13:00", // Confirmado por Gersay (31 jul 2026)
   checkOut: "11:00", // Confirmado por Gersay (31 jul 2026)
   petsAllowed: false as boolean | null, // Confirmado: no se reciben mascotas
-  // Inventario real (7 ago 2026): 3 King Size + 3 Doble Queen + la Suite.
+  // Inventario real (7 ago 2026): 3 King + 3 Queen + la Suite. Desde el 29 oct
+  // 2026 se llaman Junior King Triple y Master Queen Cuádruple (con literas).
   // La Matrimonial sigue en el catálogo pero hoy sin cuartos asignados, así que
   // no se anuncia; en cuanto Gersay confirme cuántas hay, cambian estos dos.
   rooms: 7,
@@ -160,6 +161,8 @@ export const amenities = [
 ] as const;
 
 // ── FAQ (Inicio) ────────────────────────────────────────────
+const PREGUNTA_PRECIOS = "¿Cuánto cuesta un hotel en Axtla de Terrazas?";
+
 export const faqs = [
   {
     q: "¿Dónde hospedarse en Axtla de Terrazas?",
@@ -170,10 +173,10 @@ export const faqs = [
     a: `Estamos en ${site.address.street}, ${site.address.locality}, ${site.address.region} (C.P. ${site.address.postalCode}), a una calle de la plaza principal, en pleno centro del pueblo.`,
   },
   {
-    // Mismas tarifas que `tarifaBase`/`precios` de lib/db/seed-data.ts: si
-    // Gersay las cambia, cambiar también esta respuesta.
-    q: "¿Cuánto cuesta un hotel en Axtla de Terrazas?",
-    a: "En el Hotel Magic Collinn la King Size cuesta $900 la noche para una persona y $1,080 para dos. La Doble Queen va de $1,200 a $1,440 según cuántos sean (hasta 4), y la Suite, un departamento completo para hasta 6, cuesta $2,500. Reservando directo en este sitio no pagas comisión; el precio exacto de tus fechas aparece al buscar disponibilidad.",
+    // Los precios los cambia Gersay en el panel, así que la respuesta CON
+    // cifras la arma `faqsConPrecios()` desde la base. Ésta es la de respaldo.
+    q: PREGUNTA_PRECIOS,
+    a: `En el ${site.legalName} el precio depende de la habitación y de cuántas personas sean. Reservando directo en este sitio no pagas comisión; el precio exacto de tus fechas aparece al buscar disponibilidad.`,
   },
   {
     q: "¿Sirve como base para visitar la Huasteca Potosina?",
@@ -204,6 +207,49 @@ export const faqs = [
     a: "Reservas directo en el sitio y te confirmamos por WhatsApp en menos de 24 horas. Al reservar directo tienes el mejor precio, sin comisiones.",
   },
 ] as const;
+
+export type Pregunta = { q: string; a: string };
+
+/** Lo que hace falta de una habitación para decir cuánto cuesta (sin importar la base). */
+export interface TarifaPublica {
+  nombre: string;
+  capacidad: number;
+  tarifaBase: number;
+  precios: number[];
+}
+
+/** "Habitación Junior King Triple" → "Junior King Triple"; "Suite · Departamento completo" → "Suite". */
+function nombreCorto(nombre: string): string {
+  return nombre.replace(/^Habitación\s+/i, "").split(" · ")[0];
+}
+
+function personas(n: number): string {
+  return `${n} ${n === 1 ? "persona" : "personas"}`;
+}
+
+/**
+ * Las preguntas frecuentes con la de precios contestada con las tarifas de la
+ * base. La usan el Inicio (texto y FAQPage) y /llms.txt, para que Google y las
+ * IA citen el precio que se cobra y no uno viejo.
+ */
+export function faqsConPrecios(tipos: TarifaPublica[]): readonly Pregunta[] {
+  if (tipos.length === 0) return faqs;
+  const mxn = (n: number) => `$${n.toLocaleString("es-MX")}`;
+  const partes = tipos.map((t) => {
+    // Misma regla que `precioPorNoche`: sin tabla de precios, `tarifaBase`.
+    const lista = t.precios.length > 0 ? t.precios.slice(0, t.capacidad) : [t.tarifaBase];
+    const min = Math.min(...lista);
+    const max = Math.max(...lista);
+    const nombre = nombreCorto(t.nombre);
+    return min === max
+      ? `la ${nombre} cuesta ${mxn(min)} la noche (hasta ${personas(t.capacidad)})`
+      : `la ${nombre} va de ${mxn(min)} a ${mxn(max)} según cuántos sean (hasta ${personas(t.capacidad)})`;
+  });
+  const lista =
+    partes.length === 1 ? partes[0] : `${partes.slice(0, -1).join(", ")} y ${partes.at(-1)}`;
+  const a = `En el ${site.legalName} ${lista}. Reservando directo en este sitio no pagas comisión; el precio exacto de tus fechas aparece al buscar disponibilidad.`;
+  return faqs.map((f) => (f.q === PREGUNTA_PRECIOS ? { ...f, a } : f));
+}
 
 // ── Señales de confianza (cerca del CTA) — todas verídicas ──────────
 export const confianza = [

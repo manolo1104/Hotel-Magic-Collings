@@ -20,7 +20,7 @@ export const revalidate = 600;
 export const metadata: Metadata = {
   title: "Habitaciones y tarifas en Axtla de Terrazas",
   description:
-    "Conoce las habitaciones del Hotel Magic Collinn en Axtla de Terrazas: King Size, Doble Queen y una Suite para grupos, climatizadas y con estacionamiento. Reserva directa.",
+    "Conoce las habitaciones del Hotel Magic Collinn en Axtla de Terrazas: Junior King, Master Queen y una Suite para grupos, climatizadas y con estacionamiento. Reserva directa.",
   alternates: { canonical: "/habitaciones" },
 };
 
@@ -43,7 +43,7 @@ export default async function HabitacionesPage() {
         </h1>
         <Reveal delay={0.3} className="mt-4 max-w-xl">
           <p className="leading-relaxed text-muted-foreground">
-            Habitaciones King Size y Doble Queen, y una Suite de dos recámaras
+            Habitaciones Junior King y Master Queen, y una Suite de dos recámaras
             para grupos, en el centro de Axtla de Terrazas. Elige la tuya y
             reserva directo, sin comisiones.
           </p>

@@ -18,6 +18,14 @@
 // Es idempotente: correrlo dos veces no cambia nada la segunda.
 // Sin argumentos solo actualiza precios y textos, sin tocar la estructura.
 //
+//   npm run db:tarifas -- --ensayo
+// Muestra qué cambiaría (precios, capacidad, nombre) SIN escribir nada.
+//
+// ⚠️ Desde el 29 oct 2026 Gersay cambia precios y fotos en /admin/habitaciones.
+// Este script PISA los precios, nombres y capacidad del panel con los de
+// seed-data.ts: correr primero con --ensayo. Las FOTOS de un tipo que ya existe
+// no se tocan nunca (son del panel); solo se siembran al crear un tipo nuevo.
+//
 // ⚠️ Usa la DATABASE_URL del entorno. `.env.local` apunta a PRODUCCIÓN.
 // ============================================================
 import { eq, inArray } from "drizzle-orm";
@@ -30,6 +38,7 @@ import { roomTypeSeed } from "./seed-data";
 function leerArgumentos(): Map<string, number> {
   const mapa = new Map<string, number>();
   for (const arg of process.argv.slice(2)) {
+    if (arg.startsWith("--")) continue; // banderas (--ensayo)
     const [slug, valor] = arg.split("=");
     const n = Number(valor);
     if (!slug || !Number.isInteger(n) || n < 0) {
@@ -136,6 +145,11 @@ async function ajustarCuartos(
 async function main() {
   const unidades = leerArgumentos();
   const soloPrecios = unidades.size === 0;
+  const ensayo = process.argv.includes("--ensayo");
+  if (ensayo && !soloPrecios) {
+    console.error("--ensayo solo sirve sin unidades (modo precios y textos).");
+    process.exit(1);
+  }
 
   await ensureDb();
   const existentes = await db.select().from(roomTypes);
@@ -154,10 +168,17 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(soloPrecios ? "\nModo: solo precios y textos\n" : "\nModo: estructura + precios\n");
+  console.log(
+    ensayo
+      ? "\nModo: ENSAYO (no se escribe nada)\n"
+      : soloPrecios
+        ? "\nModo: solo precios y textos\n"
+        : "\nModo: estructura + precios\n",
+  );
 
   for (const semilla of roomTypeSeed) {
     const previo = porSlug.get(semilla.slug);
+    // Sin `fotos`: las de un tipo que ya existe las maneja el panel.
     const campos = {
       nombre: semilla.nombre,
       descripcion: semilla.descripcion,
@@ -165,22 +186,27 @@ async function main() {
       tarifaBase: semilla.tarifaBase,
       precios: [...semilla.precios],
       amenidades: [...semilla.amenidades],
-      fotos: [...semilla.fotos],
     };
 
     let tipoId: string;
+    if (previo && ensayo) {
+      const antes = JSON.stringify({ nombre: previo.nombre, capacidad: previo.capacidad, tarifaBase: previo.tarifaBase, precios: previo.precios });
+      const despues = JSON.stringify({ nombre: campos.nombre, capacidad: campos.capacidad, tarifaBase: campos.tarifaBase, precios: campos.precios });
+      console.log(antes === despues ? `  = ${semilla.slug} — sin cambios` : `  ~ ${semilla.slug}\n      antes:   ${antes}\n      después: ${despues}`);
+      continue;
+    }
     if (previo) {
       await db.update(roomTypes).set(campos).where(eq(roomTypes.id, previo.id));
       tipoId = previo.id;
       console.log(`  ✓ ${semilla.nombre} — precios ${JSON.stringify(semilla.precios)}`);
     } else {
-      if (soloPrecios) {
+      if (soloPrecios || ensayo) {
         console.log(`  · ${semilla.nombre} — no existe todavía (dale unidades para crearlo)`);
         continue;
       }
       const [creado] = await db
         .insert(roomTypes)
-        .values({ slug: semilla.slug, ...campos })
+        .values({ slug: semilla.slug, ...campos, fotos: [...semilla.fotos] })
         .returning({ id: roomTypes.id });
       tipoId = creado.id;
       console.log(`  + ${semilla.nombre} — CREADO, precios ${JSON.stringify(semilla.precios)}`);
@@ -195,6 +221,8 @@ async function main() {
       prefijos.get(semilla.slug) ?? semilla.slug.slice(0, 3).toUpperCase(),
     );
   }
+
+  if (ensayo) return;
 
   // ── Tipos viejos que ya no están en seed-data ─────────────
   const slugsNuevos = new Set(roomTypeSeed.map((t) => t.slug));

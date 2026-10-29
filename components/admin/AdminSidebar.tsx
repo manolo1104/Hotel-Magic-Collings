@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
+  BedDouble,
   BookOpen,
   Calendar,
   CalendarRange,
@@ -26,6 +27,8 @@ const NAV = [
   { href: "/admin/cotizaciones", label: "Cotizaciones", icon: FileText, ready: true },
   // Bot de WhatsApp (lib/bot): pagos por confirmar, apartados y pláticas.
   { href: "/admin/whatsapp", label: "WhatsApp", icon: MessageCircle, ready: true },
+  // Fotos y precio por persona de cada habitación (antes solo con db:tarifas).
+  { href: "/admin/habitaciones", label: "Habitaciones", icon: BedDouble, ready: true },
   { href: "/admin/temporadas", label: "Temporadas", icon: CalendarRange, ready: true },
   { href: "/admin/ingresos", label: "Ingresos", icon: TrendingUp, ready: true },
   { href: "/admin/clientes", label: "Clientes", icon: Users, ready: true },

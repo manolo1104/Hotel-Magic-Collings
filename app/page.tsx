@@ -11,15 +11,20 @@ import { CtaFinal } from "@/components/home/CtaFinal";
 import { Ubicacion } from "@/components/home/Ubicacion";
 import { JsonLd } from "@/components/JsonLd";
 import { homeGraphJsonLd } from "@/lib/seo";
+import { faqsConPrecios } from "@/lib/site";
+import { getRoomTypes } from "@/lib/booking/engine";
 
 // ISR: se prerenderiza y revalida cada 10 min. Las tarifas/tipos de habitación
 // cambian rara vez, así que no hace falta render por request (mejor TTFB/LCP).
 export const revalidate = 600;
 
-export default function Home() {
+export default async function Home() {
+  // La pregunta «¿Cuánto cuesta…?» se contesta con los precios que Gersay
+  // guarda en el panel; el texto visible y el FAQPage usan la misma lista.
+  const preguntas = faqsConPrecios(await getRoomTypes());
   return (
     <>
-      <JsonLd data={homeGraphJsonLd()} />
+      <JsonLd data={homeGraphJsonLd(preguntas)} />
       {/* Orden CRO: deseo (habitaciones) → argumento (directo vs OTA) →
           prueba social (reseñas) → contexto → objeciones → cierre */}
       <Hero />
@@ -31,7 +36,7 @@ export default function Home() {
       <Amenidades />
       <Huasteca />
       <Galeria />
-      <Faq />
+      <Faq preguntas={preguntas} />
       <CtaFinal />
     </>
   );

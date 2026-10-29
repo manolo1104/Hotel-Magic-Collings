@@ -316,6 +316,20 @@ export const botSalida = pgTable("bot_salida", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Fotos de habitación que Gersay sube desde el panel (/admin/habitaciones).
+// Viven en la BASE y no en disco porque en Vercel el sistema de archivos es de
+// solo lectura. Se guardan en base64 (texto) y no en bytea a propósito: así se
+// leen igual con postgres.js (producción) que con PGlite (local). El navegador
+// las reduce antes de subirlas (~300 KB cada una), y `/fotos/[archivo]` las
+// sirve con caché de un año: la base casi no se vuelve a leer.
+export const fotosSubidas = pgTable("fotos_subidas", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  tipo: text("tipo").notNull(), // "image/jpeg" | "image/png" | "image/webp"
+  datos: text("datos").notNull(), // base64
+  bytes: integer("bytes").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export type RoomType = typeof roomTypes.$inferSelect;
 export type Room = typeof rooms.$inferSelect;
 export type Booking = typeof bookings.$inferSelect;

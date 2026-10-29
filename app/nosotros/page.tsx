@@ -63,7 +63,7 @@ export default function NosotrosPage() {
               Pequeño a propósito
             </h2>
             <p className="mt-3 leading-relaxed text-muted-foreground">
-              Tenemos {site.rooms} habitaciones —King Size, Doble Queen y una
+              Tenemos {site.rooms} habitaciones —Junior King, Master Queen y una
               Suite—, todas climatizadas y cuidadas al detalle. Ser un hotel
               pequeño no es una limitación: es lo que nos permite hacer lo que
               un hotel grande no puede. Te mostramos la habitación antes de que

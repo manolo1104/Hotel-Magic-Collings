@@ -4,12 +4,15 @@
 // y el blog para que NUNCA se desincronice del resto del sitio
 // (mismas URLs www, misma calificación que el JSON-LD).
 // ============================================================
-import { site, faqs, amenities } from "@/lib/site";
+import { site, faqsConPrecios, amenities } from "@/lib/site";
+import { getRoomTypes } from "@/lib/booking/engine";
 import { getAllPosts } from "@/lib/content";
 
 export const revalidate = 3600;
 
-export function GET(): Response {
+export async function GET(): Promise<Response> {
+  // Nombres, capacidad y precios salen de la base: Gersay los cambia en el panel.
+  const tipos = await getRoomTypes();
   const base = site.url;
 
   const paginas = [
@@ -26,7 +29,7 @@ export function GET(): Response {
     .map((p) => `- [${p.title}](${base}/blog/${p.slug}): ${p.description}`)
     .join("\n");
 
-  const preguntas = faqs
+  const preguntas = faqsConPrecios(tipos)
     .map((f) => `- **${f.q}** ${f.a}`)
     .join("\n");
 
@@ -39,7 +42,7 @@ ${site.name} es un hotel pequeño y de atención personalizada, ubicado a una ca
 ## Datos clave
 - Dirección: ${site.address.street}, ${site.address.locality}, ${site.address.region}, C.P. ${site.address.postalCode}, México.
 - Teléfono y WhatsApp: ${site.phone}.
-- Habitaciones: ${site.rooms} en total, en ${site.roomCategories} categorías (King Size, hasta 2 personas; Doble Queen, hasta 4 personas; Suite, el departamento completo de dos recámaras, hasta 6 personas).
+- Habitaciones: ${site.rooms} en total, en ${tipos.length} categorías (${tipos.map((t) => `${t.nombre}, hasta ${t.capacidad} personas`).join("; ")}).
 - Amenidades: ${amenities.map((a) => a.title.toLowerCase()).join(", ")}.
 - Check-in: a partir de las ${site.checkIn} h · Check-out: hasta las ${site.checkOut} h.
 - Cómo reservar: directo en ${base}. Se eligen fechas y huéspedes, se confirma la disponibilidad y la reserva se confirma por WhatsApp en menos de 24 horas.
